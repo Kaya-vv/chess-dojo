@@ -1,8 +1,10 @@
 'use client';
 
 import { useApi } from '@/api/Api';
+import { RequestSnackbar, useRequest } from '@/api/Request';
 import { AuthStatus, useAuth } from '@/auth/Auth';
 import LoadingPage from '@/loading/LoadingPage';
+import NotFoundPage from '@/NotFoundPage';
 import { SquareColorQuestion } from '@jackstenglein/chess-dojo-common/src/squareColors/api';
 import {
     getRandomSquare,
@@ -23,10 +25,13 @@ interface SessionSummary {
 }
 
 export function SquareColorDrillPage() {
-    const { status } = useAuth();
+    const { user, status } = useAuth();
 
     if (status === AuthStatus.Loading) {
         return <LoadingPage />;
+    }
+    if (!user) {
+        return <NotFoundPage />;
     }
 
     return <SquareColorDrill />;
@@ -34,12 +39,14 @@ export function SquareColorDrillPage() {
 
 function SquareColorDrill() {
     const api = useApi();
+    const submitRequest = useRequest();
     const [drillState, setDrillState] = useState<DrillState>('ready');
     const [currentSquare, setCurrentSquare] = useState('');
     const [questions, setQuestions] = useState<SquareColorQuestion[]>([]);
     const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
     const questionStartRef = useRef<number>(0);
     const sessionStartRef = useRef<number>(0);
+    const questionsRef = useRef<SquareColorQuestion[]>([]);
     const [summary, setSummary] = useState<SessionSummary | null>(null);
 
     const nextSquare = useCallback(() => {
@@ -49,6 +56,7 @@ function SquareColorDrill() {
 
     const startDrill = useCallback(() => {
         setQuestions([]);
+        questionsRef.current = [];
         setFeedback(null);
         setSummary(null);
         setDrillState('in_progress');
@@ -94,15 +102,17 @@ function SquareColorDrill() {
             setSummary(result);
             setDrillState('complete');
 
-            api.submitSquareColorSession(result).catch((err: unknown) => {
-                console.error('Failed to submit square color session:', err);
-            });
+            submitRequest.onStart();
+            api.submitSquareColorSession(result).then(
+                () => submitRequest.onSuccess(),
+                (err: unknown) => submitRequest.onFailure(err),
+            );
         },
-        [api],
+        [api, submitRequest],
     );
 
     const handleAnswer = useCallback(
-        (answer: 'light' | 'dark') => {
+        (answer: 'black' | 'white') => {
             if (feedback !== null) return;
 
             const correctAnswer = getSquareColor(currentSquare);
@@ -115,8 +125,11 @@ function SquareColorDrill() {
                 responseTimeMs,
             };
 
-            const updatedQuestions = [...questions, question];
-            setQuestions(updatedQuestions);
+            setQuestions((prev) => {
+                const updated = [...prev, question];
+                questionsRef.current = updated;
+                return updated;
+            });
             setFeedback(answer === correctAnswer ? 'correct' : 'incorrect');
 
             setTimeout(() => {
@@ -124,20 +137,20 @@ function SquareColorDrill() {
                 nextSquare();
             }, 400);
         },
-        [feedback, currentSquare, questions, nextSquare],
+        [feedback, currentSquare, nextSquare],
     );
 
     const handleStop = useCallback(() => {
-        finishDrill(questions);
-    }, [finishDrill, questions]);
+        finishDrill(questionsRef.current);
+    }, [finishDrill]);
 
     useEffect(() => {
         if (drillState === 'in_progress') {
             const onKeyDown = (e: KeyboardEvent) => {
-                if (e.key === 'l' || e.key === 'L') {
-                    handleAnswer('light');
-                } else if (e.key === 'd' || e.key === 'D') {
-                    handleAnswer('dark');
+                if (e.key === 'w' || e.key === 'W') {
+                    handleAnswer('white');
+                } else if (e.key === 'b' || e.key === 'B') {
+                    handleAnswer('black');
                 }
             };
             window.addEventListener('keydown', onKeyDown);
@@ -150,7 +163,12 @@ function SquareColorDrill() {
     }
 
     if (drillState === 'complete' && summary) {
-        return <CompleteScreen summary={summary} onPlayAgain={startDrill} />;
+        return (
+            <>
+                <CompleteScreen summary={summary} onPlayAgain={startDrill} />
+                <RequestSnackbar request={submitRequest} />
+            </>
+        );
     }
 
     return (
@@ -190,43 +208,44 @@ function SquareColorDrill() {
                     variant='contained'
                     size='large'
                     disabled={feedback !== null}
-                    onClick={() => handleAnswer('light')}
+                    onClick={() => handleAnswer('white')}
                     sx={{
                         px: 5,
                         py: 2,
                         fontSize: '1.25rem',
-                        backgroundColor: '#f0d9b5',
+                        backgroundColor: '#fff',
                         color: '#000',
-                        '&:hover': { backgroundColor: '#e6c99e' },
+                        border: '1px solid #ccc',
+                        '&:hover': { backgroundColor: '#f0f0f0' },
                         '&.Mui-disabled': {
-                            backgroundColor: '#f0d9b5',
+                            backgroundColor: '#fff',
                             color: '#000',
                             opacity: 0.6,
                         },
                     }}
                 >
-                    Light (L)
+                    White (W)
                 </Button>
                 <Button
                     variant='contained'
                     size='large'
                     disabled={feedback !== null}
-                    onClick={() => handleAnswer('dark')}
+                    onClick={() => handleAnswer('black')}
                     sx={{
                         px: 5,
                         py: 2,
                         fontSize: '1.25rem',
-                        backgroundColor: '#b58863',
+                        backgroundColor: '#000',
                         color: '#fff',
-                        '&:hover': { backgroundColor: '#a07652' },
+                        '&:hover': { backgroundColor: '#333' },
                         '&.Mui-disabled': {
-                            backgroundColor: '#b58863',
+                            backgroundColor: '#000',
                             color: '#fff',
                             opacity: 0.6,
                         },
                     }}
                 >
-                    Dark (D)
+                    Black (B)
                 </Button>
             </Stack>
 
@@ -251,13 +270,13 @@ function ReadyScreen({ onStart }: { onStart: () => void }) {
             </Typography>
             <Typography variant='body1' color='text.secondary' sx={{ mb: 1 }}>
                 You&apos;ll see a square name (like &quot;g7&quot;) and choose whether it&apos;s a
-                light or dark square.
+                white or black square.
             </Typography>
             <Typography variant='body1' color='text.secondary' sx={{ mb: 1 }}>
                 Answer as quickly and accurately as possible. Stop whenever you&apos;re ready!
             </Typography>
             <Typography variant='body2' color='text.secondary' sx={{ mb: 4 }}>
-                Keyboard shortcuts: <strong>L</strong> for Light, <strong>D</strong> for Dark
+                Keyboard shortcuts: <strong>W</strong> for White, <strong>B</strong> for Black
             </Typography>
             <Button variant='contained' size='large' onClick={onStart} sx={{ px: 6, py: 1.5 }}>
                 Start

@@ -5,9 +5,9 @@ const squareColorQuestionSchema = z.object({
     /** The square that was shown (e.g. "g7"). */
     square: z.string(),
     /** The correct answer for the square. */
-    correctAnswer: z.union([z.literal('light'), z.literal('dark')]),
+    correctAnswer: z.union([z.literal('white'), z.literal('black')]),
     /** The answer the user gave. */
-    userAnswer: z.union([z.literal('light'), z.literal('dark')]),
+    userAnswer: z.union([z.literal('white'), z.literal('black')]),
     /** Time in milliseconds the user took to answer. */
     responseTimeMs: z.number(),
 });
