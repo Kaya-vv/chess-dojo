@@ -50,7 +50,10 @@ function SquareColorDrill() {
     const [summary, setSummary] = useState<SessionSummary | null>(null);
 
     const nextSquare = useCallback(() => {
-        setCurrentSquare(getRandomSquare());
+        setCurrentSquare((prev) => {
+            const next = getRandomSquare(prev || undefined);
+            return next;
+        });
         questionStartRef.current = Date.now();
     }, []);
 
@@ -324,15 +327,18 @@ function CompleteScreen({
                             borderColor: 'divider',
                         }}
                     >
-                        <Typography fontWeight='bold'>{q.square}</Typography>
+                        <Typography fontWeight='bold' sx={{ width: 40, textAlign: 'left' }}>
+                            {q.square}
+                        </Typography>
                         <Typography
+                            sx={{ flex: 1, textAlign: 'center' }}
                             color={q.userAnswer === q.correctAnswer ? 'success.main' : 'error.main'}
                         >
                             {q.userAnswer === q.correctAnswer
                                 ? 'Correct'
                                 : `Wrong (was ${q.correctAnswer})`}
                         </Typography>
-                        <Typography color='text.secondary'>
+                        <Typography color='text.secondary' sx={{ width: 60, textAlign: 'right' }}>
                             {(q.responseTimeMs / 1000).toFixed(1)}s
                         </Typography>
                     </Stack>

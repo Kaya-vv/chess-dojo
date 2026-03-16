@@ -12,9 +12,14 @@ export function getSquareColor(square: string): 'black' | 'white' {
 
 /**
  * Returns a random square name from a1-h8.
+ * If `exclude` is provided, the returned square will differ from it.
  */
-export function getRandomSquare(): string {
-    const file = FILES[Math.floor(Math.random() * 8)];
-    const rank = Math.floor(Math.random() * 8) + 1;
-    return `${file}${rank}`;
+export function getRandomSquare(exclude?: string): string {
+    let square: string;
+    do {
+        const file = FILES[Math.floor(Math.random() * 8)];
+        const rank = Math.floor(Math.random() * 8) + 1;
+        square = `${file}${rank}`;
+    } while (square === exclude);
+    return square;
 }
