@@ -16,7 +16,7 @@ export async function handleBlogPublished(event: BlogPublishedEvent): Promise<vo
     const embed = new EmbedBuilder()
         .setTitle(event.title)
         .setDescription(event.description)
-        .setURL(`${frontendHost}/blog/chessdojo/${event.blogId}`)
+        .setURL(`${frontendHost}/blog/${event.blogId}`)
         .setColor(0xf7941f); // Dojo branding orange
 
     if (event.coverImage) {
