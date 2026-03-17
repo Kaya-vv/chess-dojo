@@ -59,7 +59,7 @@ async function createBlog(request: CreateBlogRequest): Promise<Blog> {
     const updatedAt = new Date().toISOString();
     const status = request.status ?? BlogStatuses.DRAFT;
 
-    const blog: Blog & { discordPosted?: boolean } = {
+    const blog: Blog = {
         owner: DOJO_BLOG_OWNER,
         id,
         title: request.title,
