@@ -63,7 +63,11 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         const blog = await updateBlog(request);
 
         if (request.status === 'PUBLISHED') {
-            await sendBlogPublishedEvent(blog);
+            try {
+                await sendBlogPublishedEvent(blog);
+            } catch (err) {
+                console.error('Failed to send blog published event for %s:', blog.id, err);
+            }
         }
 
         return success(blog);

@@ -98,7 +98,11 @@ async function createBlog(request: CreateBlogRequest): Promise<Blog> {
     }
 
     if (status === BlogStatuses.PUBLISHED) {
-        await sendBlogPublishedEvent(blog);
+        try {
+            await sendBlogPublishedEvent(blog);
+        } catch (err) {
+            console.error('Failed to send blog published event for %s:', blog.id, err);
+        }
     }
 
     return blog;
