@@ -14,6 +14,7 @@ const frontendHost = process.env.frontendHost;
  */
 export async function handleBlogPublished(event: BlogPublishedEvent): Promise<void> {
     const embed = new EmbedBuilder()
+        .setAuthor({ name: event.subtitle })
         .setTitle(event.title)
         .setDescription(event.description)
         .setURL(`${frontendHost}/blog/${event.blogId}`)
