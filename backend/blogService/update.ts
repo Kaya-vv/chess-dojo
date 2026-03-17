@@ -1,12 +1,18 @@
 'use strict';
 
-import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
+import {
+    ConditionalCheckFailedException,
+    UpdateItemCommand,
+} from '@aws-sdk/client-dynamodb';
+import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import {
     Blog,
+    DOJO_BLOG_OWNER,
     UpdateBlogRequest,
     updateBlogRequestSchema,
 } from '@jackstenglein/chess-dojo-common/src/blog/api';
+import { NotificationEventTypes } from '@jackstenglein/chess-dojo-common/src/database/notification';
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import {
     ApiError,
@@ -16,6 +22,8 @@ import {
     success,
 } from '../directoryService/api';
 import { attributeExists, blogTable, dynamo, getUser, UpdateItemBuilder } from './database';
+
+const sqs = new SQSClient({ region: 'us-east-1' });
 
 /**
  * Handles requests to update a blog post. The caller must be the owner or an admin.
@@ -53,6 +61,11 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         }
 
         const blog = await updateBlog(request);
+
+        if (request.status === 'PUBLISHED') {
+            await sendBlogPublishedEvent(blog);
+        }
+
         return success(blog);
     } catch (err) {
         return errToApiGatewayProxyResultV2(err);
@@ -100,4 +113,51 @@ async function updateBlog(request: UpdateBlogRequest): Promise<Blog> {
             cause: err,
         });
     }
+}
+
+/**
+ * Sends a BLOG_PUBLISHED SQS event if this is the first time the blog is published.
+ * Uses a DynamoDB conditional update to set discordPosted=true only if it was not already set.
+ * If the blog was already posted, the conditional check fails and the event is skipped.
+ * @param blog The blog that was just updated.
+ */
+async function sendBlogPublishedEvent(blog: Blog): Promise<void> {
+    try {
+        await dynamo.send(
+            new UpdateItemCommand({
+                TableName: blogTable,
+                Key: {
+                    owner: { S: DOJO_BLOG_OWNER },
+                    id: { S: blog.id },
+                },
+                UpdateExpression: 'SET discordPosted = :true',
+                ConditionExpression:
+                    'attribute_not_exists(discordPosted) OR discordPosted = :false',
+                ExpressionAttributeValues: {
+                    ':true': { BOOL: true },
+                    ':false': { BOOL: false },
+                },
+            }),
+        );
+    } catch (err) {
+        if (err instanceof ConditionalCheckFailedException) {
+            console.log('Blog %s already posted to Discord, skipping', blog.id);
+            return;
+        }
+        throw err;
+    }
+
+    await sqs.send(
+        new SendMessageCommand({
+            QueueUrl: process.env.notificationEventSqsUrl,
+            MessageBody: JSON.stringify({
+                type: NotificationEventTypes.BLOG_PUBLISHED,
+                blogId: blog.id,
+                title: blog.title,
+                subtitle: blog.subtitle,
+                description: blog.description,
+                coverImage: blog.coverImage,
+            }),
+        }),
+    );
 }

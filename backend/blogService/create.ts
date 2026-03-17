@@ -1,6 +1,7 @@
 'use strict';
 
 import { ConditionalCheckFailedException, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { marshall } from '@aws-sdk/util-dynamodb';
 import {
     Blog,
@@ -9,6 +10,7 @@ import {
     createBlogRequestSchema,
     DOJO_BLOG_OWNER,
 } from '@jackstenglein/chess-dojo-common/src/blog/api';
+import { NotificationEventTypes } from '@jackstenglein/chess-dojo-common/src/database/notification';
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import {
     ApiError,
@@ -18,6 +20,8 @@ import {
     success,
 } from '../directoryService/api';
 import { blogTable, dynamo, getUser } from './database';
+
+const sqs = new SQSClient({ region: 'us-east-1' });
 
 /**
  * Handles requests to create a blog post. The caller must be an admin.
@@ -55,7 +59,7 @@ async function createBlog(request: CreateBlogRequest): Promise<Blog> {
     const updatedAt = new Date().toISOString();
     const status = request.status ?? BlogStatuses.DRAFT;
 
-    const blog: Blog = {
+    const blog: Blog & { discordPosted?: boolean } = {
         owner: DOJO_BLOG_OWNER,
         id,
         title: request.title,
@@ -68,6 +72,10 @@ async function createBlog(request: CreateBlogRequest): Promise<Blog> {
         updatedAt,
         status,
     };
+
+    if (status === BlogStatuses.PUBLISHED) {
+        blog.discordPosted = true;
+    }
 
     try {
         await dynamo.send(
@@ -89,5 +97,29 @@ async function createBlog(request: CreateBlogRequest): Promise<Blog> {
         throw new ApiError({ statusCode: 500, publicMessage: 'Internal server error', cause: err });
     }
 
+    if (status === BlogStatuses.PUBLISHED) {
+        await sendBlogPublishedEvent(blog);
+    }
+
     return blog;
+}
+
+/**
+ * Sends a BLOG_PUBLISHED notification event to SQS.
+ * @param blog The blog that was just created with PUBLISHED status.
+ */
+async function sendBlogPublishedEvent(blog: Blog): Promise<void> {
+    await sqs.send(
+        new SendMessageCommand({
+            QueueUrl: process.env.notificationEventSqsUrl,
+            MessageBody: JSON.stringify({
+                type: NotificationEventTypes.BLOG_PUBLISHED,
+                blogId: blog.id,
+                title: blog.title,
+                subtitle: blog.subtitle,
+                description: blog.description,
+                coverImage: blog.coverImage,
+            }),
+        }),
+    );
 }
