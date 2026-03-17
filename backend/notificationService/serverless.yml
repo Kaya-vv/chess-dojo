@@ -38,6 +38,7 @@ functions:
       discordPrivateGuildId: ${file(../config-${sls:stage}.yml):discordPrivateGuildId}
       discordRoundRobinChannelId: ${file(../config-${sls:stage}.yml):discordRoundRobinChannelId}
       discordBlogChannelId: ${file(../config-${sls:stage}.yml):discordBlogChannelId}
+      discordBlogRoleId: ${file(../config-${sls:stage}.yml):discordBlogRoleId}
     iamRoleStatements:
       - Effect: Allow
         Action:

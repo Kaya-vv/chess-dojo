@@ -5,6 +5,7 @@ import { BlogPublishedEvent } from '@jackstenglein/chess-dojo-common/src/databas
 import { sendChannelEmbed } from './discord';
 
 const blogChannelId = process.env.discordBlogChannelId ?? '';
+const blogRoleId = process.env.discordBlogRoleId ?? '';
 const frontendHost = process.env.frontendHost;
 
 /**
@@ -25,7 +26,7 @@ export async function handleBlogPublished(event: BlogPublishedEvent): Promise<vo
     }
 
     await sendChannelEmbed(blogChannelId, {
-        content: '<@&968218453355925645>',
+        content: `<@&${blogRoleId}>`,
         embeds: [embed],
     });
 }
