@@ -24,5 +24,8 @@ export async function handleBlogPublished(event: BlogPublishedEvent): Promise<vo
         embed.setImage(event.coverImage);
     }
 
-    await sendChannelEmbed(blogChannelId, { embeds: [embed] });
+    await sendChannelEmbed(blogChannelId, {
+        content: '<@&968218453355925645>',
+        embeds: [embed],
+    });
 }
