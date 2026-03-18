@@ -1,6 +1,10 @@
 'use strict';
 
-import { ConditionalCheckFailedException, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import {
+    ConditionalCheckFailedException,
+    PutItemCommand,
+    UpdateItemCommand,
+} from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
 import {
     Blog,
@@ -70,10 +74,6 @@ async function createBlog(request: CreateBlogRequest): Promise<Blog> {
         status,
     };
 
-    if (status === BlogStatuses.PUBLISHED) {
-        blog.discordPosted = true;
-    }
-
     try {
         await dynamo.send(
             new PutItemCommand({
@@ -96,11 +96,46 @@ async function createBlog(request: CreateBlogRequest): Promise<Blog> {
 
     if (status === BlogStatuses.PUBLISHED) {
         try {
-            await sendBlogPublishedEvent(blog);
+            await sendBlogPublishedEventIfFirst(blog);
         } catch (err) {
             console.error('Failed to send blog published event for %s:', blog.id, err);
         }
     }
 
     return blog;
+}
+
+/**
+ * Sends a BLOG_PUBLISHED SQS event if this is the first time the blog is published.
+ * Uses a DynamoDB conditional update to set discordPosted=true only if it was not already set.
+ * If the conditional check fails, the event is skipped.
+ * @param blog The blog that was just created.
+ */
+async function sendBlogPublishedEventIfFirst(blog: Blog): Promise<void> {
+    try {
+        await dynamo.send(
+            new UpdateItemCommand({
+                TableName: blogTable,
+                Key: {
+                    owner: { S: DOJO_BLOG_OWNER },
+                    id: { S: blog.id },
+                },
+                UpdateExpression: 'SET discordPosted = :true',
+                ConditionExpression:
+                    'attribute_not_exists(discordPosted) OR discordPosted = :false',
+                ExpressionAttributeValues: {
+                    ':true': { BOOL: true },
+                    ':false': { BOOL: false },
+                },
+            }),
+        );
+    } catch (err) {
+        if (err instanceof ConditionalCheckFailedException) {
+            console.log('Blog %s already posted to Discord, skipping', blog.id);
+            return;
+        }
+        throw err;
+    }
+
+    await sendBlogPublishedEvent(blog);
 }

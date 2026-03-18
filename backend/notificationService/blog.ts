@@ -21,11 +21,14 @@ const announcements = [
  */
 export async function handleBlogPublished(event: BlogPublishedEvent): Promise<void> {
     const embed = new EmbedBuilder()
-        .setAuthor({ name: event.subtitle })
         .setTitle(event.title)
         .setDescription(event.description)
         .setURL(`${frontendHost}/blog/${event.blogId}`)
         .setColor(0xf7941f); // Dojo branding orange
+
+    if (event.subtitle) {
+        embed.setAuthor({ name: event.subtitle });
+    }
 
     if (event.coverImage) {
         embed.setImage(event.coverImage);
