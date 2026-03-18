@@ -8,6 +8,12 @@ const blogChannelId = process.env.discordBlogChannelId ?? '';
 const blogRoleId = process.env.discordBlogRoleId ?? '';
 const frontendHost = process.env.frontendHost;
 
+const announcements = [
+    'a new blog just dropped!',
+    'check out our latest blog post!',
+    'we just published a new blog!',
+];
+
 /**
  * Handles a BLOG_PUBLISHED notification event by posting a Discord embed
  * to the configured blog channel.
@@ -26,7 +32,7 @@ export async function handleBlogPublished(event: BlogPublishedEvent): Promise<vo
     }
 
     await sendChannelEmbed(blogChannelId, {
-        content: `<@&${blogRoleId}>`,
+        content: `<@&${blogRoleId}> ${announcements[Math.floor(Math.random() * announcements.length)]}`,
         embeds: [embed],
     });
 }
