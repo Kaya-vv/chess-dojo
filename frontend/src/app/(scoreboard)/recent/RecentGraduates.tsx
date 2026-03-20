@@ -71,6 +71,8 @@ const timeframeOptions = getTimeframeOptions();
 
 /**
  * Formats a date as YYYY.MM.DD (the period-separated format used by the games API).
+ * @param date The date to format.
+ * @returns The date formatted as YYYY.MM.DD.
  */
 function formatGameDate(date: Date): string {
     const y = date.getFullYear();
@@ -81,6 +83,11 @@ function formatGameDate(date: Date): string {
 
 /**
  * Fetches the total game count for a user by paginating through listGamesByOwner.
+ * @param api The game API context to use for requests.
+ * @param owner The username of the game owner.
+ * @param startDate The start date filter in YYYY.MM.DD format.
+ * @param endDate The end date filter in YYYY.MM.DD format.
+ * @returns The total number of games owned by the user in the date range.
  */
 async function fetchGameCount(
     api: GameApiContextType,
