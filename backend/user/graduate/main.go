@@ -76,12 +76,14 @@ func Handler(ctx context.Context, event api.Request) (api.Response, error) {
 	totalTime := user.TimeSpent()
 	dojoTime := user.TimeSpentOnReqs(requirements)
 	nonDojoTime := totalTime - dojoTime
+	log.Debugf("Total Time: %d, Dojo Time: %d, NonDojo Time: %d", totalTime, dojoTime, nonDojoTime)
+
 	gamesAnnotated := 0
 	twoMonthsAgo := now.AddDate(0, -2, 0).Format("2006.01.02")
 	nowDate := now.Format("2006.01.02")
 	var gamesStartKey string
 	for ok := true; ok; ok = gamesStartKey != "" {
-		games, nextKey, err := repository.ListGamesByOwner(true, info.Username, twoMonthsAgo, nowDate, gamesStartKey)
+		games, nextKey, err := repository.ListGamesByOwner(false, info.Username, twoMonthsAgo, nowDate, gamesStartKey)
 		if err != nil {
 			log.Errorf("Failed to list games for graduation count: %v", err)
 			break
@@ -89,8 +91,6 @@ func Handler(ctx context.Context, event api.Request) (api.Response, error) {
 		gamesAnnotated += len(games)
 		gamesStartKey = nextKey
 	}
-
-	log.Debugf("Total Time: %d, Dojo Time: %d, NonDojo Time: %d", totalTime, dojoTime, nonDojoTime)
 
 	ratingHistories := make(map[database.RatingSystem][]database.RatingHistory)
 	for rs, history := range user.RatingHistories {
