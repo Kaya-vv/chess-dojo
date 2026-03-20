@@ -15,11 +15,6 @@ export interface PuzzleApiContextType {
     getPuzzleHistory: (
         request: GetPuzzleHistoryRequest,
     ) => Promise<AxiosResponse<GetPuzzleHistoryResponse>>;
-
-    /** Submits the results of a square color drill session. */
-    submitSquareColorSession: (
-        request: SubmitSquareColorSessionRequest,
-    ) => Promise<AxiosResponse<{ message: string }>>;
 }
 
 export function nextPuzzle(idToken: string, request: NextPuzzleRequest) {
@@ -37,12 +32,13 @@ export function getPuzzleHistory(idToken: string, request: GetPuzzleHistoryReque
     });
 }
 
-export function submitSquareColorSession(
-    idToken: string,
-    request: SubmitSquareColorSessionRequest,
-) {
+/**
+ * Submits the results of a square color drill session.
+ * @param request The request containing the session results.
+ * @returns A promise that resolves to the response from the API.
+ */
+export function submitSquareColorSession(request: SubmitSquareColorSessionRequest) {
     return axiosService.post<{ message: string }>(`/puzzle/square-color`, request, {
-        headers: { Authorization: `Bearer ${idToken}` },
         functionName: 'submitSquareColorSession',
     });
 }

@@ -1,8 +1,5 @@
-import {
-    getRandomSquare,
-    getSquareColor,
-} from '@jackstenglein/chess-dojo-common/src/squareColors/squareColor';
 import { describe, expect, it } from 'vitest';
+import { getRandomSquare, getSquareColor } from './squareColor';
 
 describe('getSquareColor', () => {
     it('returns black for a1', () => {

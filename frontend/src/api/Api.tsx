@@ -30,7 +30,6 @@ import {
     RoundRobinSubmitGameRequest,
     RoundRobinWithdrawRequest,
 } from '@jackstenglein/chess-dojo-common/src/roundRobin/api';
-import { SubmitSquareColorSessionRequest } from '@jackstenglein/chess-dojo-common/src/squareColors/api';
 import { ReactNode, createContext, useContext, useMemo } from 'react';
 import { useAuth } from '../auth/Auth';
 import { Club, ClubJoinRequestStatus } from '../database/club';
@@ -150,12 +149,7 @@ import {
     subscriptionCheckout,
     subscriptionManage,
 } from './paymentApi';
-import {
-    PuzzleApiContextType,
-    getPuzzleHistory,
-    nextPuzzle,
-    submitSquareColorSession,
-} from './puzzleApi';
+import { PuzzleApiContextType, getPuzzleHistory, nextPuzzle } from './puzzleApi';
 import {
     RequirementApiContextType,
     getRequirement,
@@ -474,8 +468,6 @@ export function ApiProvider({ children }: { children: ReactNode }) {
             nextPuzzle: (request: NextPuzzleRequest) => nextPuzzle(idToken, request),
             getPuzzleHistory: (request: GetPuzzleHistoryRequest) =>
                 getPuzzleHistory(idToken, request),
-            submitSquareColorSession: (request: SubmitSquareColorSessionRequest) =>
-                submitSquareColorSession(idToken, request),
 
             listRecordings,
             getRecording,

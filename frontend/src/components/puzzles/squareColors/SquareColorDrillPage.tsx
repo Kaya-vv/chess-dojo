@@ -1,6 +1,6 @@
 'use client';
 
-import { useApi } from '@/api/Api';
+import { submitSquareColorSession } from '@/api/puzzleApi';
 import { RequestSnackbar, useRequest } from '@/api/Request';
 import { AuthStatus, useAuth } from '@/auth/Auth';
 import LoadingPage from '@/loading/LoadingPage';
@@ -38,7 +38,6 @@ export function SquareColorDrillPage() {
 }
 
 function SquareColorDrill() {
-    const api = useApi();
     const submitRequest = useRequest();
     const [drillState, setDrillState] = useState<DrillState>('ready');
     const [currentSquare, setCurrentSquare] = useState('');
@@ -106,12 +105,12 @@ function SquareColorDrill() {
             setDrillState('complete');
 
             submitRequest.onStart();
-            api.submitSquareColorSession(result).then(
+            submitSquareColorSession(result).then(
                 () => submitRequest.onSuccess(),
                 (err: unknown) => submitRequest.onFailure(err),
             );
         },
-        [api, submitRequest],
+        [submitRequest],
     );
 
     const handleAnswer = useCallback(
@@ -272,11 +271,11 @@ function ReadyScreen({ onStart }: { onStart: () => void }) {
                 Square Color Drill
             </Typography>
             <Typography variant='body1' color='text.secondary' sx={{ mb: 1 }}>
-                You&apos;ll see a square name (like &quot;g7&quot;) and choose whether it&apos;s a
-                white or black square.
+                You'll see a square name (like "g7") and choose whether it's a white or black
+                square.
             </Typography>
             <Typography variant='body1' color='text.secondary' sx={{ mb: 1 }}>
-                Answer as quickly and accurately as possible. Stop whenever you&apos;re ready!
+                Answer as quickly and accurately as possible. Stop whenever you're ready!
             </Typography>
             <Typography variant='body2' color='text.secondary' sx={{ mb: 4 }}>
                 Keyboard shortcuts: <strong>W</strong> for White, <strong>B</strong> for Black
@@ -327,18 +326,19 @@ function CompleteScreen({
                             borderColor: 'divider',
                         }}
                     >
-                        <Typography fontWeight='bold' sx={{ width: 40, textAlign: 'left' }}>
-                            {q.square}
+                        <Typography fontWeight='bold' sx={{ textAlign: 'left' }}>
+                            {q.square} ({getSquareColor(q.square)})
                         </Typography>
                         <Typography
                             sx={{ flex: 1, textAlign: 'center' }}
                             color={q.userAnswer === q.correctAnswer ? 'success.main' : 'error.main'}
                         >
-                            {q.userAnswer === q.correctAnswer
-                                ? 'Correct'
-                                : `Wrong (was ${q.correctAnswer})`}
+                            {q.userAnswer === q.correctAnswer ? 'Correct' : 'Wrong'}
                         </Typography>
-                        <Typography color='text.secondary' sx={{ width: 60, textAlign: 'right' }}>
+                        <Typography
+                            color='text.secondary'
+                            sx={{ width: { sm: 76 }, textAlign: 'right' }}
+                        >
                             {(q.responseTimeMs / 1000).toFixed(1)}s
                         </Typography>
                     </Stack>
