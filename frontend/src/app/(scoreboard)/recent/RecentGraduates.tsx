@@ -1,6 +1,7 @@
 'use client';
 
 import { useApi } from '@/api/Api';
+import { GameApiContextType } from '@/api/gameApi';
 import { RequestSnackbar, useRequest } from '@/api/Request';
 import { Link } from '@/components/navigation/Link';
 import { Graduation } from '@/database/graduation';
@@ -8,9 +9,17 @@ import { compareCohorts } from '@/database/user';
 import LoadingPage from '@/loading/LoadingPage';
 import Avatar from '@/profile/Avatar';
 import CohortIcon from '@/scoreboard/CohortIcon';
-import { Divider, FormControl, MenuItem, Select, Stack, Typography } from '@mui/material';
+import {
+    CircularProgress,
+    Divider,
+    FormControl,
+    MenuItem,
+    Select,
+    Stack,
+    Typography,
+} from '@mui/material';
 import { DataGridPro, GridColDef, GridRenderCellParams, GridRowParams } from '@mui/x-data-grid-pro';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 function getUniqueGraduations(graduations: Graduation[]): Graduation[] {
     return [...new Map(graduations.map((g) => [g.username, g])).values()];
@@ -59,134 +68,206 @@ function getTimeframeOptions() {
 }
 
 const timeframeOptions = getTimeframeOptions();
-const ANNOTATED_GAMES_TASK_ID = '4d23d689-1284-46e6-b2a2-4b4bfdc37174';
 
-function getAnnotatedGamesCount(graduation: Graduation): number {
-    const progress = graduation.progress?.[ANNOTATED_GAMES_TASK_ID];
-    if (!progress?.counts) {
-        return 0;
-    }
-    return progress.counts[graduation.previousCohort] ?? progress.counts.ALL_COHORTS ?? 0;
+/**
+ * Formats a date as YYYY.MM.DD (the period-separated format used by the games API).
+ */
+function formatGameDate(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}.${m}.${d}`;
 }
 
-const graduateTableColumns: GridColDef<Graduation>[] = [
-    {
-        field: 'displayName',
-        headerName: 'Name',
-        minWidth: 200,
-        flex: 1,
-        renderCell: (params: GridRenderCellParams<Graduation, string>) => {
-            return (
-                <Stack direction='row' spacing={1} alignItems='center'>
-                    <Avatar username={params.row.username} displayName={params.value} size={32} />
-                    <Link href={`/profile/${params.row.username}`}>{params.value}</Link>
-                </Stack>
+/**
+ * Fetches the total game count for a user by paginating through listGamesByOwner.
+ */
+async function fetchGameCount(
+    api: GameApiContextType,
+    owner: string,
+    startDate: string,
+    endDate: string,
+): Promise<number> {
+    let count = 0;
+    let startKey: string | undefined;
+    do {
+        const resp = await api.listGamesByOwner(owner, startKey, startDate, endDate);
+        count += resp.data.games.length;
+        startKey = resp.data.lastEvaluatedKey;
+    } while (startKey);
+    return count;
+}
+
+/**
+ * Cell component that shows the stored gamesAnnotated count, or fetches it live
+ * for old graduation records that don't have it stored.
+ */
+function GamesAnnotatedCell({
+    graduation,
+    api,
+}: {
+    graduation: Graduation;
+    api: GameApiContextType;
+}) {
+    const [count, setCount] = useState<number | null>(
+        graduation.gamesAnnotated !== undefined ? graduation.gamesAnnotated : null,
+    );
+    const fetchedRef = useRef(false);
+
+    const fetchCount = useCallback(async () => {
+        if (fetchedRef.current) return;
+        fetchedRef.current = true;
+        try {
+            const gradDate = new Date(graduation.createdAt);
+            const twoMonthsBefore = new Date(gradDate);
+            twoMonthsBefore.setMonth(twoMonthsBefore.getMonth() - 2);
+            const result = await fetchGameCount(
+                api,
+                graduation.username,
+                formatGameDate(twoMonthsBefore),
+                formatGameDate(gradDate),
             );
+            setCount(result);
+        } catch {
+            setCount(0);
+        }
+    }, [api, graduation.createdAt, graduation.username]);
+
+    useEffect(() => {
+        if (count === null) {
+            fetchCount();
+        }
+    }, [count, fetchCount]);
+
+    if (count === null) {
+        return <CircularProgress size={16} />;
+    }
+    return <>{count}</>;
+}
+
+function getGraduateTableColumns(api: GameApiContextType): GridColDef<Graduation>[] {
+    return [
+        {
+            field: 'displayName',
+            headerName: 'Name',
+            minWidth: 200,
+            flex: 1,
+            renderCell: (params: GridRenderCellParams<Graduation, string>) => {
+                return (
+                    <Stack direction='row' spacing={1} alignItems='center'>
+                        <Avatar
+                            username={params.row.username}
+                            displayName={params.value}
+                            size={32}
+                        />
+                        <Link href={`/profile/${params.row.username}`}>{params.value}</Link>
+                    </Stack>
+                );
+            },
         },
-    },
-    {
-        field: 'graduations',
-        headerName: 'Graduated',
-        align: 'center',
-        headerAlign: 'center',
-        minWidth: 150,
-        flex: 1,
-        valueGetter: (_value, row) => {
-            if (row.graduationCohorts && row.graduationCohorts.length > 0) {
-                return row.graduationCohorts;
-            }
-            return row.previousCohort;
+        {
+            field: 'graduations',
+            headerName: 'Graduated',
+            align: 'center',
+            headerAlign: 'center',
+            minWidth: 150,
+            flex: 1,
+            valueGetter: (_value, row) => {
+                if (row.graduationCohorts && row.graduationCohorts.length > 0) {
+                    return row.graduationCohorts;
+                }
+                return row.previousCohort;
+            },
+            renderCell: (params: GridRenderCellParams<Graduation>) => {
+                const graduationCohorts = [...params.row.graduationCohorts]
+                    .sort(compareCohorts)
+                    .filter((cohort, i, array) => i === array.indexOf(cohort))
+                    .slice(-3);
+                return (
+                    <Stack direction='row' justifyContent='center'>
+                        {graduationCohorts.map((c) => (
+                            <CohortIcon key={c} cohort={c} size={32} />
+                        ))}
+                    </Stack>
+                );
+            },
         },
-        renderCell: (params: GridRenderCellParams<Graduation>) => {
-            const graduationCohorts = [...params.row.graduationCohorts]
-                .sort(compareCohorts)
-                .filter((cohort, i, array) => i === array.indexOf(cohort))
-                .slice(-3);
-            return (
-                <Stack direction='row' justifyContent='center'>
-                    {graduationCohorts.map((c) => (
-                        <CohortIcon key={c} cohort={c} size={32} />
-                    ))}
-                </Stack>
-            );
+        {
+            field: 'previousCohort',
+            headerName: 'Old Cohort',
+            minWidth: 150,
+            headerAlign: 'center',
+            align: 'center',
+            flex: 1,
+            valueGetter: (_value, row) => {
+                return parseInt(row.previousCohort.split('-')[0]);
+            },
+            renderCell: (params: GridRenderCellParams<Graduation>) => {
+                return (
+                    <Stack height='30px' justifyContent='center'>
+                        {params.row.previousCohort}
+                    </Stack>
+                );
+            },
         },
-    },
-    {
-        field: 'previousCohort',
-        headerName: 'Old Cohort',
-        minWidth: 150,
-        headerAlign: 'center',
-        align: 'center',
-        flex: 1,
-        valueGetter: (_value, row) => {
-            return parseInt(row.previousCohort.split('-')[0]);
+        {
+            field: 'newCohort',
+            headerName: 'New Cohort',
+            minWidth: 150,
+            headerAlign: 'center',
+            align: 'center',
+            flex: 1,
+            valueGetter: (_value, row) => {
+                return parseInt(row.newCohort.replaceAll('+', '').split('-')[0]);
+            },
+            renderCell: (params: GridRenderCellParams<Graduation>) => {
+                return (
+                    <Stack height='30px' justifyContent='center'>
+                        {params.row.newCohort}
+                    </Stack>
+                );
+            },
         },
-        renderCell: (params: GridRenderCellParams<Graduation>) => {
-            return (
+        {
+            field: 'score',
+            headerName: 'Dojo Score',
+            headerAlign: 'center',
+            align: 'center',
+            flex: 1,
+            valueFormatter: (value) => Math.round(value * 100) / 100,
+            renderCell: (params) => (
                 <Stack height='30px' justifyContent='center'>
-                    {params.row.previousCohort}
+                    {params.formattedValue}
                 </Stack>
-            );
+            ),
         },
-    },
-    {
-        field: 'newCohort',
-        headerName: 'New Cohort',
-        minWidth: 150,
-        headerAlign: 'center',
-        align: 'center',
-        flex: 1,
-        valueGetter: (_value, row) => {
-            return parseInt(row.newCohort.replaceAll('+', '').split('-')[0]);
-        },
-        renderCell: (params: GridRenderCellParams<Graduation>) => {
-            return (
+        {
+            field: 'gamesAnnotated',
+            headerName: 'Games Annotated',
+            headerAlign: 'center',
+            align: 'center',
+            flex: 1,
+            renderCell: (params: GridRenderCellParams<Graduation>) => (
                 <Stack height='30px' justifyContent='center'>
-                    {params.row.newCohort}
+                    <GamesAnnotatedCell graduation={params.row} api={api} />
                 </Stack>
-            );
+            ),
         },
-    },
-    {
-        field: 'score',
-        headerName: 'Dojo Score',
-        headerAlign: 'center',
-        align: 'center',
-        flex: 1,
-        valueFormatter: (value) => Math.round(value * 100) / 100,
-        renderCell: (params) => (
-            <Stack height='30px' justifyContent='center'>
-                {params.formattedValue}
-            </Stack>
-        ),
-    },
-    {
-        field: 'gamesAnnotated',
-        headerName: 'Games Annotated',
-        headerAlign: 'center',
-        align: 'center',
-        flex: 1,
-        valueGetter: (_value, row) => getAnnotatedGamesCount(row),
-        renderCell: (params) => (
-            <Stack height='30px' justifyContent='center'>
-                {params.value}
-            </Stack>
-        ),
-    },
-    {
-        field: 'createdAt',
-        headerName: 'Date',
-        headerAlign: 'center',
-        align: 'center',
-        flex: 1,
-        valueFormatter: (value) => new Date(value).toLocaleDateString(),
-        renderCell: (params) => (
-            <Stack height='30px' justifyContent='center'>
-                {params.formattedValue}
-            </Stack>
-        ),
-    },
-];
+        {
+            field: 'createdAt',
+            headerName: 'Date',
+            headerAlign: 'center',
+            align: 'center',
+            flex: 1,
+            valueFormatter: (value) => new Date(value).toLocaleDateString(),
+            renderCell: (params) => (
+                <Stack height='30px' justifyContent='center'>
+                    {params.formattedValue}
+                </Stack>
+            ),
+        },
+    ];
+}
 
 function DetailPanelContent(params: GridRowParams<Graduation>) {
     if (!params.row.comments) {
@@ -207,6 +288,7 @@ const RecentGraduates = () => {
     const api = useApi();
     const request = useRequest<Graduation[]>();
     const [timeframe, setTimeframe] = useState<Timeframe>(timeframeOptions[0]?.value);
+    const columns = useMemo(() => getGraduateTableColumns(api), [api]);
 
     useEffect(() => {
         if (!request.isSent()) {
@@ -273,7 +355,7 @@ const RecentGraduates = () => {
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <DataGridPro
-                        columns={graduateTableColumns}
+                        columns={columns}
                         rows={graduations}
                         getRowId={(row: Graduation) => row.username}
                         getRowHeight={() => 'auto'}
