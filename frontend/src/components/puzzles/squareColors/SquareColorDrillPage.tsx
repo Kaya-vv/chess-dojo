@@ -30,7 +30,7 @@ interface SessionSummary {
  * @param sessionStartTime - The epoch timestamp (ms) when the session started.
  * @returns The computed session summary stats.
  */
-function computeSessionStats(
+export function computeSessionStats(
     allQuestions: SquareColorQuestion[],
     sessionStartTime: number,
 ): SessionSummary {
