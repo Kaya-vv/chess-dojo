@@ -151,7 +151,7 @@ function SquareColorDrill() {
             submitSquareColorSession({
                 ...stats,
                 createdAt: sessionCreatedAtRef.current,
-            }).catch(() => {});
+            }).catch(() => undefined);
 
             setFeedback(answer === correctAnswer ? 'correct' : 'incorrect');
 
