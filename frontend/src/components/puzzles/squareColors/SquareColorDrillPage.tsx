@@ -151,7 +151,7 @@ function SquareColorDrill() {
             submitSquareColorSession({
                 ...stats,
                 createdAt: sessionCreatedAtRef.current,
-            }).catch((err: unknown) => console.warn('Intermediate save failed:', err));
+            }).catch(() => {});
 
             setFeedback(answer === correctAnswer ? 'correct' : 'incorrect');
 
