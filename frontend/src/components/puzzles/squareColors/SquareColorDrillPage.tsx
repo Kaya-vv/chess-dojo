@@ -41,6 +41,17 @@ export function computeSessionStats(
     allQuestions: SquareColorQuestion[],
     sessionStartTime: number,
 ): SessionSummary {
+    if (allQuestions.length === 0) {
+        return {
+            totalQuestions: 0,
+            correctCount: 0,
+            avgResponseTimeMs: 0,
+            bestStreak: 0,
+            totalTimeSeconds: 0,
+            questions: [],
+        };
+    }
+
     const totalTimeSeconds = Math.round((Date.now() - sessionStartTime) / 1000);
     const correctCount = allQuestions.filter((q) => q.userAnswer === q.correctAnswer).length;
     const avgResponseTimeMs = Math.round(
@@ -328,12 +339,12 @@ function ReadyScreen({ onStart }: { onStart: () => void }) {
             </Typography>
             <Typography variant='body1' color='text.secondary' sx={{ mb: 1 }}>
                 {armed
-                    ? 'Timer starts now!'
+                    ? 'Ready? Hit GO! to start the timer.'
                     : "Answer as quickly and accurately as possible. Stop whenever you're ready!"}
             </Typography>
             <Typography variant='body2' color='text.secondary' sx={{ mb: 4 }}>
                 {armed ? (
-                    <>Press GO! to begin — your score will be timed from this moment.</>
+                    <>Press GO! to begin, your score will be timed from this moment.</>
                 ) : (
                     <>
                         Keyboard shortcuts: <strong>W</strong> for White, <strong>B</strong> for
