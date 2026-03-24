@@ -7,6 +7,10 @@ import LoadingPage from '@/loading/LoadingPage';
 import NotFoundPage from '@/NotFoundPage';
 import { SquareColorQuestion } from '@jackstenglein/chess-dojo-common/src/squareColors/api';
 import {
+    computeSquareColorRating,
+    MIN_QUESTIONS_FOR_RATING,
+} from '@jackstenglein/chess-dojo-common/src/squareColors/rating';
+import {
     getRandomSquare,
     getSquareColor,
 } from '@jackstenglein/chess-dojo-common/src/squareColors/squareColor';
@@ -22,13 +26,16 @@ interface SessionSummary {
     bestStreak: number;
     totalTimeSeconds: number;
     questions: SquareColorQuestion[];
+    rating?: number;
 }
 
 /**
  * Computes aggregate stats for a square color drill session.
+ * A rating is included when the user has answered at least {@link MIN_QUESTIONS_FOR_RATING} questions.
+ *
  * @param allQuestions - The list of answered questions.
  * @param sessionStartTime - The epoch timestamp (ms) when the session started.
- * @returns The computed session summary stats.
+ * @returns The computed session summary, including an optional rating.
  */
 export function computeSessionStats(
     allQuestions: SquareColorQuestion[],
@@ -51,6 +58,12 @@ export function computeSessionStats(
         }
     }
 
+    let rating: number | undefined;
+    if (allQuestions.length >= MIN_QUESTIONS_FOR_RATING) {
+        const accuracy = (correctCount / allQuestions.length) * 100;
+        rating = computeSquareColorRating(accuracy, avgResponseTimeMs);
+    }
+
     return {
         totalQuestions: allQuestions.length,
         correctCount,
@@ -58,6 +71,7 @@ export function computeSessionStats(
         bestStreak,
         totalTimeSeconds,
         questions: allQuestions,
+        rating,
     };
 }
 
@@ -194,11 +208,20 @@ function SquareColorDrill() {
         );
     }
 
+    const questionsRemaining = Math.max(0, MIN_QUESTIONS_FOR_RATING - questions.length);
+
     return (
         <Container maxWidth='sm' sx={{ py: 6, textAlign: 'center' }}>
             <Typography variant='subtitle1' color='text.secondary' sx={{ mb: 1 }}>
                 Question {questions.length + 1}
             </Typography>
+
+            {questionsRemaining > 0 && (
+                <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
+                    Answer {questionsRemaining} more{' '}
+                    {questionsRemaining === 1 ? 'question' : 'questions'} to receive a rating
+                </Typography>
+            )}
 
             <Box
                 sx={{
@@ -285,7 +308,15 @@ function SquareColorDrill() {
     );
 }
 
+/**
+ * Landing screen shown before the drill begins. Implements a two-step "Ready / GO!"
+ * flow: the first click arms the timer prompt, the second click starts the drill.
+ *
+ * @param onStart - Callback invoked when the user confirms they are ready to start.
+ */
 function ReadyScreen({ onStart }: { onStart: () => void }) {
+    const [armed, setArmed] = useState(false);
+
     return (
         <Container maxWidth='sm' sx={{ py: 8, textAlign: 'center' }}>
             <Typography variant='h4' sx={{ fontWeight: 'bold', mb: 2 }}>
@@ -296,18 +327,38 @@ function ReadyScreen({ onStart }: { onStart: () => void }) {
                 square.
             </Typography>
             <Typography variant='body1' color='text.secondary' sx={{ mb: 1 }}>
-                Answer as quickly and accurately as possible. Stop whenever you're ready!
+                {armed
+                    ? 'Timer starts now!'
+                    : "Answer as quickly and accurately as possible. Stop whenever you're ready!"}
             </Typography>
             <Typography variant='body2' color='text.secondary' sx={{ mb: 4 }}>
-                Keyboard shortcuts: <strong>W</strong> for White, <strong>B</strong> for Black
+                {armed ? (
+                    <>Press GO! to begin — your score will be timed from this moment.</>
+                ) : (
+                    <>
+                        Keyboard shortcuts: <strong>W</strong> for White, <strong>B</strong> for
+                        Black
+                    </>
+                )}
             </Typography>
-            <Button variant='contained' size='large' onClick={onStart} sx={{ px: 6, py: 1.5 }}>
-                Start
+            <Button
+                variant='contained'
+                size='large'
+                onClick={armed ? onStart : () => setArmed(true)}
+                sx={{ px: 6, py: 1.5 }}
+            >
+                {armed ? 'GO!' : 'Start'}
             </Button>
         </Container>
     );
 }
 
+/**
+ * Summary screen shown after the drill completes.
+ *
+ * @param summary - The computed session statistics.
+ * @param onPlayAgain - Callback invoked when the user wants to start a new session.
+ */
 function CompleteScreen({
     summary,
     onPlayAgain,
@@ -325,6 +376,28 @@ function CompleteScreen({
             </Typography>
 
             <Stack spacing={2} sx={{ mb: 4 }}>
+                {summary.rating !== undefined ? (
+                    <Box
+                        sx={{
+                            py: 2,
+                            mb: 1,
+                            borderRadius: 2,
+                            backgroundColor: 'primary.main',
+                            color: 'primary.contrastText',
+                        }}
+                    >
+                        <Typography variant='overline' sx={{ opacity: 0.85 }}>
+                            Your Rating
+                        </Typography>
+                        <Typography variant='h3' sx={{ fontWeight: 'bold' }}>
+                            {summary.rating}
+                        </Typography>
+                    </Box>
+                ) : (
+                    <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
+                        Answer at least {MIN_QUESTIONS_FOR_RATING} questions to receive a rating
+                    </Typography>
+                )}
                 <StatRow
                     label='Accuracy'
                     value={`${accuracy}% (${summary.correctCount}/${summary.totalQuestions})`}
@@ -373,6 +446,12 @@ function CompleteScreen({
     );
 }
 
+/**
+ * A single labeled stat row for the summary table.
+ *
+ * @param label - The human-readable label for the stat.
+ * @param value - The formatted value to display.
+ */
 function StatRow({ label, value }: { label: string; value: string }) {
     return (
         <Stack
