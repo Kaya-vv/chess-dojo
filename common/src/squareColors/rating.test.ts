@@ -13,7 +13,7 @@ describe('SQUARE_COLOR_RATING_CONFIG', () => {
         expect(SQUARE_COLOR_RATING_CONFIG.timeWeight).toBe(0.35);
         expect(SQUARE_COLOR_RATING_CONFIG.maxRating).toBe(1500);
         expect(SQUARE_COLOR_RATING_CONFIG.fastMs).toBe(500);
-        expect(SQUARE_COLOR_RATING_CONFIG.slowMs).toBe(5000);
+        expect(SQUARE_COLOR_RATING_CONFIG.slowMs).toBe(10000);
     });
 });
 

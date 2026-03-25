@@ -9,7 +9,7 @@ export const SQUARE_COLOR_RATING_CONFIG = {
     /** Response time in milliseconds considered "fast" (full time score). */
     fastMs: 500,
     /** Response time in milliseconds considered "slow" (zero time score). */
-    slowMs: 5000,
+    slowMs: 10000,
 } as const;
 
 /**
