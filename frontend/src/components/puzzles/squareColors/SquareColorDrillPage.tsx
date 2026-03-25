@@ -100,6 +100,7 @@ export function SquareColorDrillPage() {
 }
 
 function SquareColorDrill() {
+    const { user, updateUser } = useAuth();
     const submitRequest = useRequest();
     const [drillState, setDrillState] = useState<DrillState>('ready');
     const [currentSquare, setCurrentSquare] = useState('');
@@ -109,6 +110,7 @@ function SquareColorDrill() {
     const sessionStartRef = useRef<number>(0);
     const questionsRef = useRef<SquareColorQuestion[]>([]);
     const sessionCreatedAtRef = useRef<string>('');
+    const previousBestRef = useRef<number | undefined>(user?.squareColorRating);
     const [summary, setSummary] = useState<SessionSummary | null>(null);
 
     const nextSquare = useCallback(() => {
@@ -125,10 +127,11 @@ function SquareColorDrill() {
         setFeedback(null);
         setSummary(null);
         setDrillState('in_progress');
+        previousBestRef.current = user?.squareColorRating;
         sessionStartRef.current = Date.now();
         sessionCreatedAtRef.current = new Date().toISOString();
         nextSquare();
-    }, [nextSquare]);
+    }, [nextSquare, user?.squareColorRating]);
 
     const finishDrill = useCallback(
         (allQuestions: SquareColorQuestion[]) => {
@@ -146,12 +149,22 @@ function SquareColorDrill() {
             submitSquareColorSession({
                 ...result,
                 createdAt: sessionCreatedAtRef.current,
+                isFinal: true,
             }).then(
-                () => submitRequest.onSuccess(),
+                (response) => {
+                    submitRequest.onSuccess();
+                    const rating = response.data.rating;
+                    if (
+                        rating !== undefined &&
+                        (user?.squareColorRating === undefined || rating > user.squareColorRating)
+                    ) {
+                        updateUser({ squareColorRating: rating });
+                    }
+                },
                 (err: unknown) => submitRequest.onFailure(err),
             );
         },
-        [submitRequest],
+        [submitRequest, user, updateUser],
     );
 
     const handleAnswer = useCallback(
@@ -207,13 +220,17 @@ function SquareColorDrill() {
     }, [drillState, handleAnswer]);
 
     if (drillState === 'ready') {
-        return <ReadyScreen onStart={startDrill} />;
+        return <ReadyScreen onStart={startDrill} personalBest={user?.squareColorRating} />;
     }
 
     if (drillState === 'complete' && summary) {
         return (
             <>
-                <CompleteScreen summary={summary} onPlayAgain={startDrill} />
+                <CompleteScreen
+                    summary={summary}
+                    onPlayAgain={startDrill}
+                    personalBest={previousBestRef.current}
+                />
                 <RequestSnackbar request={submitRequest} />
             </>
         );
@@ -324,8 +341,9 @@ function SquareColorDrill() {
  * flow: the first click arms the timer prompt, the second click starts the drill.
  *
  * @param onStart - Callback invoked when the user confirms they are ready to start.
+ * @param personalBest - The user's best-ever square color drill rating, if any.
  */
-function ReadyScreen({ onStart }: { onStart: () => void }) {
+function ReadyScreen({ onStart, personalBest }: { onStart: () => void; personalBest?: number }) {
     const [armed, setArmed] = useState(false);
 
     return (
@@ -352,6 +370,11 @@ function ReadyScreen({ onStart }: { onStart: () => void }) {
                     </>
                 )}
             </Typography>
+            {personalBest !== undefined && (
+                <Typography variant='body1' color='text.secondary' sx={{ mb: 2 }}>
+                    Your best rating: {personalBest}
+                </Typography>
+            )}
             <Button
                 variant='contained'
                 size='large'
@@ -369,13 +392,16 @@ function ReadyScreen({ onStart }: { onStart: () => void }) {
  *
  * @param summary - The computed session statistics.
  * @param onPlayAgain - Callback invoked when the user wants to start a new session.
+ * @param personalBest - The user's best-ever square color drill rating, if any.
  */
 function CompleteScreen({
     summary,
     onPlayAgain,
+    personalBest,
 }: {
     summary: SessionSummary;
     onPlayAgain: () => void;
+    personalBest?: number;
 }) {
     const accuracy = Math.round((summary.correctCount / summary.totalQuestions) * 100);
     const avgTime = (summary.avgResponseTimeMs / 1000).toFixed(1);
@@ -407,6 +433,17 @@ function CompleteScreen({
                 ) : (
                     <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
                         Answer at least {MIN_QUESTIONS_FOR_RATING} questions to receive a rating
+                    </Typography>
+                )}
+                {summary.rating !== undefined &&
+                    (personalBest === undefined || summary.rating > personalBest) && (
+                        <Typography variant='h6' sx={{ fontWeight: 'bold', color: 'warning.main' }}>
+                            New Personal Best!
+                        </Typography>
+                    )}
+                {personalBest !== undefined && (
+                    <Typography variant='body1' color='text.secondary'>
+                        Personal Best: {personalBest}
                     </Typography>
                 )}
                 <StatRow
