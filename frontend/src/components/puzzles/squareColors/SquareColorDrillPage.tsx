@@ -361,14 +361,7 @@ function ReadyScreen({ onStart, personalBest }: { onStart: () => void; personalB
                     : "Answer as quickly and accurately as possible. Stop whenever you're ready!"}
             </Typography>
             <Typography variant='body2' color='text.secondary' sx={{ mb: 4 }}>
-                {armed ? (
-                    <>Press GO! to begin, your score will be timed from this moment.</>
-                ) : (
-                    <>
-                        Keyboard shortcuts: <strong>W</strong> for White, <strong>B</strong> for
-                        Black
-                    </>
-                )}
+                Keyboard shortcuts: <strong>W</strong> for White, <strong>B</strong> for Black
             </Typography>
             {personalBest !== undefined && (
                 <Typography variant='body1' color='text.secondary' sx={{ mb: 2 }}>
