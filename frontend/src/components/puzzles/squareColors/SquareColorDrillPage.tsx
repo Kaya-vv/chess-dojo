@@ -14,6 +14,8 @@ import {
     getRandomSquare,
     getSquareColor,
 } from '@jackstenglein/chess-dojo-common/src/squareColors/squareColor';
+import ArrowDownward from '@mui/icons-material/ArrowDownward';
+import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import { Box, Button, Container, Stack, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -428,6 +430,32 @@ function CompleteScreen({
                         Answer at least {MIN_QUESTIONS_FOR_RATING} questions to receive a rating
                     </Typography>
                 )}
+                {summary.rating !== undefined &&
+                    personalBest !== undefined &&
+                    summary.rating !== personalBest && (
+                        <Stack
+                            direction='row'
+                            alignItems='center'
+                            justifyContent='center'
+                            spacing={0.5}
+                        >
+                            {summary.rating > personalBest ? (
+                                <ArrowUpward color='success' sx={{ fontSize: '1.5rem' }} />
+                            ) : (
+                                <ArrowDownward color='error' sx={{ fontSize: '1.5rem' }} />
+                            )}
+                            <Typography
+                                variant='h6'
+                                sx={{ fontWeight: 'bold' }}
+                                color={
+                                    summary.rating > personalBest ? 'success.main' : 'error.main'
+                                }
+                            >
+                                {summary.rating > personalBest ? '+' : ''}
+                                {summary.rating - personalBest}
+                            </Typography>
+                        </Stack>
+                    )}
                 {summary.rating !== undefined &&
                     (personalBest === undefined || summary.rating > personalBest) && (
                         <Typography variant='h6' sx={{ fontWeight: 'bold', color: 'warning.main' }}>

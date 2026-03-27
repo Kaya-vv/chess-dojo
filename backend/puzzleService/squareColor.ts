@@ -84,7 +84,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
                 if (!(err instanceof ConditionalCheckFailedException)) {
                     throw err;
                 }
-                // Existing rating is already higher; no update needed.
+
             }
         }
 
