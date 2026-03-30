@@ -14,8 +14,12 @@ import {
     getRandomSquare,
     getSquareColor,
 } from '@jackstenglein/chess-dojo-common/src/squareColors/squareColor';
+import AccessTime from '@mui/icons-material/AccessTime';
 import ArrowDownward from '@mui/icons-material/ArrowDownward';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
+import Target from '@mui/icons-material/GpsFixed';
+import LocalFireDepartment from '@mui/icons-material/LocalFireDepartment';
+import Timer from '@mui/icons-material/Timer';
 import { Box, Button, Container, Stack, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -468,12 +472,25 @@ function CompleteScreen({
                     </Typography>
                 )}
                 <StatRow
+                    icon={<Target fontSize='small' />}
                     label='Accuracy'
                     value={`${accuracy}% (${summary.correctCount}/${summary.totalQuestions})`}
                 />
-                <StatRow label='Avg Response Time' value={`${avgTime}s`} />
-                <StatRow label='Best Streak' value={`${summary.bestStreak}`} />
-                <StatRow label='Total Time' value={`${summary.totalTimeSeconds}s`} />
+                <StatRow
+                    icon={<Timer fontSize='small' />}
+                    label='Avg Response Time'
+                    value={`${avgTime}s`}
+                />
+                <StatRow
+                    icon={<LocalFireDepartment fontSize='small' />}
+                    label='Best Streak'
+                    value={`${summary.bestStreak}`}
+                />
+                <StatRow
+                    icon={<AccessTime fontSize='small' />}
+                    label='Total Time'
+                    value={`${summary.totalTimeSeconds}s`}
+                />
             </Stack>
 
             <Stack spacing={1} sx={{ mb: 4, maxHeight: 300, overflow: 'auto' }}>
@@ -518,14 +535,16 @@ function CompleteScreen({
 /**
  * A single labeled stat row for the summary table.
  *
+ * @param icon - An icon element displayed before the label.
  * @param label - The human-readable label for the stat.
  * @param value - The formatted value to display.
  */
-function StatRow({ label, value }: { label: string; value: string }) {
+function StatRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
     return (
         <Stack
             direction='row'
             justifyContent='space-between'
+            alignItems='center'
             sx={{
                 px: 2,
                 py: 1,
@@ -533,7 +552,10 @@ function StatRow({ label, value }: { label: string; value: string }) {
                 borderColor: 'divider',
             }}
         >
-            <Typography color='text.secondary'>{label}</Typography>
+            <Stack direction='row' alignItems='center' spacing={1}>
+                <Box sx={{ color: 'text.secondary', display: 'flex' }}>{icon}</Box>
+                <Typography color='text.secondary'>{label}</Typography>
+            </Stack>
             <Typography fontWeight='bold'>{value}</Typography>
         </Stack>
     );
