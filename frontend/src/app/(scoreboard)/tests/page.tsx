@@ -40,8 +40,8 @@ export default function ExamLandingPage() {
                 />
 
                 <ExamCard
-                    name='Mate in One Drill'
-                    description='All Ratings'
+                    name='Blindfold Mate in One'
+                    description='Visualization Drill'
                     href='/puzzles/mate-in-one'
                     icon={EmojiEvents}
                 />

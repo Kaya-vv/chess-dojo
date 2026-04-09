@@ -79,7 +79,7 @@ function computeSolutionFromPuzzle(puzzle: MateInOnePuzzle): PuzzleWithSolution 
  * @param san - A SAN move string.
  * @returns The normalised lowercase move.
  */
-function normalizeSan(san: string): string {
+export function normalizeSan(san: string): string {
     return san.replace(/[+#=]/g, '').toLowerCase().trim();
 }
 
@@ -91,8 +91,30 @@ function normalizeSan(san: string): string {
  * @param correctSan - The correct SAN move from the puzzle.
  * @returns Whether the answer is considered correct.
  */
-function isCorrectAnswer(userInput: string, correctSan: string): boolean {
+export function isCorrectAnswer(userInput: string, correctSan: string): boolean {
     return normalizeSan(userInput) === normalizeSan(correctSan);
+}
+
+/**
+ * Computes summary statistics from a list of attempts.
+ *
+ * @param allAttempts - All attempts in the session.
+ * @param sessionStartMs - The session start timestamp in milliseconds.
+ * @returns The computed stats.
+ */
+export function computeSessionStats(
+    allAttempts: MateInOneAttempt[],
+    sessionStartMs: number,
+): Pick<SessionSummary, 'totalTimeSeconds' | 'correctCount' | 'avgResponseTimeMs'> {
+    const totalTimeSeconds = Math.round((Date.now() - sessionStartMs) / 1000);
+    const correctCount = allAttempts.filter((a) => a.isCorrect).length;
+    const avgResponseTimeMs =
+        allAttempts.length > 0
+            ? Math.round(
+                  allAttempts.reduce((sum, a) => sum + a.responseTimeMs, 0) / allAttempts.length,
+              )
+            : 0;
+    return { totalTimeSeconds, correctCount, avgResponseTimeMs };
 }
 
 /** Root component: requires authentication. */
@@ -119,6 +141,7 @@ function MateInOneDrill() {
     const [attempts, setAttempts] = useState<MateInOneAttempt[]>([]);
     const [summary, setSummary] = useState<SessionSummary | null>(null);
     const [prefetchLoading, setPrefetchLoading] = useState(false);
+    const [fetchError, setFetchError] = useState(false);
 
     const attemptsRef = useRef<MateInOneAttempt[]>([]);
     const sessionStartRef = useRef<number>(0);
@@ -126,6 +149,11 @@ function MateInOneDrill() {
     const sessionCreatedAtRef = useRef<string>('');
     const prefetchRef = useRef<Promise<PuzzleWithSolution> | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    const FOCUS_DELAY_MS = 50;
+    const focusInput = useCallback(() => {
+        setTimeout(() => inputRef.current?.focus(), FOCUS_DELAY_MS);
+    }, []);
 
     /** Fetches and computes a single puzzle. */
     const fetchPuzzle = useCallback(async (): Promise<PuzzleWithSolution> => {
@@ -143,9 +171,11 @@ function MateInOneDrill() {
         fetchPuzzle()
             .then((p) => {
                 setCurrentPuzzle(p);
+                setFetchError(false);
                 setDrillState('ready');
             })
             .catch(() => {
+                setFetchError(true);
                 setDrillState('ready');
             });
     }, [fetchPuzzle]);
@@ -156,13 +186,20 @@ function MateInOneDrill() {
         setFeedback(null);
         setSummary(null);
         setUserInput('');
+        setCurrentPuzzle(null);
+        prefetchRef.current = null;
         sessionStartRef.current = Date.now();
         sessionCreatedAtRef.current = new Date().toISOString();
-        questionStartRef.current = Date.now();
         setDrillState('in_progress');
-        prefetchNext();
-        setTimeout(() => inputRef.current?.focus(), 50);
-    }, [prefetchNext]);
+        fetchPuzzle()
+            .then((p) => {
+                setCurrentPuzzle(p);
+                questionStartRef.current = Date.now();
+                prefetchNext();
+                focusInput();
+            })
+            .catch(() => setDrillState('ready'));
+    }, [fetchPuzzle, prefetchNext, focusInput]);
 
     const finishDrill = useCallback(
         (allAttempts: MateInOneAttempt[]) => {
@@ -171,10 +208,9 @@ function MateInOneDrill() {
                 return;
             }
 
-            const totalTimeSeconds = Math.round((Date.now() - sessionStartRef.current) / 1000);
-            const correctCount = allAttempts.filter((a) => a.isCorrect).length;
-            const avgResponseTimeMs = Math.round(
-                allAttempts.reduce((sum, a) => sum + a.responseTimeMs, 0) / allAttempts.length,
+            const { totalTimeSeconds, correctCount, avgResponseTimeMs } = computeSessionStats(
+                allAttempts,
+                sessionStartRef.current,
             );
 
             const result: SessionSummary = {
@@ -216,7 +252,7 @@ function MateInOneDrill() {
                     setPrefetchLoading(false);
                     questionStartRef.current = Date.now();
                     prefetchNext();
-                    setTimeout(() => inputRef.current?.focus(), 50);
+                    focusInput();
                 })
                 .catch(() => setPrefetchLoading(false));
             return;
@@ -228,14 +264,14 @@ function MateInOneDrill() {
                 setPrefetchLoading(false);
                 questionStartRef.current = Date.now();
                 prefetchNext();
-                setTimeout(() => inputRef.current?.focus(), 50);
+                focusInput();
             })
             .catch(() => {
                 setPrefetchLoading(false);
             });
 
         prefetchRef.current = null;
-    }, [fetchPuzzle, prefetchNext]);
+    }, [fetchPuzzle, prefetchNext, focusInput]);
 
     const handleSubmit = useCallback(() => {
         if (!currentPuzzle || feedback !== null || userInput.trim() === '') return;
@@ -256,10 +292,9 @@ function MateInOneDrill() {
         attemptsRef.current = updatedAttempts;
         setAttempts(updatedAttempts);
 
-        const totalTimeSeconds = Math.round((Date.now() - sessionStartRef.current) / 1000);
-        const correctCount = updatedAttempts.filter((a) => a.isCorrect).length;
-        const avgResponseTimeMs = Math.round(
-            updatedAttempts.reduce((sum, a) => sum + a.responseTimeMs, 0) / updatedAttempts.length,
+        const { totalTimeSeconds, correctCount, avgResponseTimeMs } = computeSessionStats(
+            updatedAttempts,
+            sessionStartRef.current,
         );
 
         submitMateInOneSession({
@@ -287,7 +322,7 @@ function MateInOneDrill() {
     }
 
     if (drillState === 'ready') {
-        return <ReadyScreen onStart={startDrill} />;
+        return <ReadyScreen onStart={startDrill} fetchError={fetchError} />;
     }
 
     if (drillState === 'complete' && summary) {
@@ -319,7 +354,7 @@ function MateInOneDrill() {
  *
  * @param onStart - Callback invoked when the user confirms they want to start.
  */
-function ReadyScreen({ onStart }: { onStart: () => void }) {
+function ReadyScreen({ onStart, fetchError }: { onStart: () => void; fetchError: boolean }) {
     const [armed, setArmed] = useState(false);
 
     return (
@@ -336,6 +371,11 @@ function ReadyScreen({ onStart }: { onStart: () => void }) {
                     ? 'Ready? Hit GO! to start the timer.'
                     : 'No board is shown. Visualize the position and find the mate from memory!'}
             </Typography>
+            {fetchError && (
+                <Typography variant='body2' color='error' sx={{ mb: 2 }}>
+                    Could not load puzzles. Check your connection and try again.
+                </Typography>
+            )}
             <Button
                 variant='contained'
                 size='large'
