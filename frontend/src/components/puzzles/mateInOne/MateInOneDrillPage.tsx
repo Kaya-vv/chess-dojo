@@ -360,7 +360,7 @@ function ReadyScreen({ onStart, fetchError }: { onStart: () => void; fetchError:
     return (
         <Container maxWidth='sm' sx={{ py: 8, textAlign: 'center' }}>
             <Typography variant='h4' sx={{ fontWeight: 'bold', mb: 2 }}>
-                Mate in One Drill
+                Mate in One Visualization Drill
             </Typography>
             <Typography variant='body1' color='text.secondary' sx={{ mb: 1 }}>
                 You will see a list of pieces and their squares. Type the mating move in SAN
