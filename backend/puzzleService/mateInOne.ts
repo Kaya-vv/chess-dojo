@@ -63,6 +63,9 @@ export const getNextPuzzleHandler: APIGatewayProxyHandlerV2 = async (event) => {
             ]);
 
         const document = await cursor.next();
+        if (!document) {
+            return errToApiGatewayProxyResultV2(new Error('No puzzle found'));
+        }
         const response: GetMateInOnePuzzleResponse = {
             puzzle: {
                 id: String(document?._id ?? ''),
