@@ -48,7 +48,7 @@ function formatSide(pieces: PieceEntry[]): string {
  *
  * @example
  * fenToPieceList('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
- * // => "White: Qd1, Ra1, Rh1, Bc1, Bf1, Nb1, Ng1, Ke1, pawns a2 b2 c2 d2 e2 f2 g2 h2 / Black: Qd8, Ra8, Rh8, Bc8, Bf8, Nb8, Ng8, Ke8, pawns a7 b7 c7 d7 e7 f7 g7 h7"
+ * // => "White: Qd1, Ra1, Rh1, Bc1, Bf1, Nb1, Ng1, Ke1, pawns a2 b2 c2 d2 e2 f2 g2 h2\nBlack: Qd8, Ra8, Rh8, Bc8, Bf8, Nb8, Ng8, Ke8, pawns a7 b7 c7 d7 e7 f7 g7 h7"
  *
  * @param fen - A valid FEN string.
  * @returns A human-readable description of all pieces on the board.
@@ -83,5 +83,5 @@ export function fenToPieceList(fen: string): string {
         }
     }
 
-    return `White: ${formatSide(whitePieces)} / Black: ${formatSide(blackPieces)}`;
+    return `White: ${formatSide(whitePieces)}\nBlack: ${formatSide(blackPieces)}`;
 }
