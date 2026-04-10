@@ -62,7 +62,11 @@ function computeSolutionFromPuzzle(puzzle: MateInOnePuzzle): PuzzleWithSolution 
     const fenAfterSetup = chess.fen();
     const sideToMove = chess.turn() === 'w' ? 'White' : 'Black';
     const sol = new Chess({ fen: fenAfterSetup });
-    const correctSan = sol.move(puzzle.moves[1])?.san ?? puzzle.moves[1];
+    const moveResult = sol.move(puzzle.moves[1]);
+    if (!moveResult) {
+        throw new Error(`Invalid mating move for puzzle ${puzzle.id}: ${puzzle.moves[1]}`);
+    }
+    const correctSan = moveResult.san;
     return {
         puzzle,
         correctSan,
@@ -194,11 +198,15 @@ function MateInOneDrill() {
         fetchPuzzle()
             .then((p) => {
                 setCurrentPuzzle(p);
+                setFetchError(false);
                 questionStartRef.current = Date.now();
                 prefetchNext();
                 focusInput();
             })
-            .catch(() => setDrillState('ready'));
+            .catch(() => {
+                setFetchError(true);
+                setDrillState('ready');
+            });
     }, [fetchPuzzle, prefetchNext, focusInput]);
 
     const finishDrill = useCallback(

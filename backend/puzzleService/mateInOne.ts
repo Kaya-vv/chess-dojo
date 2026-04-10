@@ -68,9 +68,9 @@ export const getNextPuzzleHandler: APIGatewayProxyHandlerV2 = async (event) => {
         }
         const response: GetMateInOnePuzzleResponse = {
             puzzle: {
-                id: String(document?._id ?? ''),
-                fen: document?.fen ?? '',
-                moves: document?.moves ?? [],
+                id: String(document._id),
+                fen: document.fen ?? '',
+                moves: document.moves ?? [],
             },
         };
 
