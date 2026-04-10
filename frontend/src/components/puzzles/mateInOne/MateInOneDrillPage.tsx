@@ -262,7 +262,10 @@ function MateInOneDrill() {
                     prefetchNext();
                     focusInput();
                 })
-                .catch(() => setPrefetchLoading(false));
+                .catch(() => {
+                    setPrefetchLoading(false);
+                    setFetchError(true);
+                });
             return;
         }
 
@@ -276,6 +279,7 @@ function MateInOneDrill() {
             })
             .catch(() => {
                 setPrefetchLoading(false);
+                setFetchError(true);
             });
 
         prefetchRef.current = null;
