@@ -577,7 +577,7 @@ function CompleteScreen({ summary, onPlayAgain }: CompleteScreenProps) {
             <Stack spacing={1} sx={{ mb: 4, maxHeight: 300, overflow: 'auto' }}>
                 {summary.attempts.map((a, i) => (
                     <Stack
-                        key={i}
+                        key={`${a.puzzleId}-${i}`}
                         direction='row'
                         justifyContent='space-between'
                         sx={{
