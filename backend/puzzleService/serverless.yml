@@ -85,7 +85,7 @@ functions:
         Resource: ${param:UsersTableArn}
 
   getMateInOnePuzzle:
-    handler: mateInOne.getNextPuzzleHandler
+    handler: mateInOne/get.getNextPuzzleHandler
     timeout: 15
     events:
       - httpApi:
@@ -100,7 +100,7 @@ functions:
     # by adding the function's role ARN as a database user in Mongo Cloud Atlas.
 
   submitMateInOneSession:
-    handler: mateInOne.submitSessionHandler
+    handler: mateInOne/submit.submitSessionHandler
     events:
       - httpApi:
           path: /puzzle/mate-in-one/session
