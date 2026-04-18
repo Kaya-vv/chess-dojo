@@ -84,7 +84,11 @@ function computeSolutionFromPuzzle(puzzle: MateInOnePuzzle): PuzzleWithSolution 
  * @returns The normalised lowercase move.
  */
 export function normalizeSan(san: string): string {
-    return san.replace(/[+#=]/g, '').toLowerCase().trim();
+    return san
+        .replace(/[x+#=-]/g, '')
+        .replace(/[0]/g, 'O')
+        .toLowerCase()
+        .trim();
 }
 
 /**
