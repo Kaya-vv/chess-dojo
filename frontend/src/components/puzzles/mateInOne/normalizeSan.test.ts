@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isCorrectAnswer, normalizeSan } from './MateInOneDrillPage';
+import { isCorrectAnswer, normalizeSan } from './mateInOneDrillUtils';
 
 describe('normalizeSan', () => {
     it('strips check annotation', () => {

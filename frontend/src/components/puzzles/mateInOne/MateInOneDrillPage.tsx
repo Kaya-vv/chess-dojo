@@ -3,6 +3,7 @@
 import { getMateInOnePuzzle, submitMateInOneSession } from '@/api/puzzleApi';
 import { RequestSnackbar, useRequest } from '@/api/Request';
 import { AuthStatus, useAuth } from '@/auth/Auth';
+import Board from '@/board/Board';
 import LoadingPage from '@/loading/LoadingPage';
 import NotFoundPage from '@/NotFoundPage';
 import { Chess } from '@jackstenglein/chess';
@@ -23,7 +24,9 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
+import { Key } from 'chessground/types';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { computeSessionStats, isCorrectAnswer } from './mateInOneDrillUtils';
 
 const MIN_PUZZLES_FOR_RATING = 10;
 
@@ -34,6 +37,10 @@ interface PuzzleWithSolution {
     puzzle: MateInOnePuzzle;
     /** The correct mating move in SAN notation. */
     correctSan: string;
+    /** The correct move's from square. */
+    correctFrom: Key;
+    /** The correct move's to square. */
+    correctTo: Key;
     /** The FEN after the setup move (the position the user must solve). */
     fenAfterSetup: string;
     /** 'White' or 'Black', the side that delivers mate. */
@@ -61,8 +68,7 @@ function computeSolutionFromPuzzle(puzzle: MateInOnePuzzle): PuzzleWithSolution 
     chess.move(puzzle.moves[0]);
     const fenAfterSetup = chess.fen();
     const sideToMove = chess.turn() === 'w' ? 'White' : 'Black';
-    const sol = new Chess({ fen: fenAfterSetup });
-    const moveResult = sol.move(puzzle.moves[1]);
+    const moveResult = chess.move(puzzle.moves[1]);
     if (!moveResult) {
         throw new Error(`Invalid mating move for puzzle ${puzzle.id}: ${puzzle.moves[1]}`);
     }
@@ -70,59 +76,12 @@ function computeSolutionFromPuzzle(puzzle: MateInOnePuzzle): PuzzleWithSolution 
     return {
         puzzle,
         correctSan,
+        correctFrom: moveResult.from,
+        correctTo: moveResult.to,
         fenAfterSetup,
         sideToMove,
         pieceList: fenToPieceList(fenAfterSetup),
     };
-}
-
-/**
- * Strips check, checkmate, and promotion characters so answers like
- * "Qh7" match "Qh7#" and "a8Q" matches "a8=Q".
- *
- * @param san - A SAN move string.
- * @returns The normalised lowercase move.
- */
-export function normalizeSan(san: string): string {
-    return san
-        .replace(/[x+#=-]/g, '')
-        .replace(/[0]/g, 'O')
-        .toLowerCase()
-        .trim();
-}
-
-/**
- * Returns true when the user's input matches the correct mating move,
- * ignoring check/checkmate annotations and promotion `=` characters.
- *
- * @param userInput - The raw text the user typed.
- * @param correctSan - The correct SAN move from the puzzle.
- * @returns Whether the answer is considered correct.
- */
-export function isCorrectAnswer(userInput: string, correctSan: string): boolean {
-    return normalizeSan(userInput) === normalizeSan(correctSan);
-}
-
-/**
- * Computes summary statistics from a list of attempts.
- *
- * @param allAttempts - All attempts in the session.
- * @param sessionStartMs - The session start timestamp in milliseconds.
- * @returns The computed stats.
- */
-export function computeSessionStats(
-    allAttempts: MateInOneAttempt[],
-    sessionStartMs: number,
-): Pick<SessionSummary, 'totalTimeSeconds' | 'correctCount' | 'avgResponseTimeMs'> {
-    const totalTimeSeconds = Math.round((Date.now() - sessionStartMs) / 1000);
-    const correctCount = allAttempts.filter((a) => a.isCorrect).length;
-    const avgResponseTimeMs =
-        allAttempts.length > 0
-            ? Math.round(
-                  allAttempts.reduce((sum, a) => sum + a.responseTimeMs, 0) / allAttempts.length,
-              )
-            : 0;
-    return { totalTimeSeconds, correctCount, avgResponseTimeMs };
 }
 
 /** Root component: requires authentication. */
@@ -323,11 +282,7 @@ function MateInOneDrill() {
         }).catch(() => undefined);
 
         setFeedback(correct ? 'correct' : 'incorrect');
-
-        setTimeout(() => {
-            advanceToNextPuzzle();
-        }, 600);
-    }, [currentPuzzle, feedback, userInput, advanceToNextPuzzle]);
+    }, [currentPuzzle, feedback, userInput]);
 
     if (drillState === 'loading') {
         return (
@@ -357,6 +312,7 @@ function MateInOneDrill() {
             userInput={userInput}
             onInputChange={setUserInput}
             onSubmit={handleSubmit}
+            onContinue={advanceToNextPuzzle}
             onStop={handleStop}
             feedback={feedback}
             prefetchLoading={prefetchLoading}
@@ -410,6 +366,7 @@ interface InProgressScreenProps {
     userInput: string;
     onInputChange: (value: string) => void;
     onSubmit: () => void;
+    onContinue: () => void;
     onStop: () => void;
     feedback: 'correct' | 'incorrect' | null;
     prefetchLoading: boolean;
@@ -424,6 +381,7 @@ interface InProgressScreenProps {
  * @param userInput - Current text in the move input field.
  * @param onInputChange - Callback to update the input value.
  * @param onSubmit - Callback invoked when the user submits their answer.
+ * @param onContinue - Callback invoked when the user continues to the next puzzle.
  * @param onStop - Callback invoked when the user ends the session early.
  * @param feedback - Current feedback state ('correct', 'incorrect', or null).
  * @param prefetchLoading - Whether the next puzzle is still being fetched.
@@ -436,6 +394,7 @@ function InProgressScreen({
     onInputChange,
     onSubmit,
     onStop,
+    onContinue,
     feedback,
     prefetchLoading,
     inputRef,
@@ -449,7 +408,7 @@ function InProgressScreen({
     }
 
     return (
-        <Container maxWidth='sm' sx={{ py: 6, textAlign: 'center' }}>
+        <Container maxWidth='sm' sx={{ py: 4, textAlign: 'center' }}>
             <Typography variant='subtitle1' color='text.secondary' sx={{ mb: 0.5 }}>
                 Puzzle {puzzleNumber}
             </Typography>
@@ -500,10 +459,17 @@ function InProgressScreen({
                     value={userInput}
                     onChange={(e) => onInputChange(e.target.value)}
                     onKeyDown={(e) => {
-                        if (e.key === 'Enter') onSubmit();
+                        if (e.key === 'Enter') {
+                            if (feedback) {
+                                onContinue();
+                            } else {
+                                onSubmit();
+                            }
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
                     }}
                     placeholder='e.g. Qh7'
-                    disabled={feedback !== null}
                     size='small'
                     sx={{ width: 150 }}
                     autoComplete='off'
@@ -513,22 +479,42 @@ function InProgressScreen({
                 />
                 <Button
                     variant='contained'
-                    onClick={onSubmit}
-                    disabled={feedback !== null || userInput.trim() === ''}
+                    onClick={feedback ? onContinue : onSubmit}
+                    disabled={feedback === null && userInput.trim() === ''}
                 >
-                    Submit
+                    {feedback ? 'Continue' : 'Submit'}
+                </Button>
+
+                <Button variant='outlined' color='error' onClick={onStop}>
+                    Stop
                 </Button>
             </Stack>
 
-            <Button
-                variant='outlined'
-                size='small'
-                onClick={onStop}
-                disabled={feedback !== null}
-                sx={{ mt: 3 }}
-            >
-                Stop
-            </Button>
+            {feedback && (
+                <Stack direction='row' justifyContent='center'>
+                    <Box
+                        width={{ xs: 1, sm: 0.8, md: 0.75, lg: 0.75 }}
+                        sx={{ aspectRatio: 1, mt: 3 }}
+                    >
+                        <Board
+                            config={{
+                                fen: puzzle.fenAfterSetup,
+                                viewOnly: true,
+                                drawable: {
+                                    shapes: [
+                                        {
+                                            orig: puzzle.correctFrom,
+                                            dest: puzzle.correctTo,
+                                            brush: 'green',
+                                        },
+                                    ],
+                                    eraseOnClick: false,
+                                },
+                            }}
+                        />
+                    </Box>
+                </Stack>
+            )}
         </Container>
     );
 }

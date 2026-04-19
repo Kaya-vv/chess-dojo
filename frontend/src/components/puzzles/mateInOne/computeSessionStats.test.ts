@@ -1,6 +1,6 @@
 import { MateInOneAttempt } from '@jackstenglein/chess-dojo-common/src/mateInOne/api';
 import { describe, expect, it, vi } from 'vitest';
-import { computeSessionStats } from './MateInOneDrillPage';
+import { computeSessionStats } from './mateInOneDrillUtils';
 
 function makeAttempt(overrides: Partial<MateInOneAttempt> = {}): MateInOneAttempt {
     return {

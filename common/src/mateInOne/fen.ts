@@ -33,7 +33,12 @@ function formatSide(pieces: PieceEntry[]): string {
         parts.push(nonPawns.map((p) => `${p.type}${p.square}`).join(', '));
     }
     if (pawns.length > 0) {
-        parts.push(`pawns ${pawns.map((p) => p.square).join(' ')}`);
+        parts.push(
+            `pawns ${pawns
+                .map((p) => p.square)
+                .sort((a, b) => a.localeCompare(b))
+                .join(' ')}`,
+        );
     }
     return parts.join(', ');
 }
@@ -45,6 +50,7 @@ function formatSide(pieces: PieceEntry[]): string {
  *
  * Output format: "White: {pieces} / Black: {pieces}"
  * Non-pawn pieces appear in Q > R > B > N > K order, then "pawns {sq1} {sq2} ...".
+ * Pawns are sorted by file: a -> h.
  *
  * @example
  * fenToPieceList('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
@@ -69,7 +75,7 @@ export function fenToPieceList(fen: string): string {
             if (char >= '1' && char <= '8') {
                 fileIdx += parseInt(char, 10);
             } else {
-                const square = FILES[fileIdx] + rankNum;
+                const square = FILES[fileIdx] + `${rankNum}`;
                 const pieceType = char.toUpperCase();
                 const isWhite = char === char.toUpperCase();
 
