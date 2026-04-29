@@ -124,6 +124,9 @@ export interface User {
     /** The user's best-ever square color drill rating (0-1500). */
     squareColorRating?: number;
 
+    /** The user's best-ever mate-in-one drill block rating (0-2500). */
+    mateInOneRating?: number;
+
     /** The user's firebase cloud messaging tokens. */
     firebaseTokens?: string[];
 
