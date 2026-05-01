@@ -222,25 +222,6 @@ const DojoScoreCard: React.FC<DojoScoreCardProps> = ({ user, cohort }) => {
                             />
                         );
                     })}
-
-                    <Grid size={{ xs: 12 }}>
-                        <Typography
-                            variant='subtitle2'
-                            color='text.secondary'
-                            sx={{ fontWeight: 'bold', mb: 0.5 }}
-                        >
-                            Drill Ratings
-                        </Typography>
-                        <Stack
-                            direction='row'
-                            justifyContent='space-between'
-                            alignItems='center'
-                            sx={{ px: 0.5 }}
-                        >
-                            <Typography color='text.secondary'>Mate-in-One</Typography>
-                            <Typography fontWeight='bold'>{user.mateInOneRating ?? 'N/A'}</Typography>
-                        </Stack>
-                    </Grid>
                 </Grid>
             </CardContent>
         </Card>

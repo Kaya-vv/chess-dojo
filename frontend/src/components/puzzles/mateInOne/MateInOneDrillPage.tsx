@@ -386,7 +386,13 @@ function MateInOneDrill() {
     }
 
     if (drillState === 'ready') {
-        return <ReadyScreen onStart={startDrill} fetchError={fetchError} />;
+        return (
+            <ReadyScreen
+                onStart={startDrill}
+                fetchError={fetchError}
+                personalBest={user?.mateInOneRating}
+            />
+        );
     }
 
     if (drillState === 'paused') {
@@ -439,7 +445,15 @@ function MateInOneDrill() {
  * @param onStart - Callback invoked when the user confirms they want to start.
  * @param fetchError - Whether the initial puzzle fetch failed.
  */
-function ReadyScreen({ onStart, fetchError }: { onStart: () => void; fetchError: boolean }) {
+function ReadyScreen({
+    onStart,
+    fetchError,
+    personalBest,
+}: {
+    onStart: () => void;
+    fetchError: boolean;
+    personalBest?: number;
+}) {
     const [armed, setArmed] = useState(false);
 
     return (
@@ -447,6 +461,14 @@ function ReadyScreen({ onStart, fetchError }: { onStart: () => void; fetchError:
             <Typography variant='h4' sx={{ fontWeight: 'bold', mb: 2 }}>
                 Mate in One Visualization Drill
             </Typography>
+            {personalBest !== undefined && (
+                <Typography
+                    variant='subtitle1'
+                    sx={{ color: 'primary.main', fontWeight: 'bold', mb: 2 }}
+                >
+                    Personal best: {personalBest}
+                </Typography>
+            )}
             <Typography variant='body1' color='text.secondary' sx={{ mb: 1 }}>
                 You will see a list of pieces and their squares. Type the mating move in SAN
                 notation (e.g. "Qh7#" or just "Qh7") and press Enter.
