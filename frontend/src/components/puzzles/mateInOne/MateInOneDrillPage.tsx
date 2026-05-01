@@ -14,6 +14,8 @@ import {
 import { fenToPieceList } from '@jackstenglein/chess-dojo-common/src/mateInOne/fen';
 import { PUZZLES_PER_BLOCK } from '@jackstenglein/chess-dojo-common/src/mateInOne/rating';
 import AccessTime from '@mui/icons-material/AccessTime';
+import ArrowDownward from '@mui/icons-material/ArrowDownward';
+import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import Target from '@mui/icons-material/GpsFixed';
 import Timer from '@mui/icons-material/Timer';
 import {
@@ -54,7 +56,6 @@ interface BlockSummary {
     totalTimeSeconds: number;
     avgResponseTimeMs: number;
     rating: number;
-    isNewPR: boolean;
     attempts: MateInOneAttempt[];
 }
 
@@ -127,6 +128,9 @@ function MateInOneDrill() {
     const blockCreatedAtRef = useRef<string>('');
     const prefetchRef = useRef<Promise<PuzzleWithSolution> | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    /** Snapshot of the user's PR taken when a drill starts, so the complete-screen diff
+     * is computed against the pre-drill rating even after `updateUser` lands. */
+    const previousBestRef = useRef<number | undefined>(user?.mateInOneRating);
 
     const FOCUS_DELAY_MS = 50;
     const focusInput = useCallback(() => {
@@ -180,6 +184,7 @@ function MateInOneDrill() {
             accumulatedMsRef.current = 0;
             runningSinceMsRef.current = performance.now();
             blockCreatedAtRef.current = new Date().toISOString();
+            previousBestRef.current = user?.mateInOneRating;
             setDrillState('in_progress');
             fetchPuzzle()
                 .then((p) => {
@@ -199,6 +204,12 @@ function MateInOneDrill() {
 
     const startDrill = useCallback(() => startBlock(), [startBlock]);
 
+    useEffect(() => {
+        if (drillState === 'ready') {
+            previousBestRef.current = user?.mateInOneRating;
+        }
+    }, [drillState, user?.mateInOneRating]);
+
     /**
      * Finalizes a complete 10-puzzle block: freezes timer, computes rating, fires submission.
      *
@@ -214,15 +225,12 @@ function MateInOneDrill() {
             const elapsedMs = accumulatedMsRef.current;
             const stats = computeSessionStats(finalAttempts, elapsedMs);
             const rating = stats.rating ?? 0;
-            const previousPR = user?.mateInOneRating;
-            const isNewPR = previousPR === undefined || rating > previousPR;
 
             const summary: BlockSummary = {
                 correctCount: stats.correctCount,
                 totalTimeSeconds: stats.totalTimeSeconds,
                 avgResponseTimeMs: stats.avgResponseTimeMs,
                 rating,
-                isNewPR,
                 attempts: finalAttempts,
             };
             setBlockSummary(summary);
@@ -411,6 +419,7 @@ function MateInOneDrill() {
             <>
                 <BlockCompleteScreen
                     summary={blockSummary}
+                    personalBest={previousBestRef.current}
                     submitting={submitting}
                     submitFailed={submitRequest.isFailure()}
                     onContinue={() => startBlock()}
@@ -462,11 +471,8 @@ function ReadyScreen({
                 Mate in One Visualization Drill
             </Typography>
             {personalBest !== undefined && (
-                <Typography
-                    variant='subtitle1'
-                    sx={{ color: 'primary.main', fontWeight: 'bold', mb: 2 }}
-                >
-                    Personal best: {personalBest}
+                <Typography variant='body1' color='text.secondary' sx={{ mb: 2 }}>
+                    Your best rating: {personalBest}
                 </Typography>
             )}
             <Typography variant='body1' color='text.secondary' sx={{ mb: 1 }}>
@@ -716,6 +722,7 @@ function PausedScreen({ elapsedMs, puzzlesAnswered, onResume, onEndSession }: Pa
 
 interface BlockCompleteScreenProps {
     summary: BlockSummary;
+    personalBest?: number;
     submitting: boolean;
     submitFailed: boolean;
     onContinue: () => void;
@@ -726,15 +733,17 @@ interface BlockCompleteScreenProps {
 /**
  * Summary screen shown after a 10-puzzle block completes.
  *
- * @param summary - The computed block statistics including rating and isNewPR.
+ * @param summary - The computed block statistics.
+ * @param personalBest - The user's previous best rating (pre-drill snapshot), if any.
  * @param submitting - Whether the canonical block submission is in flight.
  * @param submitFailed - Whether the canonical block submission failed.
- * @param onContinue - Callback to start the next block.
+ * @param onContinue - Callback to start a new drill.
  * @param onRetry - Callback to retry the failed submission.
  * @param onEndSession - Callback to end the session and return to the landing screen.
  */
 function BlockCompleteScreen({
     summary,
+    personalBest,
     submitting,
     submitFailed,
     onContinue,
@@ -743,6 +752,10 @@ function BlockCompleteScreen({
 }: BlockCompleteScreenProps) {
     const accuracy = Math.round((summary.correctCount / PUZZLES_PER_BLOCK) * 100);
     const avgTime = (summary.avgResponseTimeMs / 1000).toFixed(1);
+    const showDiff =
+        summary.rating > 0 && personalBest !== undefined && summary.rating !== personalBest;
+    const isNewPR =
+        summary.rating > 0 && (personalBest === undefined || summary.rating > personalBest);
 
     return (
         <Container maxWidth='sm' sx={{ py: 8, textAlign: 'center' }}>
@@ -752,12 +765,40 @@ function BlockCompleteScreen({
             <Typography variant='h2' sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
                 {summary.rating}
             </Typography>
-            {summary.isNewPR && summary.rating > 0 && (
-                <Typography
-                    variant='subtitle1'
-                    sx={{ color: 'success.main', fontWeight: 'bold', mb: 3 }}
+            {showDiff && (
+                <Stack
+                    direction='row'
+                    alignItems='center'
+                    justifyContent='center'
+                    spacing={0.5}
+                    sx={{ mb: 1 }}
                 >
-                    New PR!
+                    {summary.rating > personalBest! ? (
+                        <ArrowUpward color='success' sx={{ fontSize: '1.5rem' }} />
+                    ) : (
+                        <ArrowDownward color='error' sx={{ fontSize: '1.5rem' }} />
+                    )}
+                    <Typography
+                        variant='h6'
+                        sx={{ fontWeight: 'bold' }}
+                        color={summary.rating > personalBest! ? 'success.main' : 'error.main'}
+                    >
+                        {summary.rating > personalBest! ? '+' : ''}
+                        {summary.rating - personalBest!}
+                    </Typography>
+                </Stack>
+            )}
+            {isNewPR && (
+                <Typography
+                    variant='h6'
+                    sx={{ fontWeight: 'bold', color: 'warning.main', mb: 1 }}
+                >
+                    New Personal Best!
+                </Typography>
+            )}
+            {personalBest !== undefined && (
+                <Typography variant='body1' color='text.secondary' sx={{ mb: 3 }}>
+                    Personal Best: {personalBest}
                 </Typography>
             )}
 
