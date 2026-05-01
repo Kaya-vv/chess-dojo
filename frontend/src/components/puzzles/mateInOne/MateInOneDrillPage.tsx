@@ -170,37 +170,34 @@ function MateInOneDrill() {
     }, [fetchPuzzle]);
 
     /** Resets all per-drill state and starts a fresh timer + first puzzle fetch. */
-    const startBlock = useCallback(
-        () => {
-            setAttempts([]);
-            attemptsRef.current = [];
-            setFeedback(null);
-            setBlockSummary(null);
-            setUserInput('');
-            setPauseRequested(false);
-            setPausedElapsedMs(0);
-            setCurrentPuzzle(null);
-            prefetchRef.current = null;
-            accumulatedMsRef.current = 0;
-            runningSinceMsRef.current = performance.now();
-            blockCreatedAtRef.current = new Date().toISOString();
-            previousBestRef.current = user?.mateInOneRating;
-            setDrillState('in_progress');
-            fetchPuzzle()
-                .then((p) => {
-                    setCurrentPuzzle(p);
-                    setFetchError(false);
-                    questionStartRef.current = performance.now();
-                    prefetchNext();
-                    focusInput();
-                })
-                .catch(() => {
-                    setFetchError(true);
-                    setDrillState('ready');
-                });
-        },
-        [fetchPuzzle, prefetchNext, focusInput],
-    );
+    const startBlock = useCallback(() => {
+        setAttempts([]);
+        attemptsRef.current = [];
+        setFeedback(null);
+        setBlockSummary(null);
+        setUserInput('');
+        setPauseRequested(false);
+        setPausedElapsedMs(0);
+        setCurrentPuzzle(null);
+        prefetchRef.current = null;
+        accumulatedMsRef.current = 0;
+        runningSinceMsRef.current = performance.now();
+        blockCreatedAtRef.current = new Date().toISOString();
+        previousBestRef.current = user?.mateInOneRating;
+        setDrillState('in_progress');
+        fetchPuzzle()
+            .then((p) => {
+                setCurrentPuzzle(p);
+                setFetchError(false);
+                questionStartRef.current = performance.now();
+                prefetchNext();
+                focusInput();
+            })
+            .catch(() => {
+                setFetchError(true);
+                setDrillState('ready');
+            });
+    }, [fetchPuzzle, prefetchNext, focusInput]);
 
     const startDrill = useCallback(() => startBlock(), [startBlock]);
 
@@ -705,8 +702,8 @@ function PausedScreen({ elapsedMs, puzzlesAnswered, onResume, onEndSession }: Pa
                 {display} elapsed · {puzzlesAnswered} / {PUZZLES_PER_BLOCK} puzzles answered
             </Typography>
             <Typography variant='body2' color='text.secondary' sx={{ mb: 4 }}>
-                The timer is frozen. Resume to continue, or end the session. Your progress so
-                far is already saved.
+                The timer is frozen. Resume to continue, or end the session. Your progress so far is
+                already saved.
             </Typography>
             <Stack direction='row' spacing={2} justifyContent='center'>
                 <Button variant='contained' size='large' onClick={onResume} sx={{ px: 4 }}>
@@ -791,10 +788,7 @@ function BlockCompleteScreen({
                 </Stack>
             )}
             {isNewPR && (
-                <Typography
-                    variant='h6'
-                    sx={{ fontWeight: 'bold', color: 'warning.main', mb: 1 }}
-                >
+                <Typography variant='h6' sx={{ fontWeight: 'bold', color: 'warning.main', mb: 1 }}>
                     New Personal Best!
                 </Typography>
             )}
