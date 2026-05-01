@@ -752,8 +752,10 @@ function BlockCompleteScreen({
 }: BlockCompleteScreenProps) {
     const accuracy = Math.round((summary.correctCount / PUZZLES_PER_BLOCK) * 100);
     const avgTime = (summary.avgResponseTimeMs / 1000).toFixed(1);
-    const showDiff =
-        summary.rating > 0 && personalBest !== undefined && summary.rating !== personalBest;
+    const ratingDiff =
+        summary.rating > 0 && personalBest !== undefined && summary.rating !== personalBest
+            ? summary.rating - personalBest
+            : null;
     const isNewPR =
         summary.rating > 0 && (personalBest === undefined || summary.rating > personalBest);
 
@@ -765,7 +767,7 @@ function BlockCompleteScreen({
             <Typography variant='h2' sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
                 {summary.rating}
             </Typography>
-            {showDiff && (
+            {ratingDiff !== null && (
                 <Stack
                     direction='row'
                     alignItems='center'
@@ -773,7 +775,7 @@ function BlockCompleteScreen({
                     spacing={0.5}
                     sx={{ mb: 1 }}
                 >
-                    {summary.rating > personalBest! ? (
+                    {ratingDiff > 0 ? (
                         <ArrowUpward color='success' sx={{ fontSize: '1.5rem' }} />
                     ) : (
                         <ArrowDownward color='error' sx={{ fontSize: '1.5rem' }} />
@@ -781,10 +783,10 @@ function BlockCompleteScreen({
                     <Typography
                         variant='h6'
                         sx={{ fontWeight: 'bold' }}
-                        color={summary.rating > personalBest! ? 'success.main' : 'error.main'}
+                        color={ratingDiff > 0 ? 'success.main' : 'error.main'}
                     >
-                        {summary.rating > personalBest! ? '+' : ''}
-                        {summary.rating - personalBest!}
+                        {ratingDiff > 0 ? '+' : ''}
+                        {ratingDiff}
                     </Typography>
                 </Stack>
             )}
