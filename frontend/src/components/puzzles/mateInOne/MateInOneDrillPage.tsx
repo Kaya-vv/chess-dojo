@@ -48,9 +48,8 @@ interface PuzzleWithSolution {
     pieceList: string;
 }
 
-/** Summary of a completed 10-puzzle block. */
+/** Summary of a completed 10-puzzle drill. */
 interface BlockSummary {
-    blockNumber: number;
     correctCount: number;
     totalTimeSeconds: number;
     avgResponseTimeMs: number;
@@ -109,7 +108,6 @@ function MateInOneDrill() {
     const [userInput, setUserInput] = useState('');
     const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
     const [attempts, setAttempts] = useState<MateInOneAttempt[]>([]);
-    const [blockNumber, setBlockNumber] = useState(1);
     const [blockSummary, setBlockSummary] = useState<BlockSummary | null>(null);
     const [pauseRequested, setPauseRequested] = useState(false);
     const [pausedElapsedMs, setPausedElapsedMs] = useState(0);
@@ -167,13 +165,9 @@ function MateInOneDrill() {
             });
     }, [fetchPuzzle]);
 
-    /**
-     * Resets all per-block state and starts a fresh block timer + first puzzle fetch.
-     *
-     * @param nextBlockNumber - 1-based block number to begin.
-     */
+    /** Resets all per-drill state and starts a fresh timer + first puzzle fetch. */
     const startBlock = useCallback(
-        (nextBlockNumber: number) => {
+        () => {
             setAttempts([]);
             attemptsRef.current = [];
             setFeedback(null);
@@ -186,7 +180,6 @@ function MateInOneDrill() {
             accumulatedMsRef.current = 0;
             runningSinceMsRef.current = performance.now();
             blockCreatedAtRef.current = new Date().toISOString();
-            setBlockNumber(nextBlockNumber);
             setDrillState('in_progress');
             fetchPuzzle()
                 .then((p) => {
@@ -204,7 +197,7 @@ function MateInOneDrill() {
         [fetchPuzzle, prefetchNext, focusInput],
     );
 
-    const startDrill = useCallback(() => startBlock(1), [startBlock]);
+    const startDrill = useCallback(() => startBlock(), [startBlock]);
 
     /**
      * Finalizes a complete 10-puzzle block: freezes timer, computes rating, fires submission.
@@ -225,7 +218,6 @@ function MateInOneDrill() {
             const isNewPR = previousPR === undefined || rating > previousPR;
 
             const summary: BlockSummary = {
-                blockNumber,
                 correctCount: stats.correctCount,
                 totalTimeSeconds: stats.totalTimeSeconds,
                 avgResponseTimeMs: stats.avgResponseTimeMs,
@@ -263,7 +255,7 @@ function MateInOneDrill() {
                 },
             );
         },
-        [submitRequest, blockNumber, user, updateUser],
+        [submitRequest, user, updateUser],
     );
 
     const advanceToNextPuzzle = useCallback(() => {
@@ -415,7 +407,7 @@ function MateInOneDrill() {
                     summary={blockSummary}
                     submitting={submitting}
                     submitFailed={submitRequest.isFailure()}
-                    onContinue={() => startBlock(blockSummary.blockNumber + 1)}
+                    onContinue={() => startBlock()}
                     onRetry={() => finalizeBlock(blockSummary.attempts)}
                     onEndSession={handleEndSession}
                 />
@@ -427,7 +419,6 @@ function MateInOneDrill() {
     return (
         <InProgressScreen
             puzzle={currentPuzzle}
-            blockNumber={blockNumber}
             puzzleNumberInBlock={attempts.length + 1}
             userInput={userInput}
             onInputChange={setUserInput}
@@ -461,7 +452,7 @@ function ReadyScreen({ onStart, fetchError }: { onStart: () => void; fetchError:
                 notation (e.g. "Qh7#" or just "Qh7") and press Enter.
             </Typography>
             <Typography variant='body2' color='warning.main' sx={{ mb: 1, fontWeight: 'bold' }}>
-                This drill is very hard. Your rating is computed every {PUZZLES_PER_BLOCK} problems;
+                This drill is very hard. Your rating is computed after {PUZZLES_PER_BLOCK} problems;
                 you can pause between problems with the Pause button.
             </Typography>
             <Typography variant='body1' color='text.secondary' sx={{ mb: 4 }}>
@@ -488,7 +479,6 @@ function ReadyScreen({ onStart, fetchError }: { onStart: () => void; fetchError:
 
 interface InProgressScreenProps {
     puzzle: PuzzleWithSolution | null;
-    blockNumber: number;
     puzzleNumberInBlock: number;
     userInput: string;
     onInputChange: (value: string) => void;
@@ -505,8 +495,7 @@ interface InProgressScreenProps {
  * Active drill screen: shows piece list, accepts typed move, flashes feedback.
  *
  * @param puzzle - The current puzzle with solution data.
- * @param blockNumber - 1-based current block number.
- * @param puzzleNumberInBlock - 1-based puzzle index within the current block.
+ * @param puzzleNumberInBlock - 1-based puzzle index within the drill.
  * @param userInput - Current text in the move input field.
  * @param onInputChange - Callback to update the input value.
  * @param onSubmit - Callback invoked when the user submits their answer.
@@ -519,7 +508,6 @@ interface InProgressScreenProps {
  */
 function InProgressScreen({
     puzzle,
-    blockNumber,
     puzzleNumberInBlock,
     userInput,
     onInputChange,
@@ -542,7 +530,7 @@ function InProgressScreen({
     return (
         <Container maxWidth='sm' sx={{ py: 4, textAlign: 'center' }}>
             <Typography variant='subtitle1' color='text.secondary' sx={{ mb: 0.5 }}>
-                Block {blockNumber} · Puzzle {puzzleNumberInBlock} / {PUZZLES_PER_BLOCK}
+                Puzzle {puzzleNumberInBlock} / {PUZZLES_PER_BLOCK}
             </Typography>
 
             <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
@@ -689,8 +677,8 @@ function PausedScreen({ elapsedMs, puzzlesAnswered, onResume, onEndSession }: Pa
                 {display} elapsed · {puzzlesAnswered} / {PUZZLES_PER_BLOCK} puzzles answered
             </Typography>
             <Typography variant='body2' color='text.secondary' sx={{ mb: 4 }}>
-                The timer is frozen. Resume to continue this block, or end the session. Your
-                progress so far is already saved.
+                The timer is frozen. Resume to continue, or end the session. Your progress so
+                far is already saved.
             </Typography>
             <Stack direction='row' spacing={2} justifyContent='center'>
                 <Button variant='contained' size='large' onClick={onResume} sx={{ px: 4 }}>
@@ -737,7 +725,7 @@ function BlockCompleteScreen({
     return (
         <Container maxWidth='sm' sx={{ py: 8, textAlign: 'center' }}>
             <Typography variant='h4' sx={{ fontWeight: 'bold', mb: 1 }}>
-                Block {summary.blockNumber} Complete!
+                Drill Complete!
             </Typography>
             <Typography variant='h2' sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
                 {summary.rating}
@@ -803,7 +791,7 @@ function BlockCompleteScreen({
 
             {submitFailed && !submitting && (
                 <Typography variant='body2' color='error' sx={{ mb: 2 }}>
-                    Could not save this block. Retry to record your rating.
+                    Could not save this drill. Retry to record your rating.
                 </Typography>
             )}
 
@@ -826,7 +814,7 @@ function BlockCompleteScreen({
                                 Saving...
                             </>
                         ) : (
-                            'Continue to next block'
+                            'Try again'
                         )}
                     </Button>
                 )}
