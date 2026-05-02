@@ -355,6 +355,9 @@ type User struct {
 	// The user's best-ever square color drill rating (0-1500).
 	SquareColorRating float32 `dynamodbav:"squareColorRating,omitempty" json:"squareColorRating,omitempty"`
 
+	// The user's best-ever mate-in-one drill block rating (0-2500).
+	MateInOneRating float32 `dynamodbav:"mateInOneRating,omitempty" json:"mateInOneRating,omitempty"`
+
 	// The id of the user's game review cohort, if they are a member of the Game & Profile Review tier.
 	GameReviewCohortId string `dynamodbav:"gameReviewCohortId,omitempty" json:"gameReviewCohortId,omitempty"`
 
