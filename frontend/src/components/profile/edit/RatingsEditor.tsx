@@ -1,5 +1,5 @@
-import { dojoCohorts, formatRatingSystem, RatingSystem } from '@/database/user';
-import { Timeline } from '@mui/icons-material';
+import { dojoCohorts, formatRatingSystem, isCustom, RatingSystem } from '@/database/user';
+import Timeline from '@mui/icons-material/Timeline';
 import {
     Checkbox,
     Divider,
@@ -39,6 +39,112 @@ interface RatingsEditorProps {
     setEnableZenMode: (enabled: boolean) => void;
     /** The errors in the profile editor. */
     errors: Record<string, string>;
+}
+
+const CUSTOM_RATING_SYSTEMS = [RatingSystem.Custom, RatingSystem.Custom2, RatingSystem.Custom3];
+
+const RATING_SYSTEM_FORMS = [
+    {
+        system: RatingSystem.Chesscom,
+        label: 'Chess.com Username',
+        hideLabel: 'Hide Username',
+    },
+    {
+        system: RatingSystem.Lichess,
+        label: 'Lichess Username',
+        hideLabel: 'Hide Username',
+    },
+    {
+        system: RatingSystem.Fide,
+        label: 'FIDE ID',
+        hideLabel: 'Hide ID',
+    },
+    {
+        system: RatingSystem.Uscf,
+        label: 'USCF ID',
+        hideLabel: 'Hide ID',
+    },
+    {
+        system: RatingSystem.Ecf,
+        label: 'ECF Rating Code',
+        hideLabel: 'Hide Rating Code',
+    },
+    {
+        system: RatingSystem.Cfc,
+        label: 'CFC ID',
+        hideLabel: 'Hide ID',
+    },
+    {
+        system: RatingSystem.Dwz,
+        label: 'DWZ ID',
+        hideLabel: 'Hide ID',
+    },
+    {
+        system: RatingSystem.Acf,
+        label: 'ACF ID',
+        hideLabel: 'Hide ID',
+    },
+    {
+        system: RatingSystem.Knsb,
+        label: 'KNSB ID',
+        hideLabel: 'Hide ID',
+    },
+];
+
+const RATING_SYSTEM_ORDER = [
+    ...RATING_SYSTEM_FORMS.map((form) => form.system),
+    ...CUSTOM_RATING_SYSTEMS,
+];
+
+function hasNonDefaultRating(value: string): boolean {
+    const trimmed = value.trim();
+    return trimmed !== '' && trimmed !== '0';
+}
+
+export function hasEnteredRatingSystemData(system: RatingSystem, editor: RatingEditor): boolean {
+    if (isCustom(system)) {
+        return Boolean(
+            editor.name.trim() ||
+                hasNonDefaultRating(editor.currentRating) ||
+                hasNonDefaultRating(editor.startRating),
+        );
+    }
+
+    return Boolean(
+        editor.username.trim() || hasNonDefaultRating(editor.startRating) || editor.hideUsername,
+    );
+}
+
+export function getRatingSystemLabel(system: RatingSystem): string {
+    if (system === RatingSystem.Custom2) {
+        return `${formatRatingSystem(system)} (2)`;
+    }
+    if (system === RatingSystem.Custom3) {
+        return `${formatRatingSystem(system)} (3)`;
+    }
+    return formatRatingSystem(system);
+}
+
+function orderRatingSystems(systems: RatingSystem[], preferred: RatingSystem): RatingSystem[] {
+    return [...systems].sort((lhs, rhs) => {
+        if (lhs === preferred) {
+            return -1;
+        }
+        if (rhs === preferred) {
+            return 1;
+        }
+        return RATING_SYSTEM_ORDER.indexOf(lhs) - RATING_SYSTEM_ORDER.indexOf(rhs);
+    });
+}
+
+export function getInitialVisibleRatingSystems(
+    ratingEditors: Record<RatingSystem, RatingEditor>,
+    preferred: RatingSystem,
+): RatingSystem[] {
+    const systems = RATING_SYSTEM_ORDER.filter(
+        (system) => system === preferred || hasEnteredRatingSystemData(system, ratingEditors[system]),
+    );
+    return orderRatingSystems(systems, preferred);
 }
 
 export function RatingsEditor({
@@ -278,53 +384,3 @@ export function RatingsEditor({
         </Stack>
     );
 }
-
-const CUSTOM_RATING_SYSTEMS = [RatingSystem.Custom, RatingSystem.Custom2, RatingSystem.Custom3];
-
-const RATING_SYSTEM_FORMS = [
-    {
-        system: RatingSystem.Chesscom,
-        label: 'Chess.com Username',
-        hideLabel: 'Hide Username',
-    },
-    {
-        system: RatingSystem.Lichess,
-        label: 'Lichess Username',
-        hideLabel: 'Hide Username',
-    },
-    {
-        system: RatingSystem.Fide,
-        label: 'FIDE ID',
-        hideLabel: 'Hide ID',
-    },
-    {
-        system: RatingSystem.Uscf,
-        label: 'USCF ID',
-        hideLabel: 'Hide ID',
-    },
-    {
-        system: RatingSystem.Ecf,
-        label: 'ECF Rating Code',
-        hideLabel: 'Hide Rating Code',
-    },
-    {
-        system: RatingSystem.Cfc,
-        label: 'CFC ID',
-        hideLabel: 'Hide ID',
-    },
-    {
-        system: RatingSystem.Dwz,
-        label: 'DWZ ID',
-        hideLabel: 'Hide ID',
-    },
-    {
-        system: RatingSystem.Acf,
-        label: 'ACF ID',
-        hideLabel: 'Hide ID',
-    },
-    {
-        system: RatingSystem.Knsb,
-        label: 'KNSB ID',
-        hideLabel: 'Hide ID',
-    },
-];
