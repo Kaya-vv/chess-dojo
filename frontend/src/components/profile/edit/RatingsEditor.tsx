@@ -98,6 +98,10 @@ const RATING_SYSTEM_FORMS = [
     },
 ];
 
+const RATING_SYSTEM_FORMS_BY_SYSTEM = new Map(
+    RATING_SYSTEM_FORMS.map((form) => [form.system, form]),
+);
+
 const RATING_SYSTEM_ORDER = [
     ...RATING_SYSTEM_FORMS.map((form) => form.system),
     ...CUSTOM_RATING_SYSTEMS,
@@ -242,26 +246,6 @@ export function RatingsEditor({
         });
     };
 
-    const ratingSystems = RATING_SYSTEM_FORMS.filter((rsf) =>
-        visibleRatingSystemSet.has(rsf.system),
-    ).map((rsf) => ({
-        required: ratingSystem === rsf.system,
-        label: rsf.label,
-        hideLabel: rsf.hideLabel,
-        username: ratingEditors[rsf.system].username,
-        setUsername: (value: string) => setUsername(rsf.system, value),
-        startRating: ratingEditors[rsf.system].startRating,
-        setStartRating: (value: string) => setStartRating(rsf.system, value),
-        hidden: ratingEditors[rsf.system].hideUsername,
-        setHidden: (value: boolean) => setHidden(rsf.system, value),
-        usernameError: errors[`${rsf.system}Username`],
-        startRatingError: errors[`${rsf.system}StartRating`],
-    }));
-
-    const customRatingSystems = CUSTOM_RATING_SYSTEMS.filter((system) =>
-        visibleRatingSystemSet.has(system),
-    );
-
     return (
         <Stack spacing={4}>
             <Stack
@@ -340,59 +324,70 @@ export function RatingsEditor({
                 </Stack>
             )}
 
-            {ratingSystems.map((rs) => (
-                <Grid key={rs.label} container columnGap={2} alignItems='start'>
-                    <Grid size='grow'>
-                        <TextField
-                            required={rs.required}
-                            label={rs.label}
-                            value={rs.username}
-                            onChange={(event) => rs.setUsername(event.target.value)}
-                            error={!!rs.usernameError}
-                            helperText={
-                                rs.usernameError || rs.label === 'DWZ ID' ? (
-                                    <>
-                                        Learn how to find your DWZ ID{' '}
-                                        <Link href='/help#How%20do%20I%20find%20my%20DWZ%20ID?'>
-                                            here
-                                        </Link>
-                                    </>
-                                ) : (
-                                    "Leave blank if you don't have an account"
-                                )
-                            }
-                            sx={{ width: 1 }}
-                        />
-                    </Grid>
+            {visibleRatingSystems.map((rs) => {
+                if (!isCustom(rs)) {
+                    const form = RATING_SYSTEM_FORMS_BY_SYSTEM.get(rs);
+                    if (!form) {
+                        return null;
+                    }
 
-                    <Grid size='grow'>
-                        <TextField
-                            label='Start Rating'
-                            value={rs.startRating}
-                            onChange={(event) => rs.setStartRating(event.target.value)}
-                            error={!!rs.startRatingError}
-                            helperText={
-                                rs.startRatingError || 'Your rating when you first joined the Dojo'
-                            }
-                            sx={{ width: 1 }}
-                        />
-                    </Grid>
+                    const usernameError = errors[`${rs}Username`];
+                    const startRatingError = errors[`${rs}StartRating`];
 
-                    <Grid size='grow'>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={rs.hidden}
-                                    onChange={(event) => rs.setHidden(event.target.checked)}
+                    return (
+                        <Grid key={rs} container columnGap={2} alignItems='start'>
+                            <Grid size='grow'>
+                                <TextField
+                                    required={ratingSystem === rs}
+                                    label={form.label}
+                                    value={ratingEditors[rs].username}
+                                    onChange={(event) => setUsername(rs, event.target.value)}
+                                    error={!!usernameError}
+                                    helperText={
+                                        usernameError || form.label === 'DWZ ID' ? (
+                                            <>
+                                                Learn how to find your DWZ ID{' '}
+                                                <Link href='/help#How%20do%20I%20find%20my%20DWZ%20ID?'>
+                                                    here
+                                                </Link>
+                                            </>
+                                        ) : (
+                                            "Leave blank if you don't have an account"
+                                        )
+                                    }
+                                    sx={{ width: 1 }}
                                 />
-                            }
-                            label={rs.hideLabel}
-                        />
-                    </Grid>
-                </Grid>
-            ))}
+                            </Grid>
 
-            {customRatingSystems.map((rs) => {
+                            <Grid size='grow'>
+                                <TextField
+                                    label='Start Rating'
+                                    value={ratingEditors[rs].startRating}
+                                    onChange={(event) => setStartRating(rs, event.target.value)}
+                                    error={!!startRatingError}
+                                    helperText={
+                                        startRatingError ||
+                                        'Your rating when you first joined the Dojo'
+                                    }
+                                    sx={{ width: 1 }}
+                                />
+                            </Grid>
+
+                            <Grid size='grow'>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={ratingEditors[rs].hideUsername}
+                                            onChange={(event) => setHidden(rs, event.target.checked)}
+                                        />
+                                    }
+                                    label={form.hideLabel}
+                                />
+                            </Grid>
+                        </Grid>
+                    );
+                }
+
                 const idx = CUSTOM_RATING_SYSTEMS.indexOf(rs);
 
                 return (

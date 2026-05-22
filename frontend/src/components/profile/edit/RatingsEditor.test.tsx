@@ -116,6 +116,20 @@ describe('RatingsEditor initial rendering', () => {
         expect(within(listbox).getByRole('option', { name: 'USCF' })).toBeInTheDocument();
         expect(within(listbox).queryByRole('option', { name: 'Lichess Classical' })).toBeNull();
     });
+
+    it('renders the preferred system first in the editor rows', () => {
+        renderRatingsEditor(
+            editors({
+                [RatingSystem.Chesscom]: { username: 'kaya' },
+                [RatingSystem.Custom]: { name: 'OTB' },
+            }),
+            RatingSystem.Custom,
+        );
+
+        expect(screen.getAllByRole('textbox')[0]).toBe(
+            screen.getByLabelText(/Custom 1 Rating Name/),
+        );
+    });
 });
 
 describe('RatingsEditor add menu', () => {
