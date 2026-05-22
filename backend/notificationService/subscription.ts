@@ -39,7 +39,9 @@ export async function handleSubscriptionCreated(event: SubscriptionCreatedEvent)
 export async function handleGameReviewSignup(event: GameReviewSignupEvent) {
     const user = await getNotificationSettings(event.username);
     if (!user) {
-        console.error(`Unable to send Game Review signup notification: ${event.username} not found`);
+        console.error(
+            `Unable to send Game Review signup notification: ${event.username} not found`,
+        );
         return;
     }
 
