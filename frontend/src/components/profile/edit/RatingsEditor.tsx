@@ -116,8 +116,8 @@ export function hasEnteredRatingSystemData(system: RatingSystem, editor: RatingE
     if (isCustom(system)) {
         return Boolean(
             editor.name.trim() ||
-                hasNonDefaultRating(editor.currentRating) ||
-                hasNonDefaultRating(editor.startRating),
+            hasNonDefaultRating(editor.currentRating) ||
+            hasNonDefaultRating(editor.startRating),
         );
     }
 
@@ -153,7 +153,8 @@ export function getInitialVisibleRatingSystems(
     preferred: RatingSystem,
 ): RatingSystem[] {
     const systems = RATING_SYSTEM_ORDER.filter(
-        (system) => system === preferred || hasEnteredRatingSystemData(system, ratingEditors[system]),
+        (system) =>
+            system === preferred || hasEnteredRatingSystemData(system, ratingEditors[system]),
     );
     return orderRatingSystems(systems, preferred);
 }
@@ -192,7 +193,9 @@ export function RatingsEditor({
     );
 
     const addRatingSystem = (system: RatingSystem) => {
-        setVisibleRatingSystems(orderRatingSystems([...visibleRatingSystems, system], ratingSystem));
+        setVisibleRatingSystems(
+            orderRatingSystems([...visibleRatingSystems, system], ratingSystem),
+        );
         setAddMenuAnchorEl(null);
     };
 
@@ -378,7 +381,9 @@ export function RatingsEditor({
                                     control={
                                         <Checkbox
                                             checked={ratingEditors[rs].hideUsername}
-                                            onChange={(event) => setHidden(rs, event.target.checked)}
+                                            onChange={(event) =>
+                                                setHidden(rs, event.target.checked)
+                                            }
                                         />
                                     }
                                     label={form.hideLabel}

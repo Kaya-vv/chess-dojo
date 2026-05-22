@@ -33,9 +33,9 @@ function editors(
 
 describe('RatingsEditor visibility helpers', () => {
     it('treats standard systems with usernames as configured', () => {
-        expect(hasEnteredRatingSystemData(RatingSystem.Chesscom, editor({ username: 'kaya' }))).toBe(
-            true,
-        );
+        expect(
+            hasEnteredRatingSystemData(RatingSystem.Chesscom, editor({ username: 'kaya' })),
+        ).toBe(true);
         expect(hasEnteredRatingSystemData(RatingSystem.Lichess, editor())).toBe(false);
     });
 
@@ -112,7 +112,9 @@ describe('RatingsEditor initial rendering', () => {
         fireEvent.mouseDown(screen.getByRole('combobox', { name: /Preferred Rating System/ }));
         const listbox = screen.getByRole('listbox');
 
-        expect(within(listbox).getByRole('option', { name: 'Chess.com Rapid' })).toBeInTheDocument();
+        expect(
+            within(listbox).getByRole('option', { name: 'Chess.com Rapid' }),
+        ).toBeInTheDocument();
         expect(within(listbox).getByRole('option', { name: 'USCF' })).toBeInTheDocument();
         expect(within(listbox).queryByRole('option', { name: 'Lichess Classical' })).toBeNull();
     });
