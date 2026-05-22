@@ -1,11 +1,15 @@
 import { RatingSystem } from '@/database/user';
-import { describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { RatingEditor } from './RatingsEditor';
 import {
+    RatingsEditor,
     getInitialVisibleRatingSystems,
     getRatingSystemLabel,
     hasEnteredRatingSystemData,
 } from './RatingsEditor';
+
+afterEach(cleanup);
 
 function editor(overrides: Partial<RatingEditor> = {}): RatingEditor {
     return {
@@ -59,5 +63,57 @@ describe('RatingsEditor visibility helpers', () => {
         expect(getRatingSystemLabel(RatingSystem.Custom)).toBe('Custom');
         expect(getRatingSystemLabel(RatingSystem.Custom2)).toBe('Custom (2)');
         expect(getRatingSystemLabel(RatingSystem.Custom3)).toBe('Custom (3)');
+    });
+});
+
+function renderRatingsEditor(
+    ratingEditors: Record<RatingSystem, RatingEditor>,
+    ratingSystem = RatingSystem.Chesscom,
+) {
+    return render(
+        <RatingsEditor
+            dojoCohort='1600-1700'
+            setDojoCohort={vi.fn()}
+            ratingSystem={ratingSystem}
+            setRatingSystem={vi.fn()}
+            ratingEditors={ratingEditors}
+            setRatingEditors={vi.fn()}
+            enableZenMode={false}
+            setEnableZenMode={vi.fn()}
+            errors={{}}
+        />,
+    );
+}
+
+describe('RatingsEditor initial rendering', () => {
+    it('renders configured systems and hides blank systems', () => {
+        renderRatingsEditor(
+            editors({
+                [RatingSystem.Chesscom]: { username: 'kaya' },
+                [RatingSystem.Uscf]: { username: '12345678', startRating: '1550' },
+            }),
+        );
+
+        expect(screen.getByLabelText(/Chess\.com Username/)).toBeInTheDocument();
+        expect(screen.getByLabelText(/USCF ID/)).toBeInTheDocument();
+        expect(screen.queryByLabelText(/Lichess Username/)).not.toBeInTheDocument();
+        expect(screen.queryByLabelText(/FIDE ID/)).not.toBeInTheDocument();
+    });
+
+    it('limits preferred dropdown options to visible systems', () => {
+        renderRatingsEditor(
+            editors({
+                [RatingSystem.Chesscom]: { username: 'kaya' },
+                [RatingSystem.Uscf]: { username: '12345678' },
+            }),
+            RatingSystem.Chesscom,
+        );
+
+        fireEvent.mouseDown(screen.getByRole('combobox', { name: /Preferred Rating System/ }));
+        const listbox = screen.getByRole('listbox');
+
+        expect(within(listbox).getByRole('option', { name: 'Chess.com Rapid' })).toBeInTheDocument();
+        expect(within(listbox).getByRole('option', { name: 'USCF' })).toBeInTheDocument();
+        expect(within(listbox).queryByRole('option', { name: 'Lichess Classical' })).toBeNull();
     });
 });

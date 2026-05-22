@@ -11,6 +11,7 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
+import { useMemo, useState } from 'react';
 
 export interface RatingEditor {
     username: string;
@@ -158,6 +159,20 @@ export function RatingsEditor({
     setEnableZenMode,
     errors,
 }: RatingsEditorProps) {
+    const [visibleRatingSystems] = useState<RatingSystem[]>(() =>
+        getInitialVisibleRatingSystems(ratingEditors, ratingSystem),
+    );
+
+    const visibleRatingSystemSet = useMemo(
+        () => new Set(visibleRatingSystems),
+        [visibleRatingSystems],
+    );
+
+    const preferredRatingSystems = useMemo(() => {
+        const systems = Array.from(new Set([ratingSystem, ...visibleRatingSystems]));
+        return orderRatingSystems(systems, ratingSystem);
+    }, [ratingSystem, visibleRatingSystems]);
+
     const setUsername = (ratingSystem: RatingSystem, username: string) => {
         setRatingEditors({
             ...ratingEditors,
@@ -208,7 +223,9 @@ export function RatingsEditor({
         });
     };
 
-    const ratingSystems = RATING_SYSTEM_FORMS.map((rsf) => ({
+    const ratingSystems = RATING_SYSTEM_FORMS.filter((rsf) =>
+        visibleRatingSystemSet.has(rsf.system),
+    ).map((rsf) => ({
         required: ratingSystem === rsf.system,
         label: rsf.label,
         hideLabel: rsf.hideLabel,
@@ -221,6 +238,10 @@ export function RatingsEditor({
         usernameError: errors[`${rsf.system}Username`],
         startRatingError: errors[`${rsf.system}StartRating`],
     }));
+
+    const customRatingSystems = CUSTOM_RATING_SYSTEMS.filter((system) =>
+        visibleRatingSystemSet.has(system),
+    );
 
     return (
         <Stack spacing={4}>
@@ -267,11 +288,9 @@ export function RatingsEditor({
                 error={!!errors.ratingSystem}
                 helperText={errors.ratingSystem}
             >
-                {Object.values(RatingSystem).map((option) => (
+                {preferredRatingSystems.map((option) => (
                     <MenuItem key={option} value={option}>
-                        {formatRatingSystem(option)}
-                        {option === RatingSystem.Custom2 && ' (2)'}
-                        {option === RatingSystem.Custom3 && ' (3)'}
+                        {getRatingSystemLabel(option)}
                     </MenuItem>
                 ))}
             </TextField>
@@ -328,49 +347,53 @@ export function RatingsEditor({
                 </Grid>
             ))}
 
-            {CUSTOM_RATING_SYSTEMS.map((rs, idx) => (
-                <Grid key={rs} container columnGap={2} alignItems='start'>
-                    <Grid size='grow'>
-                        <TextField
-                            label={`Custom ${idx + 1} Rating Name`}
-                            value={ratingEditors[rs].name}
-                            onChange={(event) => setRatingName(rs, event.target.value)}
-                            sx={{ width: 1 }}
-                            error={!!errors[`${rs}Name`]}
-                            helperText={errors[`${rs}Name`] || 'Manually track your rating'}
-                        />
-                    </Grid>
+            {customRatingSystems.map((rs) => {
+                const idx = CUSTOM_RATING_SYSTEMS.indexOf(rs);
 
-                    <Grid size='grow'>
-                        <TextField
-                            required={ratingSystem === rs}
-                            label='Current Rating'
-                            value={ratingEditors[rs].currentRating}
-                            onChange={(event) => setCurrentRating(rs, event.target.value)}
-                            error={!!errors[`${rs}CurrentRating`]}
-                            helperText={
-                                errors[`${rs}CurrentRating`] || 'Your most up to date rating'
-                            }
-                            sx={{ width: 1 }}
-                        />
-                    </Grid>
+                return (
+                    <Grid key={rs} container columnGap={2} alignItems='start'>
+                        <Grid size='grow'>
+                            <TextField
+                                label={`Custom ${idx + 1} Rating Name`}
+                                value={ratingEditors[rs].name}
+                                onChange={(event) => setRatingName(rs, event.target.value)}
+                                sx={{ width: 1 }}
+                                error={!!errors[`${rs}Name`]}
+                                helperText={errors[`${rs}Name`] || 'Manually track your rating'}
+                            />
+                        </Grid>
 
-                    <Grid size='grow'>
-                        <TextField
-                            required={ratingSystem === rs}
-                            label='Start Rating'
-                            value={ratingEditors[rs].startRating}
-                            onChange={(event) => setStartRating(rs, event.target.value)}
-                            error={!!errors[`${rs}StartRating`]}
-                            helperText={
-                                errors[`${rs}StartRating`] ||
-                                'Your rating when you first joined the Dojo'
-                            }
-                            sx={{ width: 1 }}
-                        />
+                        <Grid size='grow'>
+                            <TextField
+                                required={ratingSystem === rs}
+                                label='Current Rating'
+                                value={ratingEditors[rs].currentRating}
+                                onChange={(event) => setCurrentRating(rs, event.target.value)}
+                                error={!!errors[`${rs}CurrentRating`]}
+                                helperText={
+                                    errors[`${rs}CurrentRating`] || 'Your most up to date rating'
+                                }
+                                sx={{ width: 1 }}
+                            />
+                        </Grid>
+
+                        <Grid size='grow'>
+                            <TextField
+                                required={ratingSystem === rs}
+                                label='Start Rating'
+                                value={ratingEditors[rs].startRating}
+                                onChange={(event) => setStartRating(rs, event.target.value)}
+                                error={!!errors[`${rs}StartRating`]}
+                                helperText={
+                                    errors[`${rs}StartRating`] ||
+                                    'Your rating when you first joined the Dojo'
+                                }
+                                sx={{ width: 1 }}
+                            />
+                        </Grid>
                     </Grid>
-                </Grid>
-            ))}
+                );
+            })}
 
             <FormControlLabel
                 label='Enable Zen Mode (hide ratings when viewing your own profile)'
