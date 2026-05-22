@@ -117,3 +117,36 @@ describe('RatingsEditor initial rendering', () => {
         expect(within(listbox).queryByRole('option', { name: 'Lichess Classical' })).toBeNull();
     });
 });
+
+describe('RatingsEditor add menu', () => {
+    it('adds a hidden standard rating system to the editor', () => {
+        renderRatingsEditor(
+            editors({
+                [RatingSystem.Chesscom]: { username: 'kaya' },
+            }),
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'Add Rating System' }));
+        fireEvent.click(screen.getByRole('menuitem', { name: /Lichess Classical/ }));
+
+        expect(screen.getByLabelText(/Lichess Username/)).toBeInTheDocument();
+    });
+
+    it('makes an added rating system available in the preferred dropdown', () => {
+        renderRatingsEditor(
+            editors({
+                [RatingSystem.Chesscom]: { username: 'kaya' },
+            }),
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'Add Rating System' }));
+        fireEvent.click(screen.getByRole('menuitem', { name: /Lichess Classical/ }));
+        fireEvent.mouseDown(screen.getByRole('combobox', { name: /Preferred Rating System/ }));
+
+        expect(
+            within(screen.getByRole('listbox')).getByRole('option', {
+                name: 'Lichess Classical',
+            }),
+        ).toBeInTheDocument();
+    });
+});

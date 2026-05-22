@@ -1,11 +1,17 @@
 import { dojoCohorts, formatRatingSystem, isCustom, RatingSystem } from '@/database/user';
+import { RatingSystemIcon } from '@/style/RatingSystemIcons';
+import AddIcon from '@mui/icons-material/Add';
 import Timeline from '@mui/icons-material/Timeline';
 import {
+    Button,
     Checkbox,
     Divider,
     FormControlLabel,
     Grid,
     Link,
+    ListItemIcon,
+    ListItemText,
+    Menu,
     MenuItem,
     Stack,
     TextField,
@@ -159,7 +165,7 @@ export function RatingsEditor({
     setEnableZenMode,
     errors,
 }: RatingsEditorProps) {
-    const [visibleRatingSystems] = useState<RatingSystem[]>(() =>
+    const [visibleRatingSystems, setVisibleRatingSystems] = useState<RatingSystem[]>(() =>
         getInitialVisibleRatingSystems(ratingEditors, ratingSystem),
     );
 
@@ -172,6 +178,19 @@ export function RatingsEditor({
         const systems = Array.from(new Set([ratingSystem, ...visibleRatingSystems]));
         return orderRatingSystems(systems, ratingSystem);
     }, [ratingSystem, visibleRatingSystems]);
+
+    const [addMenuAnchorEl, setAddMenuAnchorEl] = useState<null | HTMLElement>(null);
+    const addMenuOpen = Boolean(addMenuAnchorEl);
+
+    const availableRatingSystems = useMemo(
+        () => RATING_SYSTEM_ORDER.filter((system) => !visibleRatingSystemSet.has(system)),
+        [visibleRatingSystemSet],
+    );
+
+    const addRatingSystem = (system: RatingSystem) => {
+        setVisibleRatingSystems(orderRatingSystems([...visibleRatingSystems, system], ratingSystem));
+        setAddMenuAnchorEl(null);
+    };
 
     const setUsername = (ratingSystem: RatingSystem, username: string) => {
         setRatingEditors({
@@ -294,6 +313,32 @@ export function RatingsEditor({
                     </MenuItem>
                 ))}
             </TextField>
+
+            {availableRatingSystems.length > 0 && (
+                <Stack direction='row' justifyContent='flex-start'>
+                    <Button
+                        variant='outlined'
+                        startIcon={<AddIcon />}
+                        onClick={(event) => setAddMenuAnchorEl(event.currentTarget)}
+                    >
+                        Add Rating System
+                    </Button>
+                    <Menu
+                        anchorEl={addMenuAnchorEl}
+                        open={addMenuOpen}
+                        onClose={() => setAddMenuAnchorEl(null)}
+                    >
+                        {availableRatingSystems.map((system) => (
+                            <MenuItem key={system} onClick={() => addRatingSystem(system)}>
+                                <ListItemIcon>
+                                    <RatingSystemIcon system={system} size='small' />
+                                </ListItemIcon>
+                                <ListItemText primary={getRatingSystemLabel(system)} />
+                            </MenuItem>
+                        ))}
+                    </Menu>
+                </Stack>
+            )}
 
             {ratingSystems.map((rs) => (
                 <Grid key={rs.label} container columnGap={2} alignItems='start'>
