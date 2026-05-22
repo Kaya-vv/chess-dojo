@@ -148,6 +148,11 @@ func handleSubscriptionPurchase(checkoutSession *stripe.CheckoutSession) api.Res
 		tier = database.SubscriptionTier_Basic
 	}
 
+	previousUser, err := repository.GetUser(checkoutSession.ClientReferenceID)
+	if err != nil {
+		return api.Failure(err)
+	}
+
 	paymentInfo := database.PaymentInfo{
 		CustomerId:     checkoutSession.Customer.ID,
 		SubscriptionId: checkoutSession.Subscription.ID,
@@ -170,9 +175,24 @@ func handleSubscriptionPurchase(checkoutSession *stripe.CheckoutSession) api.Res
 	if err := database.SendSubscriptionCreatedEvent(user.Username); err != nil {
 		log.Errorf("Failed to send subscription created notification: %v", err)
 	}
+	sendGameReviewSignupNotification(previousUser, user)
 
 	analytics.PurchaseEvent(user, checkoutSession)
 	return api.Success(nil)
+}
+
+func sendGameReviewSignupNotification(previousUser, user *database.User) {
+	if !shouldSendGameReviewSignupNotification(previousUser.GetSubscriptionTier(), user.GetSubscriptionTier()) {
+		return
+	}
+
+	if err := database.SendGameReviewSignupEvent(user.Username); err != nil {
+		log.Errorf("Failed to send game review signup notification: %v", err)
+	}
+}
+
+func shouldSendGameReviewSignupNotification(previousTier, newTier database.SubscriptionTier) bool {
+	return previousTier != database.SubscriptionTier_GameReview && newTier == database.SubscriptionTier_GameReview
 }
 
 // Handles a successful coaching lesson purchase by setting the event participant's
@@ -337,6 +357,11 @@ func handleSubscriptionUpdated(event *stripe.Event) api.Response {
 		return api.Failure(err)
 	}
 
+	previousUser, err := repository.GetUser(username)
+	if err != nil {
+		return api.Failure(err)
+	}
+
 	paymentInfo := database.PaymentInfo{
 		CustomerId:     subscription.Customer.ID,
 		SubscriptionId: subscription.ID,
@@ -355,6 +380,7 @@ func handleSubscriptionUpdated(event *stripe.Event) api.Response {
 	if err := discord.SetCohortRole(user); err != nil {
 		log.Errorf("Failed to set Discord roles: %v", err)
 	}
+	sendGameReviewSignupNotification(previousUser, user)
 
 	return api.Success(nil)
 }
