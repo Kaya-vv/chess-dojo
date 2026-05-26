@@ -37,13 +37,14 @@ export function SwitchCohortPrompt() {
     const [open, setOpen] = useState(false);
     const [forceClose, setForceClose] = useState(false);
 
-    const [oldCohort, newCohort] = getSuggestedCohorts(user);
+    const [oldSuggestedCohort, newCohort] = getSuggestedCohorts(user);
+    const currentCohort = user?.dojoCohort;
     const request = useRequest();
 
     const showSwitchCohorts =
-        oldCohort !== newCohort &&
+        oldSuggestedCohort !== newCohort &&
         user &&
-        user.dojoCohort !== newCohort &&
+        currentCohort !== newCohort &&
         user.cohortVersion !== CURRENT_COHORT_VERSION;
 
     useEffect(() => {
@@ -102,8 +103,8 @@ export function SwitchCohortPrompt() {
                     <DialogContentText>
                         The Dojo has recalculated the cohort ranges for all rating systems. As a
                         result, we strongly suggest changing your cohort from{' '}
-                        <strong>{oldCohort}</strong> to <strong>{newCohort}</strong>. This will
-                        place you with sparring partners more similar in strength and give you
+                        <strong>{currentCohort}</strong> to <strong>{newCohort}</strong>. This
+                        will place you with sparring partners more similar in strength and give you
                         training material better suited to your level.
                         <br />
                         You can find more information in the FAQs on our{' '}
