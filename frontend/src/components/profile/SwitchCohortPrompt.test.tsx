@@ -19,11 +19,7 @@ vi.mock('@/api/Api', () => ({
 }));
 
 vi.mock('@/components/navigation/Link', () => ({
-    Link: ({
-        href,
-        children,
-        ...props
-    }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    Link: ({ href, children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
         <a href={href} {...props}>
             {children}
         </a>

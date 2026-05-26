@@ -103,8 +103,8 @@ export function SwitchCohortPrompt() {
                     <DialogContentText>
                         The Dojo has recalculated the cohort ranges for all rating systems. As a
                         result, we strongly suggest changing your cohort from{' '}
-                        <strong>{currentCohort}</strong> to <strong>{newCohort}</strong>. This
-                        will place you with sparring partners more similar in strength and give you
+                        <strong>{currentCohort}</strong> to <strong>{newCohort}</strong>. This will
+                        place you with sparring partners more similar in strength and give you
                         training material better suited to your level.
                         <br />
                         You can find more information in the FAQs on our{' '}
