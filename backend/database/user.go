@@ -1160,6 +1160,33 @@ func (repo *dynamoRepository) createDefaultDirectories(user *User) error {
 
 // UpdateUser applies the specified update to the user with the provided username.
 func (repo *dynamoRepository) UpdateUser(username string, update *UserUpdate) (*User, error) {
+	return repo.updateUser(
+		username,
+		update,
+		expression.AttributeExists(expression.Name("username")),
+	)
+}
+
+// UpdateUserIfNotGameReview applies the specified update only if the user is not currently
+// an active Game & Profile Review subscriber.
+func (repo *dynamoRepository) UpdateUserIfNotGameReview(username string, update *UserUpdate) (*User, error) {
+	notSubscribed := expression.AttributeNotExists(expression.Name("subscriptionStatus")).
+		Or(expression.Name("subscriptionStatus").NotEqual(expression.Value(SubscriptionStatus_Subscribed)))
+	notGameReviewTier := expression.AttributeNotExists(expression.Name("subscriptionTier")).
+		Or(expression.Name("subscriptionTier").NotEqual(expression.Value(SubscriptionTier_GameReview)))
+
+	return repo.updateUser(
+		username,
+		update,
+		expression.AttributeExists(expression.Name("username")).And(notSubscribed.Or(notGameReviewTier)),
+	)
+}
+
+func (repo *dynamoRepository) updateUser(
+	username string,
+	update *UserUpdate,
+	condition expression.ConditionBuilder,
+) (*User, error) {
 	if username == "STATISTICS" {
 		return nil, errors.New(403, "Invalid request: cannot update username `STATISTICS`", "")
 	}
@@ -1179,7 +1206,7 @@ func (repo *dynamoRepository) UpdateUser(username string, update *UserUpdate) (*
 		builder = builder.Set(expression.Name(k), expression.Value(v))
 	}
 
-	expr, err := expression.NewBuilder().WithUpdate(builder).Build()
+	expr, err := expression.NewBuilder().WithUpdate(builder).WithCondition(condition).Build()
 	if err != nil {
 		return nil, errors.Wrap(500, "Temporary server error", "DynamoDB expression building error", err)
 	}
@@ -1193,7 +1220,7 @@ func (repo *dynamoRepository) UpdateUser(username string, update *UserUpdate) (*
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
 		UpdateExpression:          expr.Update(),
-		ConditionExpression:       aws.String("attribute_exists(username)"),
+		ConditionExpression:       expr.Condition(),
 		TableName:                 aws.String(userTable),
 		ReturnValues:              aws.String("ALL_NEW"),
 	}
