@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { getCoordinateSx } from './boardThemes';
 import { CoordinateSize } from './pgn/boardTools/underboard/settings/viewerSettingsConstants';
@@ -42,5 +44,16 @@ describe('getCoordinateSx', () => {
             '--coordinate-font-weight': 800,
             '--coordinate-opacity': 1,
         });
+    });
+});
+
+describe('board coordinate stylesheet contract', () => {
+    it('uses coordinate CSS variables for size, weight, and opacity', () => {
+        const cssPath = path.resolve(process.cwd(), 'src/board/board.css');
+        const css = readFileSync(cssPath, 'utf8');
+
+        expect(css).toContain('font-size: var(--coordinate-font-size, 9px)');
+        expect(css).toContain('font-weight: var(--coordinate-font-weight, 600)');
+        expect(css).toContain('opacity: var(--coordinate-opacity, 0.8)');
     });
 });
