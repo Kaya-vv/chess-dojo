@@ -40,7 +40,7 @@ describe('getCoordinateSx', () => {
 
     it('returns more readable values for large coordinates', () => {
         expect(getCoordinateSx(CoordinateSize.Large)).toEqual({
-            '--coordinate-font-size': '11px',
+            '--coordinate-font-size': '13px',
             '--coordinate-font-weight': 800,
             '--coordinate-opacity': 1,
         });

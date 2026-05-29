@@ -97,7 +97,7 @@ export function getCoordinateSx(size: CoordinateSize): CoordinateSx {
             };
         case CoordinateSize.Large:
             return {
-                '--coordinate-font-size': '11px',
+                '--coordinate-font-size': '13px',
                 '--coordinate-font-weight': 800,
                 '--coordinate-opacity': 1,
             };
