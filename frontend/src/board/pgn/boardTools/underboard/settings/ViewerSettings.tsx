@@ -15,6 +15,8 @@ import {
 import { useLocalStorage } from 'usehooks-ts';
 import KeyboardShortcuts, { KeyboardShortcutsProps } from './KeyboardShortcuts';
 
+export { CoordinateSize, CoordinateSizeKey } from './viewerSettingsConstants';
+
 export const BoardStyleKey = 'boardStyle';
 export const PieceStyleKey = 'pieceStyle';
 export const CoordinateStyleKey = 'coordinateStyle';
