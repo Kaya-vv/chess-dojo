@@ -1,10 +1,6 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import ViewerSettings, {
-    CoordinateSize,
-    CoordinateSizeKey,
-    ViewerSetting,
-} from './ViewerSettings';
+import ViewerSettings, { CoordinateSize, CoordinateSizeKey, ViewerSetting } from './ViewerSettings';
 
 vi.mock('./KeyboardShortcuts', () => ({
     default: () => null,
