@@ -14,6 +14,9 @@ import {
 } from '@mui/material';
 import { useLocalStorage } from 'usehooks-ts';
 import KeyboardShortcuts, { KeyboardShortcutsProps } from './KeyboardShortcuts';
+import { CoordinateSize, CoordinateSizeKey } from './viewerSettingsConstants';
+
+export { CoordinateSize, CoordinateSizeKey } from './viewerSettingsConstants';
 
 export const BoardStyleKey = 'boardStyle';
 export const PieceStyleKey = 'pieceStyle';
@@ -97,6 +100,7 @@ export enum ViewerSetting {
     BoardStyle,
     PieceStyle,
     CoordinateStyle,
+    CoordinateSize,
     StartEndButtonBehavior,
     VariationBehavior,
     CapturedMaterialDisplay,
@@ -124,6 +128,10 @@ const ViewerSettings = ({
     const [coordinateStyle, setCoordinateStyle] = useLocalStorage<CoordinateStyle>(
         CoordinateStyleKey,
         CoordinateStyle.RankFileOnly,
+    );
+    const [coordinateSize, setCoordinateSize] = useLocalStorage<CoordinateSize>(
+        CoordinateSizeKey,
+        CoordinateSize.Standard,
     );
     const [goToEndBehavior, setGoToEndBehavior] = useLocalStorage<string>(
         GoToEndButtonBehaviorKey,
@@ -221,6 +229,18 @@ const ViewerSettings = ({
                     <MenuItem value={CoordinateStyle.None}>None</MenuItem>
                     <MenuItem value={CoordinateStyle.RankFileOnly}>Rank and File Only</MenuItem>
                     <MenuItem value={CoordinateStyle.AllSquares}>Every Square</MenuItem>
+                </TextField>
+            )}
+
+            {(!enabledSettings || enabledSettings[ViewerSetting.CoordinateSize]) && (
+                <TextField
+                    select
+                    label='Coordinate Size'
+                    value={coordinateSize}
+                    onChange={(e) => setCoordinateSize(e.target.value as CoordinateSize)}
+                >
+                    <MenuItem value={CoordinateSize.Standard}>Standard</MenuItem>
+                    <MenuItem value={CoordinateSize.Large}>Large</MenuItem>
                 </TextField>
             )}
 
