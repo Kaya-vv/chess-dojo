@@ -12,7 +12,6 @@ export type PartialUser = Pick<
     | 'dojoCohort'
     | 'discordId'
     | 'discordUsername'
-    | 'gameReviewCohortId'
     | 'notificationSettings'
     | 'subscriptionStatus'
     | 'subscriptionTier'
@@ -29,7 +28,7 @@ export async function getNotificationSettings(username: string): Promise<Partial
             Key: {
                 username: { S: username },
             },
-            ProjectionExpression: `username, displayName, dojoCohort, email, discordId, discordUsername, gameReviewCohortId, notificationSettings, subscriptionStatus, subscriptionTier`,
+            ProjectionExpression: `username, displayName, dojoCohort, email, discordId, discordUsername, notificationSettings, subscriptionStatus, subscriptionTier`,
             TableName: userTable,
         }),
     );
