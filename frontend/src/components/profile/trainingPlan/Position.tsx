@@ -3,9 +3,10 @@ import { axiosService } from '@/api/axiosService';
 import { RequestSnackbar, useRequest } from '@/api/Request';
 import Board from '@/board/Board';
 import { getLigaIconBasedOnTimeControl } from '@/components/calendar/eventViewer/LigaTournamentViewer';
+import { PlayMaiaDialog } from '@/components/playbot/PlayMaiaDialog';
 import { Position as PositionModel } from '@/database/requirement';
 import Icon from '@/style/Icon';
-import { Biotech, Close as CloseIcon, SmartDisplay } from '@mui/icons-material';
+import { Biotech, Close as CloseIcon, SmartDisplay, SmartToy } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import { LoadingButton } from '@mui/lab';
@@ -49,6 +50,7 @@ const Position = ({ position, orientation }: PositionProps) => {
     const playComputerAnchor = useRef<HTMLButtonElement>(null);
     const [playComputerOpen, setPlayComputerOpen] = useState(false);
     const [videoOpen, setVideoOpen] = useState(false);
+    const [playMaiaOpen, setPlayMaiaOpen] = useState(false);
 
     const onCopy = (name: string) => {
         setCopied(name);
@@ -195,6 +197,14 @@ const Position = ({ position, orientation }: PositionProps) => {
                     </Button>
                 </Tooltip>
 
+                <Tooltip title='Play this position against Maia, a neural network which is trained on human games'>
+                    <Button
+                        startIcon={<SmartToy color='primary' />}
+                        onClick={() => setPlayMaiaOpen(true)}
+                    >
+                        Play Bot
+                    </Button>
+                </Tooltip>
                 {position.videoUrl && (
                     <Tooltip title='Watch the video for this position'>
                         <Button
@@ -233,6 +243,15 @@ const Position = ({ position, orientation }: PositionProps) => {
                 </Menu>
             </CardActions>
 
+            <PlayMaiaDialog
+                open={playMaiaOpen}
+                onClose={() => setPlayMaiaOpen(false)}
+                fen={position.fen.trim()}
+                limitSeconds={position.limitSeconds}
+                incrementSeconds={position.incrementSeconds}
+                positionTitle={position.title}
+                playerColor={turnColor(position.fen)}
+            />
             {position.videoUrl && (
                 <Dialog
                     open={videoOpen}
