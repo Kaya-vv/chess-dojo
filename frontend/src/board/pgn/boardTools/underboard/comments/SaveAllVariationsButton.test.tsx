@@ -78,7 +78,7 @@ describe('SaveAllVariationsButton', () => {
         expect(screen.getByRole('button', { name: 'Save All' })).toBeEnabled();
     });
 
-    it('saves all variations and updates the game', async () => {
+    it('saves all variations and updates the game without showing a success snackbar', async () => {
         const updatedGame = { ...game, positionComments: { updated: {} } } as unknown as Game;
         vi.mocked(getUnsavedSuggestedVariationRoots).mockReturnValue([{} as Move, {} as Move]);
         vi.mocked(saveAllSuggestedVariations).mockResolvedValue({
@@ -93,6 +93,6 @@ describe('SaveAllVariationsButton', () => {
             expect(saveAllSuggestedVariations).toHaveBeenCalledWith(user, game, api, chess);
         });
         expect(onUpdateGame).toHaveBeenCalledWith(updatedGame);
-        expect(await screen.findByText('Saved 2 variations as comments')).toBeInTheDocument();
+        expect(screen.queryByText('Saved 2 variations as comments')).not.toBeInTheDocument();
     });
 });

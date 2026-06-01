@@ -14,7 +14,7 @@ export function SaveAllVariationsButton() {
     const api = useApi();
     const { chess } = useChess();
     const { game, onUpdateGame } = useGame();
-    const request = useRequest<string>();
+    const request = useRequest();
     const [renderVersion, setRenderVersion] = useState(0);
 
     useEffect(() => {
@@ -58,11 +58,7 @@ export function SaveAllVariationsButton() {
             if (response.game) {
                 onUpdateGame(response.game);
             }
-            const savedLabel =
-                response.savedCount === 1
-                    ? 'Saved 1 variation as a comment'
-                    : `Saved ${response.savedCount} variations as comments`;
-            request.onSuccess(savedLabel);
+            request.onSuccess();
         } catch (err) {
             request.onFailure(err);
         }
@@ -87,7 +83,7 @@ export function SaveAllVariationsButton() {
             >
                 <Typography variant='body2'>{variationLabel}</Typography>
             </Alert>
-            <RequestSnackbar request={request} showSuccess />
+            <RequestSnackbar request={request} />
         </>
     );
 }
