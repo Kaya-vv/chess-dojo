@@ -1,5 +1,5 @@
 import { GameApiContextType } from '@/api/gameApi';
-import { Game } from '@/database/game';
+import { Game, GameResult } from '@/database/game';
 import { User } from '@/database/user';
 import { Chess, Move } from '@jackstenglein/chess';
 import { describe, expect, it, vi } from 'vitest';
@@ -25,7 +25,7 @@ function makeGame(overrides: Partial<Game> = {}): Game {
             Black: 'Black',
             Date: '2026.06.01',
             Site: 'ChessDojo',
-            Result: '*',
+            Result: GameResult.Incomplete,
         },
         createdAt: '2026-06-01T00:00:00Z',
         pgn: '[Event "?"]\n\n1. e4 e5 *',
