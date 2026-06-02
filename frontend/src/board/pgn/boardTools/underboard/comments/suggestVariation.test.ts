@@ -42,17 +42,23 @@ function markSaved(chess: Chess, move: Move, commentId: string) {
     chess.setCommand('dojoComment', `${user.username},${user.displayName},${commentId}`, move);
 }
 
+function requireMove(move: Move | null): Move {
+    expect(move).not.toBeNull();
+    if (!move) {
+        throw new Error('Expected move to be legal');
+    }
+    return move;
+}
+
 describe('getUnsavedSuggestedVariationRoots', () => {
     it('returns one root for a multi-move unsaved variation', () => {
         const chess = new Chess({ pgn: '[Event "?"]\n\n1. e4 e5 *' });
         const e4 = chess.history()[0];
-        const c5 = chess.move('c5', { previousMove: e4, skipSeek: true });
-        expect(c5).not.toBeNull();
-        markUnsaved(chess, c5!);
+        const c5 = requireMove(chess.move('c5', { previousMove: e4, skipSeek: true }));
+        markUnsaved(chess, c5);
 
-        const nf3 = chess.move('Nf3', { previousMove: c5, skipSeek: true });
-        expect(nf3).not.toBeNull();
-        markUnsaved(chess, nf3!);
+        const nf3 = requireMove(chess.move('Nf3', { previousMove: c5, skipSeek: true }));
+        markUnsaved(chess, nf3);
 
         const roots = getUnsavedSuggestedVariationRoots(user, chess);
 
@@ -65,13 +71,11 @@ describe('getUnsavedSuggestedVariationRoots', () => {
         const e4 = chess.history()[0];
         const e5 = chess.history()[1];
 
-        const c5 = chess.move('c5', { previousMove: e4, skipSeek: true });
-        expect(c5).not.toBeNull();
-        markUnsaved(chess, c5!);
+        const c5 = requireMove(chess.move('c5', { previousMove: e4, skipSeek: true }));
+        markUnsaved(chess, c5);
 
-        const d4 = chess.move('d4', { previousMove: e5, skipSeek: true });
-        expect(d4).not.toBeNull();
-        markUnsaved(chess, d4!);
+        const d4 = requireMove(chess.move('d4', { previousMove: e5, skipSeek: true }));
+        markUnsaved(chess, d4);
 
         const roots = getUnsavedSuggestedVariationRoots(user, chess);
 
@@ -83,13 +87,11 @@ describe('getUnsavedSuggestedVariationRoots', () => {
     it('returns the saved comment root when an existing suggested variation has an unsaved extension', () => {
         const chess = new Chess({ pgn: '[Event "?"]\n\n1. e4 e5 *' });
         const e4 = chess.history()[0];
-        const c5 = chess.move('c5', { previousMove: e4, skipSeek: true });
-        expect(c5).not.toBeNull();
-        markSaved(chess, c5!, 'comment-1');
+        const c5 = requireMove(chess.move('c5', { previousMove: e4, skipSeek: true }));
+        markSaved(chess, c5, 'comment-1');
 
-        const nf3 = chess.move('Nf3', { previousMove: c5, skipSeek: true });
-        expect(nf3).not.toBeNull();
-        markUnsaved(chess, nf3!);
+        const nf3 = requireMove(chess.move('Nf3', { previousMove: c5, skipSeek: true }));
+        markUnsaved(chess, nf3);
 
         const roots = getUnsavedSuggestedVariationRoots(user, chess);
 
@@ -100,9 +102,8 @@ describe('getUnsavedSuggestedVariationRoots', () => {
     it('ignores unsaved variations from another user', () => {
         const chess = new Chess({ pgn: '[Event "?"]\n\n1. e4 e5 *' });
         const e4 = chess.history()[0];
-        const c5 = chess.move('c5', { previousMove: e4, skipSeek: true });
-        expect(c5).not.toBeNull();
-        chess.setCommand('dojoComment', 'other-user,Other User,unsaved', c5!);
+        const c5 = requireMove(chess.move('c5', { previousMove: e4, skipSeek: true }));
+        chess.setCommand('dojoComment', 'other-user,Other User,unsaved', c5);
 
         expect(getUnsavedSuggestedVariationRoots(user, chess)).toEqual([]);
     });
@@ -113,13 +114,11 @@ describe('saveAllSuggestedVariations', () => {
         const chess = new Chess({ pgn: '[Event "?"]\n\n1. e4 e5 *' });
         const e4 = chess.history()[0];
 
-        const c5 = chess.move('c5', { previousMove: e4, skipSeek: true });
-        expect(c5).not.toBeNull();
-        markUnsaved(chess, c5!);
+        const c5 = requireMove(chess.move('c5', { previousMove: e4, skipSeek: true }));
+        markUnsaved(chess, c5);
 
-        const e6 = chess.move('e6', { previousMove: e4, skipSeek: true });
-        expect(e6).not.toBeNull();
-        markUnsaved(chess, e6!);
+        const e6 = requireMove(chess.move('e6', { previousMove: e4, skipSeek: true }));
+        markUnsaved(chess, e6);
 
         const firstGame = makeGame();
         const secondGame = makeGame({
@@ -170,20 +169,18 @@ describe('saveAllSuggestedVariations', () => {
         expect(api.createComment).toHaveBeenCalledTimes(2);
         expect(result.savedCount).toBe(2);
         expect(result.game).toBe(finalGame);
-        expect(c5!.commentDiag?.dojoComment).toBe(`${user.username},${user.displayName},comment-1`);
-        expect(e6!.commentDiag?.dojoComment).toBe(`${user.username},${user.displayName},comment-2`);
+        expect(c5.commentDiag?.dojoComment).toBe(`${user.username},${user.displayName},comment-1`);
+        expect(e6.commentDiag?.dojoComment).toBe(`${user.username},${user.displayName},comment-2`);
     });
 
     it('updates an existing suggested variation when only the extension is unsaved', async () => {
         const chess = new Chess({ pgn: '[Event "?"]\n\n1. e4 e5 *' });
         const e4 = chess.history()[0];
-        const c5 = chess.move('c5', { previousMove: e4, skipSeek: true });
-        expect(c5).not.toBeNull();
-        markSaved(chess, c5!, 'comment-1');
+        const c5 = requireMove(chess.move('c5', { previousMove: e4, skipSeek: true }));
+        markSaved(chess, c5, 'comment-1');
 
-        const nf3 = chess.move('Nf3', { previousMove: c5, skipSeek: true });
-        expect(nf3).not.toBeNull();
-        markUnsaved(chess, nf3!);
+        const nf3 = requireMove(chess.move('Nf3', { previousMove: c5, skipSeek: true }));
+        markUnsaved(chess, nf3);
 
         const updatedGame = makeGame();
         const game = makeGame({
@@ -220,8 +217,6 @@ describe('saveAllSuggestedVariations', () => {
         expect(api.updateComment).toHaveBeenCalledTimes(1);
         expect(result.savedCount).toBe(1);
         expect(result.game).toBe(updatedGame);
-        expect(nf3!.commentDiag?.dojoComment).toBe(
-            `${user.username},${user.displayName},comment-1`,
-        );
+        expect(nf3.commentDiag?.dojoComment).toBe(`${user.username},${user.displayName},comment-1`);
     });
 });
