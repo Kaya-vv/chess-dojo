@@ -43,6 +43,12 @@ export const ShowSuggestedVariations = {
     default: true,
 } as const;
 
+/** Whether to show position comments in the PGN text. */
+export const ShowInlineCommentsInPgn = {
+    key: 'showInlineCommentsInPgn',
+    default: true,
+} as const;
+
 /** Whether to automatically save variations as comments on other users games. */
 export const AutoSaveVariations = {
     key: 'autoSaveVariations',
@@ -123,6 +129,7 @@ export enum ViewerSetting {
     HighlightEngineLines,
     PersistEngineLines,
     DisplaySuggestedVariations,
+    DisplayInlineComments,
     ScrollOnBoardToMove,
     PieceSounds,
     CorrectSolitaireMoveSound,
@@ -180,6 +187,10 @@ const ViewerSettings = ({
     const [showSuggestedVariations, setShowSuggestedVariations] = useLocalStorage<boolean>(
         ShowSuggestedVariations.key,
         ShowSuggestedVariations.default,
+    );
+    const [showInlineCommentsInPgn, setShowInlineCommentsInPgn] = useLocalStorage<boolean>(
+        ShowInlineCommentsInPgn.key,
+        ShowInlineCommentsInPgn.default,
     );
     const [autoSaveVariations, setAutoSaveVariations] = useLocalStorage<boolean>(
         AutoSaveVariations.key,
@@ -375,6 +386,18 @@ const ViewerSettings = ({
                             />
                         }
                         label="Display other users' suggested variations in PGN text"
+                    />
+                )}
+
+                {(!enabledSettings || enabledSettings[ViewerSetting.DisplayInlineComments]) && (
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={showInlineCommentsInPgn}
+                                onChange={(e) => setShowInlineCommentsInPgn(e.target.checked)}
+                            />
+                        }
+                        label='Display comments in PGN text'
                     />
                 )}
 
