@@ -41,6 +41,21 @@ export function getInlineCommentsForMove(
     }
 
     return getCommentsForFen(game, chess.normalizedFen(move), move, SortBy.Oldest).filter(
-        (comment) => !comment.parentIds?.trim() && comment.content.trim().length > 0,
+        isInlineComment,
     );
+}
+
+export function getInlineCommentsForStartingPosition(
+    game: Game | undefined,
+    chess: Chess | undefined,
+): PositionComment[] {
+    if (!game || !chess) {
+        return [];
+    }
+
+    return getCommentsForFen(game, chess.setUpFen(), null, SortBy.Oldest).filter(isInlineComment);
+}
+
+function isInlineComment(comment: PositionComment): boolean {
+    return !comment.parentIds?.trim() && comment.content.trim().length > 0;
 }

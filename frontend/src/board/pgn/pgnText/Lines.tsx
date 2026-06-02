@@ -1,15 +1,21 @@
 import { useAuth } from '@/auth/Auth';
+import useGame from '@/context/useGame';
 import { CommentType, Event, EventType, Move } from '@jackstenglein/chess';
 import { Box, Collapse, Divider, Stack, Tooltip, Typography } from '@mui/material';
 import { Fragment, useEffect, useMemo, useRef, useState, type JSX } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
+import { getInlineCommentsForMove } from '../boardTools/underboard/comments/positionComments';
 import {
     isSuggestedVariation,
     isVariationSuggestor,
 } from '../boardTools/underboard/comments/suggestVariation';
-import { ShowSuggestedVariations } from '../boardTools/underboard/settings/ViewerSettings';
+import {
+    ShowInlineCommentsInPgn,
+    ShowSuggestedVariations,
+} from '../boardTools/underboard/settings/ViewerSettings';
 import { useChess } from '../PgnBoard';
 import Comment from './Comment';
+import InlinePositionComments from './InlinePositionComments';
 import MoveButton, { MoveButtonSlotProps } from './MoveButton';
 
 const borderWidth = 1.5; // px
@@ -36,10 +42,15 @@ export const Line: React.FC<LineProps> = ({
 }) => {
     const { user } = useAuth();
     const { chess } = useChess();
+    const { game } = useGame();
     const [, setForceRender] = useState(0);
     const [showSuggestedVariations] = useLocalStorage<boolean>(
         ShowSuggestedVariations.key,
         ShowSuggestedVariations.default,
+    );
+    const [showInlineCommentsInPgn] = useLocalStorage<boolean>(
+        ShowInlineCommentsInPgn.key,
+        ShowInlineCommentsInPgn.default,
     );
 
     useEffect(() => {
@@ -97,6 +108,11 @@ export const Line: React.FC<LineProps> = ({
                     slotProps={slotProps?.moveButton}
                 />
                 <Comment move={move} inline />
+                <InlinePositionComments
+                    comments={
+                        showInlineCommentsInPgn ? getInlineCommentsForMove(game, chess, move) : []
+                    }
+                />
             </Fragment>,
         );
     }

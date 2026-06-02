@@ -1,7 +1,12 @@
 import { Game, PositionComment } from '@/database/game';
 import { Chess } from '@jackstenglein/chess';
 import { describe, expect, it } from 'vitest';
-import { getCommentsForFen, getInlineCommentsForMove, SortBy } from './positionComments';
+import {
+    getCommentsForFen,
+    getInlineCommentsForMove,
+    getInlineCommentsForStartingPosition,
+    SortBy,
+} from './positionComments';
 
 function makeComment(overrides: Partial<PositionComment> = {}): PositionComment {
     return {
@@ -137,5 +142,47 @@ describe('position comment helpers', () => {
             [],
         );
         expect(getInlineCommentsForMove({ positionComments: {} } as Game, chess, null)).toEqual([]);
+    });
+
+    it('returns top-level non-empty starting position comments oldest first', () => {
+        const chess = new Chess({ pgn: '1. e4' });
+        const fen = chess.setUpFen();
+        const older = makeComment({
+            id: 'older',
+            fen,
+            ply: 0,
+            san: undefined,
+            content: 'First starting position comment',
+            createdAt: '2026-06-01T10:00:00Z',
+        });
+        const newer = makeComment({
+            id: 'newer',
+            fen,
+            ply: 0,
+            san: undefined,
+            content: 'Second starting position comment',
+            createdAt: '2026-06-01T11:00:00Z',
+        });
+        const reply = makeComment({
+            id: 'reply',
+            fen,
+            ply: 0,
+            san: undefined,
+            parentIds: 'older',
+            content: 'Reply text',
+        });
+        const empty = makeComment({
+            id: 'empty',
+            fen,
+            ply: 0,
+            san: undefined,
+            content: '   ',
+        });
+        const game = makeGame({ [fen]: { newer, reply, empty, older } });
+
+        expect(getInlineCommentsForStartingPosition(game, chess).map((c) => c.id)).toEqual([
+            'older',
+            'newer',
+        ]);
     });
 });

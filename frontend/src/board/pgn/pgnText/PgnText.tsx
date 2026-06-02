@@ -14,6 +14,7 @@ import { HideEngine } from '../boardTools/underboard/settings/ViewerSettings';
 import { ResizableData } from '../resize';
 import GameComment from './GameComment';
 import Result from './Result';
+import StartingPositionComments from './StartingPositionComments';
 import Variation from './Variation';
 import EngineSection from './engine/EngineSection';
 
@@ -55,6 +56,7 @@ const PgnText = () => {
                     sx={{ overflowY: 'scroll', overflowX: 'clip', flexGrow: 1, width: 1 }}
                 >
                     <GameComment />
+                    <StartingPositionComments />
                     <Variation handleScroll={handleScroll} />
                     {!slotProps?.pgnText?.hideResult && !solitaire?.enabled && <Result />}
 
