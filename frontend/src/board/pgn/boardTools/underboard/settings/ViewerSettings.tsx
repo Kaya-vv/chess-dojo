@@ -43,6 +43,12 @@ export const ShowSuggestedVariations = {
     default: true,
 } as const;
 
+/** Whether to automatically save variations as comments on other users games. */
+export const AutoSaveVariations = {
+    key: 'autoSaveVariations',
+    default: false,
+} as const;
+
 /** Whether to play sounds for piece moves on the board. */
 export const PieceSounds = {
     key: 'pieceSounds',
@@ -174,6 +180,10 @@ const ViewerSettings = ({
     const [showSuggestedVariations, setShowSuggestedVariations] = useLocalStorage<boolean>(
         ShowSuggestedVariations.key,
         ShowSuggestedVariations.default,
+    );
+    const [autoSaveVariations, setAutoSaveVariations] = useLocalStorage<boolean>(
+        AutoSaveVariations.key,
+        AutoSaveVariations.default,
     );
     const [scrollToMove, setScrollToMove] = useLocalStorage<boolean>(
         ScrollToMove.key,
@@ -365,6 +375,19 @@ const ViewerSettings = ({
                             />
                         }
                         label="Display other users' suggested variations in PGN text"
+                    />
+                )}
+
+                {(!enabledSettings ||
+                    enabledSettings[ViewerSetting.DisplaySuggestedVariations]) && (
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={autoSaveVariations}
+                                onChange={(e) => setAutoSaveVariations(e.target.checked)}
+                            />
+                        }
+                        label='Automatically save my suggested variations as comments'
                     />
                 )}
 
