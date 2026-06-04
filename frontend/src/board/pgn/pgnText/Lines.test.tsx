@@ -69,7 +69,7 @@ function makeComment(overrides: Partial<PositionComment> = {}): PositionComment 
     };
 }
 
-function renderVariationLine(enabled: boolean) {
+function renderVariationLine(enabled: boolean, showInlinePositionComments = true) {
     localStorage.setItem(ShowInlineCommentsInPgn.key, JSON.stringify(enabled));
 
     const chess = new Chess({ pgn: '1. e4 (1. d4 d5) e5' });
@@ -85,7 +85,13 @@ function renderVariationLine(enabled: boolean) {
 
     return render(
         <GameContext.Provider value={{ game }}>
-            <Line line={line} depth={0} handleScroll={() => null} onExpand={() => null} />
+            <Line
+                line={line}
+                depth={0}
+                handleScroll={() => null}
+                onExpand={() => null}
+                showInlinePositionComments={showInlinePositionComments}
+            />
         </GameContext.Provider>,
     );
 }
@@ -100,6 +106,12 @@ describe('Line inline position comments', () => {
 
     it('does not render comments attached to variation moves when the setting is disabled', () => {
         renderVariationLine(false);
+
+        expect(screen.queryByText('Variation position note')).not.toBeInTheDocument();
+    });
+
+    it('does not render comments when the line consumer disables inline position comments', () => {
+        renderVariationLine(true, false);
 
         expect(screen.queryByText('Variation position note')).not.toBeInTheDocument();
     });

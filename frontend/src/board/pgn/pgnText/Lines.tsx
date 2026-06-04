@@ -27,6 +27,7 @@ interface LineProps {
     handleScroll: (child: HTMLElement | null) => void;
     onExpand: () => void;
     forceShowSuggestedVariations?: boolean;
+    showInlinePositionComments?: boolean;
     slotProps?: {
         moveButton?: MoveButtonSlotProps;
     };
@@ -38,6 +39,7 @@ export const Line: React.FC<LineProps> = ({
     handleScroll,
     onExpand,
     forceShowSuggestedVariations,
+    showInlinePositionComments = true,
     slotProps,
 }) => {
     const { user } = useAuth();
@@ -91,6 +93,7 @@ export const Line: React.FC<LineProps> = ({
                     handleScroll={handleScroll}
                     expandParent={onExpand}
                     forceShowSuggestedVariations={forceShowSuggestedVariations}
+                    showInlinePositionComments={showInlinePositionComments}
                     slotProps={slotProps}
                 />,
             );
@@ -110,7 +113,9 @@ export const Line: React.FC<LineProps> = ({
                 <Comment move={move} inline />
                 <InlinePositionComments
                     comments={
-                        showInlineCommentsInPgn ? getInlineCommentsForMove(game, chess, move) : []
+                        showInlinePositionComments && showInlineCommentsInPgn
+                            ? getInlineCommentsForMove(game, chess, move)
+                            : []
                     }
                 />
             </Fragment>,
@@ -143,6 +148,7 @@ interface LinesProps {
     handleScroll: (child: HTMLElement | null) => void;
     expandParent?: () => void;
     forceShowSuggestedVariations?: boolean;
+    showInlinePositionComments?: boolean;
     slotProps?: {
         moveButton?: MoveButtonSlotProps;
     };
@@ -154,6 +160,7 @@ const Lines: React.FC<LinesProps> = ({
     handleScroll,
     expandParent,
     forceShowSuggestedVariations,
+    showInlinePositionComments = true,
     slotProps,
 }) => {
     const { chess } = useChess();
@@ -292,6 +299,7 @@ const Lines: React.FC<LinesProps> = ({
                             expandParent?.();
                         }}
                         forceShowSuggestedVariations={forceShowSuggestedVariations}
+                        showInlinePositionComments={showInlinePositionComments}
                         slotProps={slotProps}
                     />
                 ))}
