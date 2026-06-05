@@ -13,9 +13,8 @@ import {
     ShowSuggestedVariations,
 } from '../boardTools/underboard/settings/ViewerSettings';
 import { useChess } from '../PgnBoard';
-import Comment from './Comment';
+import { Comments } from './Comments';
 import { Ellipsis } from './Ellipsis';
-import InlinePositionComments from './InlinePositionComments';
 import Lines from './Lines';
 
 export function hasInterrupt(
@@ -96,8 +95,7 @@ const Interrupt: React.FC<InterruptProps> = ({ move, handleScroll }) => {
                         }}
                     />
 
-                    <Comment move={move} />
-                    <InlinePositionComments comments={inlineComments} />
+                    <Comments move={move} inlineComments={inlineComments} />
 
                     <Lines lines={move.variations} handleScroll={handleScroll} />
 

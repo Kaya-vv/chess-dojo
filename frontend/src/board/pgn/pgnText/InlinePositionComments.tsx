@@ -4,15 +4,16 @@ import { Stack, Tooltip, Typography } from '@mui/material';
 
 interface InlinePositionCommentsProps {
     comments: PositionComment[];
+    inline?: boolean;
 }
 
-export default function InlinePositionComments({ comments }: InlinePositionCommentsProps) {
+export default function InlinePositionComments({ comments, inline }: InlinePositionCommentsProps) {
     if (comments.length === 0) {
         return null;
     }
 
     return (
-        <Stack spacing={0.75} px={1} py={0.75}>
+        <Stack spacing={1.5} px={1} py={0.75}>
             {comments.map((comment) => (
                 <Stack
                     key={comment.id}
@@ -31,10 +32,10 @@ export default function InlinePositionComments({ comments }: InlinePositionComme
                         </span>
                     </Tooltip>
                     <Typography
-                        variant='body2'
-                        color='text.primary'
+                        variant={inline ? 'caption' : 'body2'}
+                        color='text.secondary'
                         whiteSpace='pre-line'
-                        sx={{ minWidth: 0, wordBreak: 'break-word' }}
+                        sx={{ minWidth: 0, wordBreak: 'break-word', paddingTop: '2px' }}
                     >
                         {comment.content.trim()}
                     </Typography>

@@ -14,8 +14,7 @@ import {
     ShowSuggestedVariations,
 } from '../boardTools/underboard/settings/ViewerSettings';
 import { useChess } from '../PgnBoard';
-import Comment from './Comment';
-import InlinePositionComments from './InlinePositionComments';
+import { Comments } from './Comments';
 import MoveButton, { MoveButtonSlotProps } from './MoveButton';
 
 const borderWidth = 1.5; // px
@@ -102,7 +101,7 @@ export const Line: React.FC<LineProps> = ({
 
         result.push(
             <Fragment key={`fragment-${i}`}>
-                <Comment move={move} type={CommentType.Before} inline />
+                <Comments move={move} type={CommentType.Before} inline inlineComments={[]} />
                 <MoveButton
                     inline
                     forceShowPly={i === 0}
@@ -110,9 +109,10 @@ export const Line: React.FC<LineProps> = ({
                     handleScroll={handleScroll}
                     slotProps={slotProps?.moveButton}
                 />
-                <Comment move={move} inline />
-                <InlinePositionComments
-                    comments={
+                <Comments
+                    move={move}
+                    inline
+                    inlineComments={
                         showInlinePositionComments && showInlineCommentsInPgn
                             ? getInlineCommentsForMove(game, chess, move)
                             : []

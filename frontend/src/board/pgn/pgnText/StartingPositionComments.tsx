@@ -1,5 +1,5 @@
 import useGame from '@/context/useGame';
-import { Paper } from '@mui/material';
+import { Divider, Paper } from '@mui/material';
 import { useLocalStorage } from 'usehooks-ts';
 import { getInlineCommentsForStartingPosition } from '../boardTools/underboard/comments/positionComments';
 import { ShowInlineCommentsInPgn } from '../boardTools/underboard/settings/ViewerSettings';
@@ -24,6 +24,7 @@ export default function StartingPositionComments() {
     return (
         <Paper elevation={3} sx={{ boxShadow: 'none', color: 'text.secondary' }}>
             <InlinePositionComments comments={comments} />
+            <Divider />
         </Paper>
     );
 }
