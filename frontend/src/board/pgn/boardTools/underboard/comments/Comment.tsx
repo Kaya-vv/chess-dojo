@@ -145,6 +145,7 @@ const BaseComment: React.FC<BaseCommentProps> = ({
                                         lines={[suggestedVariation]}
                                         handleScroll={() => null}
                                         forceShowSuggestedVariations
+                                        showInlinePositionComments={false}
                                         slotProps={{
                                             moveButton: { hideSuggestedVariationOwner: true },
                                         }}
