@@ -803,6 +803,9 @@ type UserUpdate struct {
 	// Non-Dojo tasks are not included.
 	MinutesSpent *map[string]int `dynamodbav:"minutesSpent,omitempty" json:"minutesSpent,omitempty"`
 
+	// The user's total dojo score, across all cohorts. Cannot be manually set by the user.
+	TotalDojoScore *float32 `dynamodbav:"totalDojoScore,omitempty" json:"-"`
+
 	// The user's profile picture as a base64 encoded string. This data gets saved to S3, not Dynamo.
 	ProfilePictureData *string `dynamodbav:"-" json:"profilePictureData,omitempty"`
 
