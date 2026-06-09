@@ -165,4 +165,18 @@ describe('Underboard side-panel tabs', () => {
         expect(screen.getByTestId('player-opening-tree-provider')).toBeInTheDocument();
         expect(explorerProps[0]).toEqual({ storageKey: 'analysis.left.explorerTab' });
     });
+
+    it('prefixes tab button test ids for secondary panels', () => {
+        render(
+            <Underboard
+                tabs={[DefaultUnderboardTab.Tags, DefaultUnderboardTab.PgnText]}
+                buttonTestIdPrefix='right-'
+                resizeData={resizeData}
+                onResize={vi.fn()}
+            />,
+        );
+
+        expect(screen.getByTestId('right-underboard-button-tags')).toBeInTheDocument();
+        expect(screen.queryByTestId('underboard-button-tags')).not.toBeInTheDocument();
+    });
 });

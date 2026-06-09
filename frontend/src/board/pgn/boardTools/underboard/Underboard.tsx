@@ -136,6 +136,7 @@ interface UnderboardProps {
     onResize: (width: number, height: number) => void;
     storageKey?: string;
     explorerStorageKey?: string;
+    buttonTestIdPrefix?: string;
 }
 
 const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
@@ -147,6 +148,7 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
             onResize,
             storageKey = 'underboardTab',
             explorerStorageKey,
+            buttonTestIdPrefix = '',
         },
         ref,
     ) => {
@@ -290,6 +292,7 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
                                             tooltip={info.tooltip}
                                             value={info.name}
                                             shortcut={info.shortcut}
+                                            testIdPrefix={buttonTestIdPrefix}
                                             sx={{
                                                 borderTop: light ? 0 : undefined,
 
@@ -312,6 +315,7 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
                                     <UnderboardButton
                                         tooltip='More'
                                         value='more'
+                                        testIdPrefix={buttonTestIdPrefix}
                                         onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
@@ -401,9 +405,17 @@ interface UnderboardButtonProps extends ToggleButtonProps {
     tooltip: string;
     value: string;
     shortcut?: ShortcutAction;
+    testIdPrefix?: string;
 }
 
-function UnderboardButton({ children, value, tooltip, shortcut, ...props }: UnderboardButtonProps) {
+function UnderboardButton({
+    children,
+    value,
+    tooltip,
+    shortcut,
+    testIdPrefix = '',
+    ...props
+}: UnderboardButtonProps) {
     const [keyBindings] = useLocalStorage(ShortcutBindings.key, ShortcutBindings.default);
     if (shortcut) {
         const binding = keyBindings[shortcut] || ShortcutBindings.default[shortcut];
@@ -414,7 +426,11 @@ function UnderboardButton({ children, value, tooltip, shortcut, ...props }: Unde
 
     return (
         <Tooltip title={tooltip}>
-            <ToggleButton data-testid={`underboard-button-${value}`} value={value} {...props}>
+            <ToggleButton
+                data-testid={`${testIdPrefix}underboard-button-${value}`}
+                value={value}
+                {...props}
+            >
                 {children}
             </ToggleButton>
         </Tooltip>

@@ -141,6 +141,7 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
                     onResize={onResize('pgn')}
                     storageKey={getPanelStorageKey(tabStorageKeyPrefix, 'right')}
                     explorerStorageKey={getExplorerStorageKey(tabStorageKeyPrefix, 'right')}
+                    buttonTestIdPrefix='right-'
                 />
             ) : (
                 <ResizablePgnText resizeData={sizes.pgn} onResize={onResize('pgn')} />

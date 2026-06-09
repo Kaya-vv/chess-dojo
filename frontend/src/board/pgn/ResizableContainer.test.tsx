@@ -25,11 +25,13 @@ vi.mock('./boardTools/underboard/Underboard', () => ({
         initialTab,
         storageKey,
         explorerStorageKey,
+        buttonTestIdPrefix,
     }: {
         tabs: unknown[];
         initialTab?: string;
         storageKey?: string;
         explorerStorageKey?: string;
+        buttonTestIdPrefix?: string;
     }) => (
         <div
             data-testid='underboard-panel'
@@ -37,6 +39,7 @@ vi.mock('./boardTools/underboard/Underboard', () => ({
             data-initial-tab={initialTab}
             data-storage-key={storageKey}
             data-explorer-storage-key={explorerStorageKey}
+            data-button-test-id-prefix={buttonTestIdPrefix}
         />
     ),
 }));
@@ -99,6 +102,7 @@ describe('ResizableContainer side panels', () => {
             'data-explorer-storage-key',
             'analysis.right.explorerTab',
         );
+        expect(panels[1]).toHaveAttribute('data-button-test-id-prefix', 'right-');
         expect(screen.queryByTestId('dedicated-pgn-panel')).not.toBeInTheDocument();
     });
 });
