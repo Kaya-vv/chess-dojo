@@ -92,6 +92,9 @@ export interface PgnBoardSlotProps {
 interface PgnBoardProps extends ChessConfig {
     underboardTabs: UnderboardTab[];
     initialUnderboardTab?: string;
+    rightTabs?: UnderboardTab[];
+    initialRightTab?: string;
+    tabStorageKeyPrefix?: string;
     pgn?: string;
     fen?: string;
     showPlayerHeaders?: boolean;
@@ -106,6 +109,9 @@ const PgnBoard = forwardRef<PgnBoardApi, PgnBoardProps>(
         {
             underboardTabs,
             initialUnderboardTab,
+            rightTabs,
+            initialRightTab,
+            tabStorageKeyPrefix,
             pgn,
             fen,
             showPlayerHeaders = true,
@@ -286,6 +292,9 @@ const PgnBoard = forwardRef<PgnBoardApi, PgnBoardProps>(
                             {...{
                                 underboardTabs,
                                 initialUnderboardTab,
+                                rightTabs,
+                                initialRightTab,
+                                tabStorageKeyPrefix,
                                 showPlayerHeaders,
                                 pgn,
                                 fen,

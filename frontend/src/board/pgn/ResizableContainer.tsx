@@ -17,9 +17,20 @@ function getParentWidth() {
     return document.getElementById(CONTAINER_ID)?.getBoundingClientRect().width || 0;
 }
 
+function getPanelStorageKey(prefix: string | undefined, side: 'left' | 'right') {
+    return prefix ? `${prefix}.${side}.tab` : undefined;
+}
+
+function getExplorerStorageKey(prefix: string | undefined, side: 'left' | 'right') {
+    return prefix ? `${prefix}.${side}.explorerTab` : undefined;
+}
+
 interface ResizableContainerProps {
     underboardTabs: UnderboardTab[];
     initialUnderboardTab?: string;
+    rightTabs?: UnderboardTab[];
+    initialRightTab?: string;
+    tabStorageKeyPrefix?: string;
     pgn?: string;
     fen?: string;
     showPlayerHeaders?: boolean;
@@ -30,6 +41,9 @@ interface ResizableContainerProps {
 const ResizableContainer: React.FC<ResizableContainerProps> = ({
     underboardTabs,
     initialUnderboardTab,
+    rightTabs,
+    initialRightTab,
+    tabStorageKeyPrefix,
     showPlayerHeaders,
     pgn,
     fen,
@@ -100,6 +114,8 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
                     initialTab={initialUnderboardTab}
                     resizeData={sizes.underboard}
                     onResize={onResize('underboard')}
+                    storageKey={getPanelStorageKey(tabStorageKeyPrefix, 'left')}
+                    explorerStorageKey={getExplorerStorageKey(tabStorageKeyPrefix, 'left')}
                 />
             )}
 
@@ -117,7 +133,18 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
                 }}
             />
 
-            <ResizablePgnText resizeData={sizes.pgn} onResize={onResize('pgn')} />
+            {rightTabs ? (
+                <Underboard
+                    tabs={rightTabs}
+                    initialTab={initialRightTab}
+                    resizeData={sizes.pgn}
+                    onResize={onResize('pgn')}
+                    storageKey={getPanelStorageKey(tabStorageKeyPrefix, 'right')}
+                    explorerStorageKey={getExplorerStorageKey(tabStorageKeyPrefix, 'right')}
+                />
+            ) : (
+                <ResizablePgnText resizeData={sizes.pgn} onResize={onResize('pgn')} />
+            )}
         </Stack>
     );
 };

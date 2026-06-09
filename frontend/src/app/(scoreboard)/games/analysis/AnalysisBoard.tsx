@@ -24,6 +24,16 @@ import { useState } from 'react';
 
 const gameUrlRegex = /^\/games\/.*\/.*/;
 
+const analysisTabs = [
+    DefaultUnderboardTab.PgnText,
+    DefaultUnderboardTab.Tags,
+    DefaultUnderboardTab.Editor,
+    DefaultUnderboardTab.Explorer,
+    DefaultUnderboardTab.Clocks,
+    DefaultUnderboardTab.Share,
+    DefaultUnderboardTab.Settings,
+];
+
 function parseCreateGameRequest(req: CreateGameRequest | null) {
     if (req?.pgnText) {
         return { pgn: req.pgnText };
@@ -65,21 +75,17 @@ export default function AnalysisBoard() {
                     pgn={pgn}
                     fen={searchParams.get('fen') || fen}
                     startOrientation={getDefaultOrientation(pgn, user)}
-                    underboardTabs={[
-                        DefaultUnderboardTab.Tags,
-                        DefaultUnderboardTab.Editor,
-                        DefaultUnderboardTab.Explorer,
-                        DefaultUnderboardTab.Clocks,
-                        DefaultUnderboardTab.Share,
-                        DefaultUnderboardTab.Settings,
-                    ]}
+                    underboardTabs={analysisTabs}
+                    rightTabs={analysisTabs}
+                    initialUnderboardTab={DefaultUnderboardTab.Explorer}
+                    initialRightTab={DefaultUnderboardTab.PgnText}
+                    tabStorageKeyPrefix='analysis'
                     allowMoveDeletion={true}
                     allowDeleteBefore={true}
                     showElapsedMoveTimes
                     slots={{
                         moveButtonExtras: GameMoveButtonExtras,
                     }}
-                    initialUnderboardTab={DefaultUnderboardTab.Explorer}
                     disableNullMoves={false}
                     onInitialize={(_, c) => setChess(c)}
                 />

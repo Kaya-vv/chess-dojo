@@ -2,6 +2,7 @@ import useGame from '@/context/useGame';
 import { useLightMode } from '@/style/useLightMode';
 import {
     AccessAlarm,
+    Article,
     Chat,
     Construction,
     Edit,
@@ -25,14 +26,7 @@ import {
     ToggleButtonProps,
     Tooltip,
 } from '@mui/material';
-import React, {
-    forwardRef,
-    Fragment,
-    useCallback,
-    useImperativeHandle,
-    useMemo,
-    useState,
-} from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 import { Resizable, ResizeCallbackData } from 'react-resizable';
 import { useLocalStorage } from 'usehooks-ts';
 import { AuthStatus, useAuth } from '../../../../auth/Auth';
@@ -40,6 +34,7 @@ import { useChess } from '../../PgnBoard';
 import ResizeHandle from '../../ResizeHandle';
 import Explorer from '../../explorer/Explorer';
 import { PlayerOpeningTreeProvider } from '../../explorer/player/PlayerOpeningTree';
+import { UnderboardPgnText } from '../../pgnText/PgnText';
 import { ResizableData } from '../../resize';
 import Editor from './Editor';
 import ClockUsage from './clock/ClockUsage';
@@ -65,6 +60,12 @@ const tabInfo: Record<DefaultUnderboardTab, DefaultUnderboardTabInfo> = {
         tooltip: 'Files',
         icon: <Folder />,
         shortcut: ShortcutAction.OpenFiles,
+    },
+    [DefaultUnderboardTab.PgnText]: {
+        name: DefaultUnderboardTab.PgnText,
+        tooltip: 'PGN Text',
+        icon: <Article />,
+        shortcut: ShortcutAction.OpenPgnText,
     },
     [DefaultUnderboardTab.Tags]: {
         name: DefaultUnderboardTab.Tags,
@@ -133,10 +134,22 @@ interface UnderboardProps {
     initialTab?: string;
     resizeData: ResizableData;
     onResize: (width: number, height: number) => void;
+    storageKey?: string;
+    explorerStorageKey?: string;
 }
 
 const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
-    ({ tabs, initialTab, resizeData, onResize }, ref) => {
+    (
+        {
+            tabs,
+            initialTab,
+            resizeData,
+            onResize,
+            storageKey = 'underboardTab',
+            explorerStorageKey,
+        },
+        ref,
+    ) => {
         const auth = useAuth();
         const { chess } = useChess();
         const { game, isOwner } = useGame();
@@ -163,7 +176,7 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
             [isOwner, game],
         );
 
-        const [storedTab, setStoredTab] = useLocalStorage<string>('underboardTab', fallbackTab);
+        const [storedTab, setStoredTab] = useLocalStorage<string>(storageKey, fallbackTab);
 
         // Local override for pages with forced initialTab (puzzles, exams, analysis).
         // Allows tab switching without persisting to localStorage.
@@ -234,10 +247,6 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
         const customTab = tabs.find(
             (t) => typeof t !== 'string' && t.name === underboard,
         ) as CustomUnderboardTab;
-
-        const ExplorerWrapper = tabs.includes(DefaultUnderboardTab.Explorer)
-            ? PlayerOpeningTreeProvider
-            : Fragment;
 
         return (
             <Resizable
@@ -351,15 +360,18 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
 
                     <Stack sx={{ overflowY: 'auto', flexGrow: 1 }}>
                         {underboard === DefaultUnderboardTab.Directories && <Directories />}
+                        {underboard === DefaultUnderboardTab.PgnText && <UnderboardPgnText />}
                         {underboard === DefaultUnderboardTab.Tags && (
                             <Tags game={game} allowEdits={isOwner} />
                         )}
                         {underboard === DefaultUnderboardTab.Editor && (
                             <Editor focusEditor={focusEditor} setFocusEditor={setFocusEditor} />
                         )}
-                        <ExplorerWrapper>
-                            {underboard === DefaultUnderboardTab.Explorer && <Explorer />}
-                        </ExplorerWrapper>
+                        {underboard === DefaultUnderboardTab.Explorer && (
+                            <PlayerOpeningTreeProvider>
+                                <Explorer storageKey={explorerStorageKey} />
+                            </PlayerOpeningTreeProvider>
+                        )}
                         {underboard === DefaultUnderboardTab.Settings && (
                             <Settings showEditor={isOwner} />
                         )}

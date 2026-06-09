@@ -49,6 +49,8 @@ function displayShortcutAction(action: ShortcutAction): string {
             return 'Open Files';
         case ShortcutAction.OpenTags:
             return 'Open Tags';
+        case ShortcutAction.OpenPgnText:
+            return 'Open PGN Text';
         case ShortcutAction.OpenEditor:
             return 'Open Editor';
         case ShortcutAction.OpenComments:
@@ -105,6 +107,8 @@ function shortcutActionDescription(action: ShortcutAction): string {
             return 'Open the Files tab.';
         case ShortcutAction.OpenTags:
             return 'Open the Tags tab.';
+        case ShortcutAction.OpenPgnText:
+            return 'Open the PGN Text tab.';
         case ShortcutAction.OpenEditor:
             return 'Open the Editor tab, if present.';
         case ShortcutAction.OpenComments:
@@ -390,6 +394,7 @@ export const keyboardShortcutHandlers: Record<ShortcutAction, ShortcutHandler> =
     [ShortcutAction.LastMoveVariation]: handleLastMoveVariation,
     [ShortcutAction.OpenFiles]: handleOpenTab(DefaultUnderboardTab.Directories),
     [ShortcutAction.OpenTags]: handleOpenTab(DefaultUnderboardTab.Tags),
+    [ShortcutAction.OpenPgnText]: handleOpenTab(DefaultUnderboardTab.PgnText),
     [ShortcutAction.OpenEditor]: handleOpenTab(DefaultUnderboardTab.Editor),
     [ShortcutAction.OpenComments]: handleOpenTab(DefaultUnderboardTab.Comments),
     [ShortcutAction.OpenDatabase]: handleOpenTab(DefaultUnderboardTab.Explorer),
