@@ -6,7 +6,7 @@ import AnalysisBoard from './AnalysisBoard';
 import type { ReactNode } from 'react';
 
 const { pgnBoardProps } = vi.hoisted(() => ({
-    pgnBoardProps: [] as Array<Record<string, unknown>>,
+    pgnBoardProps: [] as Record<string, unknown>[],
 }));
 
 vi.mock('@/auth/Auth', () => ({

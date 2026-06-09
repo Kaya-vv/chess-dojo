@@ -6,7 +6,7 @@ import { DefaultUnderboardTab } from './underboardTabs';
 import type { ReactNode } from 'react';
 
 const { explorerProps } = vi.hoisted(() => ({
-    explorerProps: [] as Array<{ storageKey?: string }>,
+    explorerProps: [] as { storageKey?: string }[],
 }));
 
 vi.mock('@mui/icons-material', () => ({
