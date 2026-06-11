@@ -376,6 +376,17 @@ type User struct {
 
 	// Tracks which cohort version the user is currently on. Unset means 2024.
 	CohortVersion string `dynamodbav:"cohortVersion,omitempty" json:"cohortVersion,omitempty"`
+
+	// The user's aggregate time management rating, computed from games in their mygames folder
+	TimeManagementRating *TimeManagementRating `dynamodbav:"timeManagementRating,omitempty" json:"timeManagementRating,omitempty"`
+}
+
+// TimeManagementRating holds the user's aggregate time management rating.
+type TimeManagementRating struct {
+	// The current aggregate rating
+	CurrentRating int `dynamodbav:"currentRating" json:"currentRating"`
+	// The number of games included in the aggregate
+	NumGames int `dynamodbav:"numGames" json:"numGames"`
 }
 
 type PuzzleThemeOverview struct {
