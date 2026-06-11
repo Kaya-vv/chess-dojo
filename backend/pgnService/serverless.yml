@@ -253,13 +253,14 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:DeleteItem
+          - dynamodb:PartiQLUpdate
           - dynamodb:BatchGetItem
         Resource: ${param:GamesTableArn}
       - Effect: Allow
         Action:
           - dynamodb:GetItem
-        Resource:
-          - ${param:DirectoriesTableArn}
+          - dynamodb:UpdateItem
+        Resource: ${param:DirectoriesTableArn}
       - Effect: Allow
         Action:
           - dynamodb:UpdateItem
