@@ -197,6 +197,23 @@ describe('Underboard side-panel tabs', () => {
         expect(screen.getByTestId('explorer-tab')).toBeInTheDocument();
     });
 
+    it('keeps header content outside the tab content card', () => {
+        render(
+            <Underboard
+                tabs={[DefaultUnderboardTab.PgnText]}
+                initialTab={DefaultUnderboardTab.PgnText}
+                resizeData={resizeData}
+                onResize={vi.fn()}
+                header={<div data-testid='right-panel-header'>Header</div>}
+            />,
+        );
+
+        expect(screen.getByTestId('right-panel-header').closest('.MuiCard-root')).toBeNull();
+        expect(
+            screen.getByTestId('underboard-tab-content').closest('.MuiCard-root'),
+        ).not.toBeNull();
+    });
+
     it('falls back to an available tab when initialTab is unavailable', () => {
         render(
             <Underboard
