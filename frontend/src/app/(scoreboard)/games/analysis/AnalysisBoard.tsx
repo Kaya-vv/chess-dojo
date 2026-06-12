@@ -3,6 +3,7 @@
 import { AuthStatus, useAuth } from '@/auth/Auth';
 import { DefaultUnderboardTab } from '@/board/pgn/boardTools/underboard/underboardTabs';
 import PgnBoard from '@/board/pgn/PgnBoard';
+import { getInitialSidePanelTab, useSidePanelTabs } from '@/board/pgn/sidePanelTabs';
 import SaveGameDialog, { SaveGameDialogType } from '@/components/games/edit/SaveGameDialog';
 import { GameMoveButtonExtras } from '@/components/games/view/GameMoveButtonExtras';
 import { GameContext } from '@/context/useGame';
@@ -58,6 +59,7 @@ export default function AnalysisBoard() {
         onSubmit,
         request,
     } = useUnsavedGame(chess);
+    const { leftTabs, rightTabs } = useSidePanelTabs(analysisTabs);
 
     if (status === AuthStatus.Loading) {
         return <LoadingPage />;
@@ -75,10 +77,14 @@ export default function AnalysisBoard() {
                     pgn={pgn}
                     fen={searchParams.get('fen') || fen}
                     startOrientation={getDefaultOrientation(pgn, user)}
-                    underboardTabs={analysisTabs}
-                    rightTabs={analysisTabs}
-                    initialUnderboardTab={DefaultUnderboardTab.Explorer}
-                    initialRightTab={DefaultUnderboardTab.PgnText}
+                    underboardTabs={leftTabs}
+                    rightTabs={rightTabs}
+                    sidePanelTabs={analysisTabs}
+                    initialUnderboardTab={getInitialSidePanelTab(
+                        leftTabs,
+                        DefaultUnderboardTab.Explorer,
+                    )}
+                    initialRightTab={getInitialSidePanelTab(rightTabs, DefaultUnderboardTab.PgnText)}
                     tabStorageKeyPrefix='analysis'
                     allowMoveDeletion={true}
                     allowDeleteBefore={true}

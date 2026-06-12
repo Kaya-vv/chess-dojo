@@ -84,28 +84,62 @@ describe('AnalysisBoard side tabs', () => {
     });
 
     beforeEach(() => {
+        localStorage.clear();
         pgnBoardProps.length = 0;
     });
 
-    it('passes the shared analysis tabs to both side panels', () => {
+    it('uses the familiar default side-panel layout', () => {
         render(<AnalysisBoard />);
 
-        const analysisTabs = [
-            DefaultUnderboardTab.PgnText,
-            DefaultUnderboardTab.Tags,
-            DefaultUnderboardTab.Editor,
-            DefaultUnderboardTab.Explorer,
-            DefaultUnderboardTab.Clocks,
-            DefaultUnderboardTab.Share,
-            DefaultUnderboardTab.Settings,
-        ];
-
         expect(pgnBoardProps[0]).toMatchObject({
-            underboardTabs: analysisTabs,
-            rightTabs: analysisTabs,
+            underboardTabs: [
+                DefaultUnderboardTab.Tags,
+                DefaultUnderboardTab.Editor,
+                DefaultUnderboardTab.Explorer,
+                DefaultUnderboardTab.Clocks,
+                DefaultUnderboardTab.Share,
+                DefaultUnderboardTab.Settings,
+            ],
+            rightTabs: [DefaultUnderboardTab.PgnText],
             initialUnderboardTab: DefaultUnderboardTab.Explorer,
             initialRightTab: DefaultUnderboardTab.PgnText,
+            sidePanelTabs: [
+                DefaultUnderboardTab.PgnText,
+                DefaultUnderboardTab.Tags,
+                DefaultUnderboardTab.Editor,
+                DefaultUnderboardTab.Explorer,
+                DefaultUnderboardTab.Clocks,
+                DefaultUnderboardTab.Share,
+                DefaultUnderboardTab.Settings,
+            ],
             tabStorageKeyPrefix: 'analysis',
+        });
+    });
+
+    it('uses stored side-panel tab placement', () => {
+        localStorage.setItem(
+            'analysisSidePanelTabs',
+            JSON.stringify({
+                [DefaultUnderboardTab.Explorer]: 'both',
+                [DefaultUnderboardTab.Editor]: 'right',
+            }),
+        );
+
+        render(<AnalysisBoard />);
+
+        expect(pgnBoardProps[0]).toMatchObject({
+            underboardTabs: [
+                DefaultUnderboardTab.Tags,
+                DefaultUnderboardTab.Explorer,
+                DefaultUnderboardTab.Clocks,
+                DefaultUnderboardTab.Share,
+                DefaultUnderboardTab.Settings,
+            ],
+            rightTabs: [
+                DefaultUnderboardTab.PgnText,
+                DefaultUnderboardTab.Editor,
+                DefaultUnderboardTab.Explorer,
+            ],
         });
     });
 });
