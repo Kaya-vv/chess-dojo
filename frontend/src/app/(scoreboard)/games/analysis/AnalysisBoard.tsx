@@ -84,7 +84,10 @@ export default function AnalysisBoard() {
                         leftTabs,
                         DefaultUnderboardTab.Explorer,
                     )}
-                    initialRightTab={getInitialSidePanelTab(rightTabs, DefaultUnderboardTab.PgnText)}
+                    initialRightTab={getInitialSidePanelTab(
+                        rightTabs,
+                        DefaultUnderboardTab.PgnText,
+                    )}
                     tabStorageKeyPrefix='analysis'
                     allowMoveDeletion={true}
                     allowDeleteBefore={true}

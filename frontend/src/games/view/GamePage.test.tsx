@@ -1,26 +1,37 @@
 import { DefaultUnderboardTab } from '@/board/pgn/boardTools/underboard/underboardTabs';
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import GamePage from './GamePage';
 
 import type { ReactNode } from 'react';
 
-const { game, pgnBoardProps } = vi.hoisted(() => ({
-    game: {
-        cohort: 'dojo',
-        id: 'game1',
-        owner: 'dojo-user',
-        pgn: '1. e4 e5',
-        orientation: 'white',
-        headers: {
-            white: 'White',
-            black: 'Black',
-            date: '2026.06.12',
-            result: '*',
+const { game, pgnBoardProps, authState } = vi.hoisted(() => {
+    const user = {
+        username: 'dojo-user',
+        displayName: 'Dojo User',
+    };
+
+    return {
+        game: {
+            cohort: 'dojo',
+            id: 'game1',
+            owner: 'dojo-user',
+            pgn: '1. e4 e5',
+            orientation: 'white',
+            headers: {
+                white: 'White',
+                black: 'Black',
+                date: '2026.06.12',
+                result: '*',
+            },
         },
-    },
-    pgnBoardProps: [] as Record<string, unknown>[],
-}));
+        pgnBoardProps: [] as Record<string, unknown>[],
+        authState: {
+            status: 'authenticated',
+            user: user as typeof user | undefined,
+        },
+    };
+});
 
 vi.mock('@/analytics/events', () => ({
     EventType: { UpdateGame: 'UpdateGame' },
@@ -57,13 +68,7 @@ vi.mock('@/auth/Auth', () => ({
         Authenticated: 'authenticated',
         Loading: 'loading',
     },
-    useAuth: () => ({
-        status: 'authenticated',
-        user: {
-            username: 'dojo-user',
-            displayName: 'Dojo User',
-        },
-    }),
+    useAuth: () => authState,
 }));
 
 vi.mock('@/board/pgn/PgnBoard', () => ({
@@ -113,9 +118,15 @@ vi.mock('./PgnErrorBoundary', () => ({
 describe('GamePage side tabs', () => {
     afterEach(() => {
         cleanup();
+        vi.restoreAllMocks();
     });
 
     beforeEach(() => {
+        authState.status = 'authenticated';
+        authState.user = {
+            username: 'dojo-user',
+            displayName: 'Dojo User',
+        };
         localStorage.clear();
         pgnBoardProps.length = 0;
     });
@@ -170,5 +181,30 @@ describe('GamePage side tabs', () => {
                 DefaultUnderboardTab.Explorer,
             ],
         });
+    });
+
+    it('keeps hook order when auth finishes loading', () => {
+        authState.status = 'loading';
+        authState.user = undefined;
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+        const { rerender } = render(<GamePage cohort='dojo' id='game1' />);
+        expect(screen.getByTestId('loading-page')).toBeInTheDocument();
+
+        authState.status = 'authenticated';
+        authState.user = {
+            username: 'dojo-user',
+            displayName: 'Dojo User',
+        };
+        rerender(<GamePage cohort='dojo' id='game1' />);
+
+        expect(pgnBoardProps[0]).toMatchObject({
+            rightTabs: [DefaultUnderboardTab.PgnText],
+        });
+        expect(consoleError).not.toHaveBeenCalledWith(
+            expect.stringContaining(
+                'React has detected a change in the order of Hooks called by GamePage',
+            ),
+        );
     });
 });

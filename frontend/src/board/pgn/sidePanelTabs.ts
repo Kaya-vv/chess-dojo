@@ -7,10 +7,7 @@ export type SidePanelTabConfig = Partial<Record<DefaultUnderboardTab, SidePanelT
 
 export const SIDE_PANEL_TABS_KEY = 'analysisSidePanelTabs';
 
-export const DEFAULT_SIDE_PANEL_TAB_CONFIG: Record<
-    DefaultUnderboardTab,
-    SidePanelTabPlacement
-> = {
+export const DEFAULT_SIDE_PANEL_TAB_CONFIG: Record<DefaultUnderboardTab, SidePanelTabPlacement> = {
     [DefaultUnderboardTab.Directories]: 'left',
     [DefaultUnderboardTab.PgnText]: 'right',
     [DefaultUnderboardTab.Tags]: 'left',

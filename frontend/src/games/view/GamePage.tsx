@@ -89,6 +89,23 @@ const GamePage = ({ cohort: initialCohort, id: initialId }: { cohort: string; id
         window.history.replaceState(null, '', newUrl);
     }, []);
 
+    // Use currentGame to keep the board visible while switching games
+    const game = currentGame ?? request.data;
+    const isOwner = game?.owner === user?.username;
+    const availableSidePanelTabs = [
+        ...(user ? [DefaultUnderboardTab.Directories] : []),
+        DefaultUnderboardTab.PgnText,
+        DefaultUnderboardTab.Tags,
+        ...(isOwner ? [DefaultUnderboardTab.Editor] : []),
+        DefaultUnderboardTab.Comments,
+        DefaultUnderboardTab.Explorer,
+        DefaultUnderboardTab.Clocks,
+        DefaultUnderboardTab.Tools,
+        DefaultUnderboardTab.Share,
+        DefaultUnderboardTab.Settings,
+    ];
+    const { leftTabs, rightTabs } = useSidePanelTabs(availableSidePanelTabs);
+
     if (status === AuthStatus.Loading) {
         return <LoadingPage />;
     }
@@ -177,23 +194,7 @@ const GamePage = ({ cohort: initialCohort, id: initialId }: { cohort: string; id
         }
     };
 
-    // Use currentGame to keep the board visible while switching games
-    const game = currentGame ?? request.data;
-    const isOwner = game?.owner === user?.username;
     const showPreflight = isOwner && firstLoad && game !== undefined && isMissingData(game);
-    const availableSidePanelTabs = [
-        ...(user ? [DefaultUnderboardTab.Directories] : []),
-        DefaultUnderboardTab.PgnText,
-        DefaultUnderboardTab.Tags,
-        ...(isOwner ? [DefaultUnderboardTab.Editor] : []),
-        DefaultUnderboardTab.Comments,
-        DefaultUnderboardTab.Explorer,
-        DefaultUnderboardTab.Clocks,
-        DefaultUnderboardTab.Tools,
-        DefaultUnderboardTab.Share,
-        DefaultUnderboardTab.Settings,
-    ];
-    const { leftTabs, rightTabs } = useSidePanelTabs(availableSidePanelTabs);
 
     return (
         <Box
