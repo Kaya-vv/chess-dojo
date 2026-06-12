@@ -3,7 +3,7 @@ import { UnpublishedGameBanner } from '@/components/games/edit/UnpublishedGameBa
 import { UnsavedGameBanner } from '@/components/games/edit/UnsavedGameBanner';
 import useGame from '@/context/useGame';
 import { useLightMode } from '@/style/useLightMode';
-import { Card, CardContent, Stack } from '@mui/material';
+import { Card, Stack } from '@mui/material';
 import React, { useMemo, useRef } from 'react';
 import { Resizable, ResizeCallbackData } from 'react-resizable';
 import { useLocalStorage } from 'usehooks-ts';
@@ -40,7 +40,16 @@ const PgnTextBody = () => {
     return (
         <>
             {!config?.disableEngine && !hideEngine && !solitaire?.enabled && <EngineSection />}
-            <Stack ref={ref} sx={{ overflowY: 'scroll', overflowX: 'clip', flexGrow: 1, width: 1 }}>
+            <Stack
+                ref={ref}
+                sx={{
+                    overflowY: 'scroll',
+                    overflowX: 'clip',
+                    flexGrow: 1,
+                    minHeight: 0,
+                    width: 1,
+                }}
+            >
                 <GameComment />
                 <StartingPositionComments />
                 <Variation handleScroll={handleScroll} />
@@ -56,7 +65,7 @@ const PgnTextBody = () => {
     );
 };
 
-function PgnTextBanners() {
+export function PgnTextBanners() {
     const { unsaved, game, isOwner } = useGame();
 
     return (
@@ -70,17 +79,17 @@ function PgnTextBanners() {
 
 export const UnderboardPgnText = () => {
     return (
-        <CardContent
+        <Stack
             data-testid='pgn-text'
-            sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, flexGrow: 1 }}
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 0,
+                flexGrow: 1,
+            }}
         >
-            <Stack spacing={1} maxHeight={1} sx={{ minHeight: 0, flexGrow: 1 }}>
-                <PgnTextBanners />
-                <Stack sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, flexGrow: 1 }}>
-                    <PgnTextBody />
-                </Stack>
-            </Stack>
-        </CardContent>
+            <PgnTextBody />
+        </Stack>
     );
 };
 

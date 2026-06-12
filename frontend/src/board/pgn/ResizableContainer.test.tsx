@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ResizableContainer from './ResizableContainer';
 import { DefaultUnderboardTab } from './boardTools/underboard/underboardTabs';
 
+import type { ReactNode } from 'react';
+
 vi.mock('@/style/useWindowSizeEffect', () => ({
     useWindowSizeEffect: () => undefined,
 }));
@@ -16,6 +18,7 @@ vi.mock('./ResizableBoardArea', () => ({
 }));
 
 vi.mock('./pgnText/PgnText', () => ({
+    PgnTextBanners: () => <div data-testid='pgn-text-banners' />,
     ResizablePgnText: () => <div data-testid='dedicated-pgn-panel' />,
 }));
 
@@ -26,12 +29,16 @@ vi.mock('./boardTools/underboard/Underboard', () => ({
         storageKey,
         explorerStorageKey,
         buttonTestIdPrefix,
+        header,
+        sidePanelTabs,
     }: {
         tabs: unknown[];
         initialTab?: string;
         storageKey?: string;
         explorerStorageKey?: string;
         buttonTestIdPrefix?: string;
+        header?: ReactNode;
+        sidePanelTabs?: unknown[];
     }) => (
         <div
             data-testid='underboard-panel'
@@ -40,6 +47,8 @@ vi.mock('./boardTools/underboard/Underboard', () => ({
             data-storage-key={storageKey}
             data-explorer-storage-key={explorerStorageKey}
             data-button-test-id-prefix={buttonTestIdPrefix}
+            data-has-header={header ? 'true' : 'false'}
+            data-side-panel-tabs={sidePanelTabs?.length ?? 0}
         />
     ),
 }));
@@ -84,6 +93,7 @@ describe('ResizableContainer side panels', () => {
                     initialUnderboardTab={DefaultUnderboardTab.Explorer}
                     rightTabs={[DefaultUnderboardTab.Explorer, DefaultUnderboardTab.PgnText]}
                     initialRightTab={DefaultUnderboardTab.PgnText}
+                    sidePanelTabs={[DefaultUnderboardTab.Explorer, DefaultUnderboardTab.PgnText]}
                     tabStorageKeyPrefix='analysis'
                     pgn='1. e4'
                     onInitialize={vi.fn()}
@@ -96,6 +106,8 @@ describe('ResizableContainer side panels', () => {
         expect(panels[0]).toHaveAttribute('data-initial-tab', 'explorer');
         expect(panels[0]).toHaveAttribute('data-storage-key', 'analysis.left.tab');
         expect(panels[0]).toHaveAttribute('data-explorer-storage-key', 'analysis.left.explorerTab');
+        expect(panels[0]).toHaveAttribute('data-has-header', 'false');
+        expect(panels[0]).toHaveAttribute('data-side-panel-tabs', '2');
         expect(panels[1]).toHaveAttribute('data-initial-tab', 'pgnText');
         expect(panels[1]).toHaveAttribute('data-storage-key', 'analysis.right.tab');
         expect(panels[1]).toHaveAttribute(
@@ -103,6 +115,8 @@ describe('ResizableContainer side panels', () => {
             'analysis.right.explorerTab',
         );
         expect(panels[1]).toHaveAttribute('data-button-test-id-prefix', 'right-');
+        expect(panels[1]).toHaveAttribute('data-has-header', 'true');
+        expect(panels[1]).toHaveAttribute('data-side-panel-tabs', '2');
         expect(screen.queryByTestId('dedicated-pgn-panel')).not.toBeInTheDocument();
     });
 });

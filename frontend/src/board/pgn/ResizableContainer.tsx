@@ -7,8 +7,8 @@ import { onInitializeFunc } from '../Board';
 import KeyboardHandler from './KeyboardHandler';
 import ResizableBoardArea from './ResizableBoardArea';
 import Underboard, { UnderboardApi } from './boardTools/underboard/Underboard';
-import { UnderboardTab } from './boardTools/underboard/underboardTabs';
-import { ResizablePgnText } from './pgnText/PgnText';
+import { DefaultUnderboardTab, UnderboardTab } from './boardTools/underboard/underboardTabs';
+import { PgnTextBanners, ResizablePgnText } from './pgnText/PgnText';
 import { AreaSizes, getNewSizes, getSizes } from './resize';
 
 export const CONTAINER_ID = 'resize-container';
@@ -31,6 +31,7 @@ interface ResizableContainerProps {
     rightTabs?: UnderboardTab[];
     initialRightTab?: string;
     tabStorageKeyPrefix?: string;
+    sidePanelTabs?: DefaultUnderboardTab[];
     pgn?: string;
     fen?: string;
     showPlayerHeaders?: boolean;
@@ -44,6 +45,7 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
     rightTabs,
     initialRightTab,
     tabStorageKeyPrefix,
+    sidePanelTabs,
     showPlayerHeaders,
     pgn,
     fen,
@@ -116,6 +118,7 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
                     onResize={onResize('underboard')}
                     storageKey={getPanelStorageKey(tabStorageKeyPrefix, 'left')}
                     explorerStorageKey={getExplorerStorageKey(tabStorageKeyPrefix, 'left')}
+                    sidePanelTabs={sidePanelTabs}
                 />
             )}
 
@@ -142,6 +145,8 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
                     storageKey={getPanelStorageKey(tabStorageKeyPrefix, 'right')}
                     explorerStorageKey={getExplorerStorageKey(tabStorageKeyPrefix, 'right')}
                     buttonTestIdPrefix='right-'
+                    header={<PgnTextBanners />}
+                    sidePanelTabs={sidePanelTabs}
                 />
             ) : (
                 <ResizablePgnText resizeData={sizes.pgn} onResize={onResize('pgn')} />

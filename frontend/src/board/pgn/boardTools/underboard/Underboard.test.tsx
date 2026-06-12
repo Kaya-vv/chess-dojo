@@ -84,7 +84,9 @@ vi.mock('./directories/Directories', () => ({
 }));
 
 vi.mock('./settings/Settings', () => ({
-    default: () => <div data-testid='settings-tab' />,
+    default: ({ sidePanelTabs }: { sidePanelTabs?: unknown[] }) => (
+        <div data-testid='settings-tab' data-side-panel-tabs={sidePanelTabs?.length ?? 0} />
+    ),
 }));
 
 vi.mock('./share/ShareTab', () => ({
@@ -178,5 +180,47 @@ describe('Underboard side-panel tabs', () => {
 
         expect(screen.getByTestId('right-underboard-button-tags')).toBeInTheDocument();
         expect(screen.queryByTestId('underboard-button-tags')).not.toBeInTheDocument();
+    });
+
+    it('renders header content above the tab buttons', () => {
+        render(
+            <Underboard
+                tabs={[DefaultUnderboardTab.Explorer, DefaultUnderboardTab.PgnText]}
+                initialTab={DefaultUnderboardTab.Explorer}
+                resizeData={resizeData}
+                onResize={vi.fn()}
+                header={<div data-testid='right-panel-header'>Header</div>}
+            />,
+        );
+
+        expect(screen.getByTestId('right-panel-header')).toBeInTheDocument();
+        expect(screen.getByTestId('explorer-tab')).toBeInTheDocument();
+    });
+
+    it('falls back to an available tab when initialTab is unavailable', () => {
+        render(
+            <Underboard
+                tabs={[DefaultUnderboardTab.PgnText]}
+                initialTab={DefaultUnderboardTab.Explorer}
+                resizeData={resizeData}
+                onResize={vi.fn()}
+            />,
+        );
+
+        expect(screen.getByTestId('underboard-pgn-text')).toBeInTheDocument();
+    });
+
+    it('passes available side-panel tabs to Settings', () => {
+        render(
+            <Underboard
+                tabs={[DefaultUnderboardTab.Settings]}
+                initialTab={DefaultUnderboardTab.Settings}
+                resizeData={resizeData}
+                onResize={vi.fn()}
+                sidePanelTabs={[DefaultUnderboardTab.PgnText, DefaultUnderboardTab.Settings]}
+            />,
+        );
+
+        expect(screen.getByTestId('settings-tab')).toHaveAttribute('data-side-panel-tabs', '2');
     });
 });

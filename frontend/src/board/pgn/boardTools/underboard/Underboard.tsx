@@ -26,7 +26,14 @@ import {
     ToggleButtonProps,
     Tooltip,
 } from '@mui/material';
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
+import React, {
+    forwardRef,
+    useCallback,
+    useImperativeHandle,
+    useMemo,
+    useState,
+    type ReactNode,
+} from 'react';
 import { Resizable, ResizeCallbackData } from 'react-resizable';
 import { useLocalStorage } from 'usehooks-ts';
 import { AuthStatus, useAuth } from '../../../../auth/Auth';
@@ -123,6 +130,10 @@ function getTabInfo(tab: UnderboardTab): DefaultUnderboardTabInfo {
     return tab;
 }
 
+function getTabName(tab: UnderboardTab): string {
+    return typeof tab === 'string' ? tab : tab.name;
+}
+
 export interface UnderboardApi {
     switchTab: (tab: DefaultUnderboardTab) => void;
     focusEditor: () => void;
@@ -137,6 +148,8 @@ interface UnderboardProps {
     storageKey?: string;
     explorerStorageKey?: string;
     buttonTestIdPrefix?: string;
+    header?: ReactNode;
+    sidePanelTabs?: DefaultUnderboardTab[];
 }
 
 const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
@@ -149,6 +162,8 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
             storageKey = 'underboardTab',
             explorerStorageKey,
             buttonTestIdPrefix = '',
+            header,
+            sidePanelTabs,
         },
         ref,
     ) => {
@@ -185,17 +200,23 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
         const [localOverride, setLocalOverride] = useState<string | null>(null);
 
         const underboard = useMemo(() => {
-            if (localOverride) {
-                const overrideExists = tabs.some(
-                    (t) => (typeof t === 'string' ? t : t.name) === localOverride,
-                );
-                if (overrideExists) return localOverride;
+            const tabExists = (tab?: string | null) =>
+                Boolean(tab && tabs.some((t) => getTabName(t) === tab));
+            const firstTab = tabs[0] ? getTabName(tabs[0]) : fallbackTab;
+
+            if (localOverride && tabExists(localOverride)) {
+                return localOverride;
             }
-            if (initialTab) {
+            if (initialTab && tabExists(initialTab)) {
                 return initialTab;
             }
-            const tabExists = tabs.some((t) => (typeof t === 'string' ? t : t.name) === storedTab);
-            return tabExists ? storedTab : fallbackTab;
+            if (tabExists(storedTab)) {
+                return storedTab;
+            }
+            if (tabExists(fallbackTab)) {
+                return fallbackTab;
+            }
+            return firstTab;
         }, [localOverride, initialTab, tabs, storedTab, fallbackTab]);
 
         const setUnderboard = useCallback(
@@ -274,6 +295,8 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
                     }}
                     variant={light ? 'outlined' : 'elevation'}
                 >
+                    {header && <Stack sx={{ flexShrink: 0 }}>{header}</Stack>}
+
                     {tabs.length > 1 && (
                         <Paper elevation={10} sx={{ boxShadow: 'none' }}>
                             <ToggleButtonGroup
@@ -362,7 +385,15 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
                         })}
                     </Menu>
 
-                    <Stack sx={{ overflowY: 'auto', flexGrow: 1 }}>
+                    <Stack
+                        data-testid={`${buttonTestIdPrefix}underboard-tab-content`}
+                        sx={{
+                            overflowY:
+                                underboard === DefaultUnderboardTab.PgnText ? 'hidden' : 'auto',
+                            flexGrow: 1,
+                            minHeight: 0,
+                        }}
+                    >
                         {underboard === DefaultUnderboardTab.Directories && <Directories />}
                         {underboard === DefaultUnderboardTab.PgnText && <UnderboardPgnText />}
                         {underboard === DefaultUnderboardTab.Tags && (
@@ -377,7 +408,7 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
                             </PlayerOpeningTreeProvider>
                         )}
                         {underboard === DefaultUnderboardTab.Settings && (
-                            <Settings showEditor={isOwner} />
+                            <Settings showEditor={isOwner} sidePanelTabs={sidePanelTabs} />
                         )}
                         {underboard === DefaultUnderboardTab.Clocks && (
                             <ClockUsage showEditor={isOwner} />

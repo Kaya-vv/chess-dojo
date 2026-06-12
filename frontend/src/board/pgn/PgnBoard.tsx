@@ -24,7 +24,7 @@ import { BoardApi, onMoveFunc } from '../Board';
 import ResizableContainer from './ResizableContainer';
 import { saveSuggestedVariation } from './boardTools/underboard/comments/suggestVariation';
 import { AutoSaveVariations } from './boardTools/underboard/settings/ViewerSettings';
-import { UnderboardTab } from './boardTools/underboard/underboardTabs';
+import { DefaultUnderboardTab, UnderboardTab } from './boardTools/underboard/underboardTabs';
 import { ButtonProps as MoveButtonProps } from './pgnText/MoveButton';
 import { CONTAINER_ID } from './resize';
 import {
@@ -95,6 +95,7 @@ interface PgnBoardProps extends ChessConfig {
     rightTabs?: UnderboardTab[];
     initialRightTab?: string;
     tabStorageKeyPrefix?: string;
+    sidePanelTabs?: DefaultUnderboardTab[];
     pgn?: string;
     fen?: string;
     showPlayerHeaders?: boolean;
@@ -112,6 +113,7 @@ const PgnBoard = forwardRef<PgnBoardApi, PgnBoardProps>(
             rightTabs,
             initialRightTab,
             tabStorageKeyPrefix,
+            sidePanelTabs,
             pgn,
             fen,
             showPlayerHeaders = true,
@@ -295,6 +297,7 @@ const PgnBoard = forwardRef<PgnBoardApi, PgnBoardProps>(
                                 rightTabs,
                                 initialRightTab,
                                 tabStorageKeyPrefix,
+                                sidePanelTabs,
                                 showPlayerHeaders,
                                 pgn,
                                 fen,
