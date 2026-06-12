@@ -136,6 +136,7 @@ describe('GamePage side tabs', () => {
                 DefaultUnderboardTab.Settings,
             ],
             rightTabs: [DefaultUnderboardTab.PgnText],
+            tabStorageKeyPrefix: 'game',
             sidePanelTabs: [
                 DefaultUnderboardTab.Directories,
                 DefaultUnderboardTab.PgnText,

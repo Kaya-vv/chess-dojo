@@ -222,6 +222,7 @@ const GamePage = ({ cohort: initialCohort, id: initialId }: { cohort: string; id
                         startOrientation={game?.orientation}
                         underboardTabs={leftTabs}
                         rightTabs={rightTabs}
+                        tabStorageKeyPrefix='game'
                         sidePanelTabs={availableSidePanelTabs}
                         allowMoveDeletion={game?.owner === user?.username}
                         allowDeleteBefore={game?.owner === user?.username}
