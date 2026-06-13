@@ -1,9 +1,9 @@
 import { DefaultUnderboardTab } from '@/board/pgn/boardTools/underboard/underboardTabs';
-import { cleanup, render, screen } from '@testing-library/react';
+import { renderWithIntl } from '@/i18n/intl.test';
+import { cleanup, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import GamePage from './GamePage';
-
-import type { ReactNode } from 'react';
 
 const { game, pgnBoardProps, authState } = vi.hoisted(() => {
     const user = {
@@ -28,7 +28,7 @@ const { game, pgnBoardProps, authState } = vi.hoisted(() => {
         pgnBoardProps: [] as Record<string, unknown>[],
         authState: {
             status: 'authenticated',
-            user: user as typeof user | undefined,
+            user: user,
         },
     };
 });
@@ -132,7 +132,7 @@ describe('GamePage side tabs', () => {
     });
 
     it('passes default side-panel tabs to saved games', () => {
-        render(<GamePage cohort='dojo' id='game1' />);
+        renderWithIntl(<GamePage cohort='dojo' id='game1' />);
 
         expect(pgnBoardProps[0]).toMatchObject({
             underboardTabs: [
@@ -172,7 +172,7 @@ describe('GamePage side tabs', () => {
             }),
         );
 
-        render(<GamePage cohort='dojo' id='game1' />);
+        renderWithIntl(<GamePage cohort='dojo' id='game1' />);
 
         expect(pgnBoardProps[0]).toMatchObject({
             rightTabs: [
@@ -185,10 +185,10 @@ describe('GamePage side tabs', () => {
 
     it('keeps hook order when auth finishes loading', () => {
         authState.status = 'loading';
-        authState.user = undefined;
+        authState.user = undefined as unknown as (typeof authState)['user'];
         const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
-        const { rerender } = render(<GamePage cohort='dojo' id='game1' />);
+        const { rerender } = renderWithIntl(<GamePage cohort='dojo' id='game1' />);
         expect(screen.getByTestId('loading-page')).toBeInTheDocument();
 
         authState.status = 'authenticated';

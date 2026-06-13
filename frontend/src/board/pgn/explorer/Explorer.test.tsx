@@ -1,4 +1,5 @@
-import { cleanup, render } from '@testing-library/react';
+import { renderWithIntl } from '@/i18n/intl.test';
+import { cleanup } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Explorer, { ExplorerDatabaseType } from './Explorer';
 
@@ -107,7 +108,7 @@ describe('Explorer storage', () => {
     });
 
     it('uses the provided storage key for its internal database tab', () => {
-        render(<Explorer storageKey='analysis.right.explorerTab' />);
+        renderWithIntl(<Explorer storageKey='analysis.right.explorerTab' />);
 
         expect(useLocalStorageMock).toHaveBeenCalledWith(
             'analysis.right.explorerTab',

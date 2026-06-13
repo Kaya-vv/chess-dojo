@@ -1,9 +1,9 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { renderWithIntl } from '@/i18n/intl.test';
+import { cleanup, fireEvent, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Underboard from './Underboard';
 import { DefaultUnderboardTab } from './underboardTabs';
-
-import type { ReactNode } from 'react';
 
 const { explorerProps } = vi.hoisted(() => ({
     explorerProps: [] as { storageKey?: string }[],
@@ -121,7 +121,7 @@ describe('Underboard side-panel tabs', () => {
     });
 
     it('renders PGN Text as a selectable tab', () => {
-        render(
+        renderWithIntl(
             <Underboard
                 tabs={[DefaultUnderboardTab.Explorer, DefaultUnderboardTab.PgnText]}
                 initialTab={DefaultUnderboardTab.Explorer}
@@ -138,7 +138,7 @@ describe('Underboard side-panel tabs', () => {
     });
 
     it('uses the provided tab storage key when no forced initial tab is set', () => {
-        render(
+        renderWithIntl(
             <Underboard
                 tabs={[DefaultUnderboardTab.Explorer, DefaultUnderboardTab.PgnText]}
                 storageKey='analysis.left.tab'
@@ -154,7 +154,7 @@ describe('Underboard side-panel tabs', () => {
     });
 
     it('passes the panel-scoped Explorer storage key', () => {
-        render(
+        renderWithIntl(
             <Underboard
                 tabs={[DefaultUnderboardTab.Explorer, DefaultUnderboardTab.PgnText]}
                 initialTab={DefaultUnderboardTab.Explorer}
@@ -169,7 +169,7 @@ describe('Underboard side-panel tabs', () => {
     });
 
     it('prefixes tab button test ids for secondary panels', () => {
-        render(
+        renderWithIntl(
             <Underboard
                 tabs={[DefaultUnderboardTab.Tags, DefaultUnderboardTab.PgnText]}
                 buttonTestIdPrefix='right-'
@@ -183,7 +183,7 @@ describe('Underboard side-panel tabs', () => {
     });
 
     it('renders header content above the tab buttons', () => {
-        render(
+        renderWithIntl(
             <Underboard
                 tabs={[DefaultUnderboardTab.Explorer, DefaultUnderboardTab.PgnText]}
                 initialTab={DefaultUnderboardTab.Explorer}
@@ -198,7 +198,7 @@ describe('Underboard side-panel tabs', () => {
     });
 
     it('keeps header content outside the tab content card', () => {
-        render(
+        renderWithIntl(
             <Underboard
                 tabs={[DefaultUnderboardTab.PgnText]}
                 initialTab={DefaultUnderboardTab.PgnText}
@@ -215,7 +215,7 @@ describe('Underboard side-panel tabs', () => {
     });
 
     it('falls back to an available tab when initialTab is unavailable', () => {
-        render(
+        renderWithIntl(
             <Underboard
                 tabs={[DefaultUnderboardTab.PgnText]}
                 initialTab={DefaultUnderboardTab.Explorer}
@@ -228,7 +228,7 @@ describe('Underboard side-panel tabs', () => {
     });
 
     it('passes available side-panel tabs to Settings', () => {
-        render(
+        renderWithIntl(
             <Underboard
                 tabs={[DefaultUnderboardTab.Settings]}
                 initialTab={DefaultUnderboardTab.Settings}

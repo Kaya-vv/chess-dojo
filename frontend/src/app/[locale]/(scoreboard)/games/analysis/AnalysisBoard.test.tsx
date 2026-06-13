@@ -1,9 +1,9 @@
 import { DefaultUnderboardTab } from '@/board/pgn/boardTools/underboard/underboardTabs';
-import { cleanup, render } from '@testing-library/react';
+import { renderWithIntl } from '@/i18n/intl.test';
+import { cleanup } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import AnalysisBoard from './AnalysisBoard';
-
-import type { ReactNode } from 'react';
 
 const { pgnBoardProps } = vi.hoisted(() => ({
     pgnBoardProps: [] as Record<string, unknown>[],
@@ -89,7 +89,7 @@ describe('AnalysisBoard side tabs', () => {
     });
 
     it('uses the familiar default side-panel layout', () => {
-        render(<AnalysisBoard />);
+        renderWithIntl(<AnalysisBoard />);
 
         expect(pgnBoardProps[0]).toMatchObject({
             underboardTabs: [
@@ -125,7 +125,7 @@ describe('AnalysisBoard side tabs', () => {
             }),
         );
 
-        render(<AnalysisBoard />);
+        renderWithIntl(<AnalysisBoard />);
 
         expect(pgnBoardProps[0]).toMatchObject({
             underboardTabs: [
