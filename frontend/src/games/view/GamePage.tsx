@@ -8,6 +8,7 @@ import { AuthStatus, useAuth } from '@/auth/Auth';
 import { BoardApi } from '@/board/Board';
 import { DefaultUnderboardTab } from '@/board/pgn/boardTools/underboard/underboardTabs';
 import PgnBoard from '@/board/pgn/PgnBoard';
+import { useSidePanelTabs } from '@/board/pgn/sidePanelTabs';
 import { GameMoveButtonExtras } from '@/components/games/view/GameMoveButtonExtras';
 import { GameContext } from '@/context/useGame';
 import { Game } from '@/database/game';
@@ -89,6 +90,23 @@ const GamePage = ({ cohort: initialCohort, id: initialId }: { cohort: string; id
         const newUrl = `/games/${newCohort.replaceAll('+', '%2B')}/${newId.replaceAll('?', '%3F')}${window.location.search}`;
         window.history.replaceState(null, '', newUrl);
     }, []);
+
+    // Use currentGame to keep the board visible while switching games
+    const game = currentGame ?? request.data;
+    const isOwner = game?.owner === user?.username;
+    const availableSidePanelTabs = [
+        ...(user ? [DefaultUnderboardTab.Directories] : []),
+        DefaultUnderboardTab.PgnText,
+        DefaultUnderboardTab.Tags,
+        ...(isOwner ? [DefaultUnderboardTab.Editor] : []),
+        DefaultUnderboardTab.Comments,
+        DefaultUnderboardTab.Explorer,
+        DefaultUnderboardTab.Clocks,
+        DefaultUnderboardTab.Tools,
+        DefaultUnderboardTab.Share,
+        DefaultUnderboardTab.Settings,
+    ];
+    const { leftTabs, rightTabs } = useSidePanelTabs(availableSidePanelTabs);
 
     if (status === AuthStatus.Loading) {
         return <LoadingPage />;
@@ -178,9 +196,6 @@ const GamePage = ({ cohort: initialCohort, id: initialId }: { cohort: string; id
         }
     };
 
-    // Use currentGame to keep the board visible while switching games
-    const game = currentGame ?? request.data;
-    const isOwner = game?.owner === user?.username;
     const showPreflight = isOwner && firstLoad && game !== undefined && isMissingData(game);
 
     return (
@@ -208,17 +223,10 @@ const GamePage = ({ cohort: initialCohort, id: initialId }: { cohort: string; id
                         key={`${game?.cohort}/${game?.id}`}
                         pgn={game?.pgn}
                         startOrientation={game?.orientation}
-                        underboardTabs={[
-                            ...(user ? [DefaultUnderboardTab.Directories] : []),
-                            DefaultUnderboardTab.Tags,
-                            ...(isOwner ? [DefaultUnderboardTab.Editor] : []),
-                            DefaultUnderboardTab.Comments,
-                            DefaultUnderboardTab.Explorer,
-                            DefaultUnderboardTab.Clocks,
-                            DefaultUnderboardTab.Tools,
-                            DefaultUnderboardTab.Share,
-                            DefaultUnderboardTab.Settings,
-                        ]}
+                        underboardTabs={leftTabs}
+                        rightTabs={rightTabs}
+                        tabStorageKeyPrefix='game'
+                        sidePanelTabs={availableSidePanelTabs}
                         allowMoveDeletion={game?.owner === user?.username}
                         allowDeleteBefore={game?.owner === user?.username}
                         showElapsedMoveTimes

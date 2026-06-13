@@ -9,7 +9,7 @@ test.describe('Default Time Control (localStorage)', () => {
 
     test('saves time control to localStorage when edited', async ({ page }) => {
         // Open the Tags tab
-        await page.getByRole('button', { name: 'PGN Tags' }).click();
+        await page.getByTestId('underboard-button-tags').click();
 
         // Find the TimeControl row and double-click to edit
         const timeControlRow = page.getByRole('row', { name: 'TimeControl' });
@@ -45,7 +45,7 @@ test.describe('Default Time Control (localStorage)', () => {
         });
 
         // Open the Tags tab
-        await page.getByRole('button', { name: 'PGN Tags' }).click();
+        await page.getByTestId('underboard-button-tags').click();
 
         // Double-click TimeControl to open the editor dialog
         const timeControlRow = page.getByRole('row', { name: 'TimeControl' });
@@ -88,7 +88,7 @@ test.describe('Default Time Control (localStorage)', () => {
         await expect(page).toHaveURL(/\/games\/analysis(?:\?|$)/);
 
         // Open the Tags tab
-        await page.getByRole('button', { name: 'PGN Tags' }).click();
+        await page.getByTestId('underboard-button-tags').click();
 
         // Verify the original TimeControl is preserved (3600+0), not the localStorage default
         // Use regex since row name includes the value (e.g., "TimeControl 3600+0")

@@ -267,6 +267,7 @@ export const keyboardShortcutHandlers: Record<ShortcutAction, ShortcutHandler> =
     [ShortcutAction.LastMoveVariation]: handleLastMoveVariation,
     [ShortcutAction.OpenFiles]: handleOpenTab(DefaultUnderboardTab.Directories),
     [ShortcutAction.OpenTags]: handleOpenTab(DefaultUnderboardTab.Tags),
+    [ShortcutAction.OpenPgnText]: handleOpenTab(DefaultUnderboardTab.PgnText),
     [ShortcutAction.OpenEditor]: handleOpenTab(DefaultUnderboardTab.Editor),
     [ShortcutAction.OpenComments]: handleOpenTab(DefaultUnderboardTab.Comments),
     [ShortcutAction.OpenDatabase]: handleOpenTab(DefaultUnderboardTab.Explorer),
@@ -385,6 +386,8 @@ const KeyboardShortcuts = ({
                         return t('shortcutFirstMoveInVariation');
                     case ShortcutAction.LastMoveVariation:
                         return t('shortcutLastMoveInVariation');
+                    case ShortcutAction.OpenPgnText:
+                        return 'Open PGN Text';
                     case ShortcutAction.OpenFiles:
                         return t('shortcutOpenFiles');
                     case ShortcutAction.OpenTags:
@@ -440,6 +443,8 @@ const KeyboardShortcuts = ({
                         return t('shortcutFirstMoveVariationDesc');
                     case ShortcutAction.LastMoveVariation:
                         return t('shortcutLastMoveVariationDesc');
+                    case ShortcutAction.OpenPgnText:
+                        return 'Open the PGN Text tab.';
                     case ShortcutAction.OpenFiles:
                         return t('shortcutOpenFilesDesc');
                     case ShortcutAction.OpenTags:

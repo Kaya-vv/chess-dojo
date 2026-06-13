@@ -3,6 +3,7 @@
 import { AuthStatus, useAuth } from '@/auth/Auth';
 import { DefaultUnderboardTab } from '@/board/pgn/boardTools/underboard/underboardTabs';
 import PgnBoard from '@/board/pgn/PgnBoard';
+import { getInitialSidePanelTab, useSidePanelTabs } from '@/board/pgn/sidePanelTabs';
 import SaveGameDialog, { SaveGameDialogType } from '@/components/games/edit/SaveGameDialog';
 import { GameMoveButtonExtras } from '@/components/games/view/GameMoveButtonExtras';
 import { GameContext } from '@/context/useGame';
@@ -24,6 +25,16 @@ import { useNavigationGuard } from 'next-navigation-guard';
 import { useState } from 'react';
 
 const gameUrlRegex = /^\/games\/.*\/.*/;
+
+const analysisTabs = [
+    DefaultUnderboardTab.PgnText,
+    DefaultUnderboardTab.Tags,
+    DefaultUnderboardTab.Editor,
+    DefaultUnderboardTab.Explorer,
+    DefaultUnderboardTab.Clocks,
+    DefaultUnderboardTab.Share,
+    DefaultUnderboardTab.Settings,
+];
 
 function parseCreateGameRequest(req: CreateGameRequest | null) {
     if (req?.pgnText) {
@@ -50,6 +61,7 @@ export default function AnalysisBoard() {
         onSubmit,
         request,
     } = useUnsavedGame(chess);
+    const { leftTabs, rightTabs } = useSidePanelTabs(analysisTabs);
 
     if (status === AuthStatus.Loading) {
         return <LoadingPage />;
@@ -67,21 +79,24 @@ export default function AnalysisBoard() {
                     pgn={pgn}
                     fen={searchParams.get('fen') || fen}
                     startOrientation={getDefaultOrientation(pgn, user)}
-                    underboardTabs={[
-                        DefaultUnderboardTab.Tags,
-                        DefaultUnderboardTab.Editor,
+                    underboardTabs={leftTabs}
+                    rightTabs={rightTabs}
+                    sidePanelTabs={analysisTabs}
+                    initialUnderboardTab={getInitialSidePanelTab(
+                        leftTabs,
                         DefaultUnderboardTab.Explorer,
-                        DefaultUnderboardTab.Clocks,
-                        DefaultUnderboardTab.Share,
-                        DefaultUnderboardTab.Settings,
-                    ]}
+                    )}
+                    initialRightTab={getInitialSidePanelTab(
+                        rightTabs,
+                        DefaultUnderboardTab.PgnText,
+                    )}
+                    tabStorageKeyPrefix='analysis'
                     allowMoveDeletion={true}
                     allowDeleteBefore={true}
                     showElapsedMoveTimes
                     slots={{
                         moveButtonExtras: GameMoveButtonExtras,
                     }}
-                    initialUnderboardTab={DefaultUnderboardTab.Explorer}
                     disableNullMoves={false}
                     onInitialize={(_, c) => setChess(c)}
                 />

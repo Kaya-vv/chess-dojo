@@ -36,8 +36,12 @@ export enum ExplorerDatabaseType {
     ChessDB = 'chessdb',
 }
 
-const Explorer = () => {
-    const [tab, setTab] = useLocalStorage(explorerTabKey, ExplorerDatabaseType.Dojo);
+interface ExplorerProps {
+    storageKey?: string;
+}
+
+const Explorer: React.FC<ExplorerProps> = ({ storageKey = explorerTabKey }) => {
+    const [tab, setTab] = useLocalStorage(storageKey, ExplorerDatabaseType.Dojo);
     const searchParams = useSearchParams();
     const { chess } = useChess();
     const t = useTranslations('analysisBoard.explorer');

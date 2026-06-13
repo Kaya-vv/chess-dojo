@@ -1,6 +1,6 @@
 import { render, RenderResult, screen } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
-import { JSX } from 'react';
+import { JSX, ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import messages from '~/messages/en.json';
 
@@ -12,11 +12,15 @@ import messages from '~/messages/en.json';
  * @returns The result from the render call.
  */
 export function renderWithIntl(children: JSX.Element): RenderResult {
-    return render(
+    const wrap = (ui: ReactNode) => (
         <NextIntlClientProvider locale='en' messages={messages}>
-            {children}
-        </NextIntlClientProvider>,
+            {ui}
+        </NextIntlClientProvider>
     );
+    const result = render(wrap(children));
+    const baseRerender = result.rerender.bind(result);
+    result.rerender = (ui: ReactNode) => baseRerender(wrap(ui));
+    return result;
 }
 
 describe('renderWithIntl', () => {
