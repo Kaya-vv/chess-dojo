@@ -26,6 +26,7 @@ import {
     ToggleButtonProps,
     Tooltip,
 } from '@mui/material';
+import { useTranslations } from 'next-intl';
 import React, {
     forwardRef,
     useCallback,
@@ -61,69 +62,10 @@ import {
 
 const MIN_TAB_BUTTON_WIDTH = 40;
 
-const tabInfo: Record<DefaultUnderboardTab, DefaultUnderboardTabInfo> = {
-    [DefaultUnderboardTab.Directories]: {
-        name: DefaultUnderboardTab.Directories,
-        tooltip: 'Files',
-        icon: <Folder />,
-        shortcut: ShortcutAction.OpenFiles,
-    },
-    [DefaultUnderboardTab.PgnText]: {
-        name: DefaultUnderboardTab.PgnText,
-        tooltip: 'PGN Text',
-        icon: <Article />,
-        shortcut: ShortcutAction.OpenPgnText,
-    },
-    [DefaultUnderboardTab.Tags]: {
-        name: DefaultUnderboardTab.Tags,
-        tooltip: 'PGN Tags',
-        icon: <Sell />,
-        shortcut: ShortcutAction.OpenTags,
-    },
-    [DefaultUnderboardTab.Editor]: {
-        name: DefaultUnderboardTab.Editor,
-        tooltip: 'Edit PGN',
-        icon: <Edit />,
-        shortcut: ShortcutAction.OpenEditor,
-    },
-    [DefaultUnderboardTab.Comments]: {
-        name: DefaultUnderboardTab.Comments,
-        tooltip: 'Comments',
-        icon: <Chat />,
-        shortcut: ShortcutAction.OpenComments,
-    },
-    [DefaultUnderboardTab.Explorer]: {
-        name: DefaultUnderboardTab.Explorer,
-        tooltip: 'Position Database',
-        icon: <Storage />,
-        shortcut: ShortcutAction.OpenDatabase,
-    },
-    [DefaultUnderboardTab.Clocks]: {
-        name: DefaultUnderboardTab.Clocks,
-        tooltip: 'Clock Usage',
-        icon: <AccessAlarm />,
-        shortcut: ShortcutAction.OpenClocks,
-    },
-    [DefaultUnderboardTab.Share]: {
-        name: DefaultUnderboardTab.Share,
-        tooltip: 'Share',
-        icon: <Share />,
-        shortcut: ShortcutAction.OpenShare,
-    },
-    [DefaultUnderboardTab.Settings]: {
-        name: DefaultUnderboardTab.Settings,
-        tooltip: 'Settings',
-        icon: <SettingsIcon />,
-        shortcut: ShortcutAction.OpenSettings,
-    },
-    [DefaultUnderboardTab.Tools]: {
-        name: DefaultUnderboardTab.Tools,
-        tooltip: 'Tools',
-        icon: <Construction />,
-    },
-};
-
-function getTabInfo(tab: UnderboardTab): DefaultUnderboardTabInfo {
+function getTabInfo(
+    tab: UnderboardTab,
+    tabInfo: Record<DefaultUnderboardTab, DefaultUnderboardTabInfo>,
+): DefaultUnderboardTabInfo {
     if (typeof tab === 'string') {
         return tabInfo[tab];
     }
@@ -174,6 +116,89 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
         const [focusCommenter, setFocusCommenter] = useState(false);
         const [moreAnchor, setMoreAnchor] = useState<HTMLElement>();
         const [keyBindings] = useLocalStorage(ShortcutBindings.key, ShortcutBindings.default);
+
+        const t = useTranslations('analysisBoard.underboard');
+        const tSettings = useTranslations('analysisBoard.underboard.settings');
+
+        const keyLabels = useMemo<Record<string, string>>(
+            () => ({
+                ArrowLeft: tSettings('keyArrowLeft'),
+                ArrowRight: tSettings('keyArrowRight'),
+                ArrowUp: tSettings('keyArrowUp'),
+                ArrowDown: tSettings('keyArrowDown'),
+                Space: tSettings('keySpace'),
+                Enter: tSettings('keyEnter'),
+                Escape: tSettings('keyEscape'),
+                Tab: tSettings('keyTab'),
+                Backspace: tSettings('keyBackspace'),
+            }),
+            [tSettings],
+        );
+
+        const tabInfo = useMemo(
+            () => ({
+                [DefaultUnderboardTab.Directories]: {
+                    name: DefaultUnderboardTab.Directories,
+                    tooltip: t('directoriesTab'),
+                    icon: <Folder />,
+                    shortcut: ShortcutAction.OpenFiles,
+                },
+                [DefaultUnderboardTab.PgnText]: {
+                    name: DefaultUnderboardTab.PgnText,
+                    tooltip: 'PGN Text',
+                    icon: <Article />,
+                    shortcut: ShortcutAction.OpenPgnText,
+                },
+                [DefaultUnderboardTab.Tags]: {
+                    name: DefaultUnderboardTab.Tags,
+                    tooltip: t('tagsTab'),
+                    icon: <Sell />,
+                    shortcut: ShortcutAction.OpenTags,
+                },
+                [DefaultUnderboardTab.Editor]: {
+                    name: DefaultUnderboardTab.Editor,
+                    tooltip: t('editorTab'),
+                    icon: <Edit />,
+                    shortcut: ShortcutAction.OpenEditor,
+                },
+                [DefaultUnderboardTab.Comments]: {
+                    name: DefaultUnderboardTab.Comments,
+                    tooltip: t('commentsTab'),
+                    icon: <Chat />,
+                    shortcut: ShortcutAction.OpenComments,
+                },
+                [DefaultUnderboardTab.Explorer]: {
+                    name: DefaultUnderboardTab.Explorer,
+                    tooltip: t('explorerTab'),
+                    icon: <Storage />,
+                    shortcut: ShortcutAction.OpenDatabase,
+                },
+                [DefaultUnderboardTab.Clocks]: {
+                    name: DefaultUnderboardTab.Clocks,
+                    tooltip: t('clocksTab'),
+                    icon: <AccessAlarm />,
+                    shortcut: ShortcutAction.OpenClocks,
+                },
+                [DefaultUnderboardTab.Share]: {
+                    name: DefaultUnderboardTab.Share,
+                    tooltip: t('shareTab'),
+                    icon: <Share />,
+                    shortcut: ShortcutAction.OpenShare,
+                },
+                [DefaultUnderboardTab.Settings]: {
+                    name: DefaultUnderboardTab.Settings,
+                    tooltip: t('settingsTab'),
+                    icon: <SettingsIcon />,
+                    shortcut: ShortcutAction.OpenSettings,
+                },
+                [DefaultUnderboardTab.Tools]: {
+                    name: DefaultUnderboardTab.Tools,
+                    tooltip: t('toolsTab'),
+                    icon: <Construction />,
+                },
+            }),
+            [t],
+        );
 
         const maxTabs = Math.max(2, Math.floor(resizeData.width / MIN_TAB_BUTTON_WIDTH));
         let displayedTabs = tabs;
@@ -268,7 +293,7 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
         }
 
         const customTab = tabs.find(
-            (t) => typeof t !== 'string' && t.name === underboard,
+            (tab) => typeof tab !== 'string' && tab.name === underboard,
         ) as CustomUnderboardTab;
 
         return (
@@ -317,7 +342,7 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
                                     fullWidth
                                 >
                                     {displayedTabs.map((tab, index) => {
-                                        const info = getTabInfo(tab);
+                                        const info = getTabInfo(tab, tabInfo);
 
                                         return (
                                             <UnderboardButton
@@ -347,7 +372,7 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
 
                                     {hiddenTabs.length > 0 && (
                                         <UnderboardButton
-                                            tooltip='More'
+                                            tooltip={t('more')}
                                             value='more'
                                             testIdPrefix={buttonTestIdPrefix}
                                             onClick={(e) => {
@@ -369,14 +394,15 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
                             onClose={() => setMoreAnchor(undefined)}
                         >
                             {hiddenTabs.map((tab) => {
-                                const info = getTabInfo(tab);
+                                const info = getTabInfo(tab, tabInfo);
 
                                 if (info.shortcut) {
                                     const binding =
                                         keyBindings[info.shortcut] ||
                                         ShortcutBindings.default[info.shortcut];
                                     if (binding.key) {
-                                        info.tooltip += ` (${binding.modifier ? `${binding.modifier}+` : ''}${binding.key})`;
+                                        const keyLabel = keyLabels[binding.key] ?? binding.key;
+                                        info.tooltip += ` (${binding.modifier ? `${binding.modifier}+` : ''}${keyLabel})`;
                                     }
                                 }
 
@@ -460,10 +486,26 @@ function UnderboardButton({
     ...props
 }: UnderboardButtonProps) {
     const [keyBindings] = useLocalStorage(ShortcutBindings.key, ShortcutBindings.default);
+    const tSettings = useTranslations('analysisBoard.underboard.settings');
+    const keyLabels = useMemo<Record<string, string>>(
+        () => ({
+            ArrowLeft: tSettings('keyArrowLeft'),
+            ArrowRight: tSettings('keyArrowRight'),
+            ArrowUp: tSettings('keyArrowUp'),
+            ArrowDown: tSettings('keyArrowDown'),
+            Space: tSettings('keySpace'),
+            Enter: tSettings('keyEnter'),
+            Escape: tSettings('keyEscape'),
+            Tab: tSettings('keyTab'),
+            Backspace: tSettings('keyBackspace'),
+        }),
+        [tSettings],
+    );
     if (shortcut) {
         const binding = keyBindings[shortcut] || ShortcutBindings.default[shortcut];
         if (binding.key) {
-            tooltip += ` (${binding.modifier ? `${binding.modifier}+` : ''}${binding.key})`;
+            const keyLabel = keyLabels[binding.key] ?? binding.key;
+            tooltip += ` (${binding.modifier ? `${binding.modifier}+` : ''}${keyLabel})`;
         }
     }
 

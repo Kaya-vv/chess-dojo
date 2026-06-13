@@ -25,6 +25,7 @@ import {
 } from '@jackstenglein/chess-dojo-common/src/database/game';
 import { Box } from '@mui/material';
 import { isAxiosError } from 'axios';
+import { useTranslations } from 'next-intl';
 import { notFound } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { MissingGameDataPreflight } from '../edit/MissingGameDataPreflight';
@@ -34,6 +35,7 @@ import PgnErrorBoundary from './PgnErrorBoundary';
 const gameCache = new Map<string, Game>();
 
 const GamePage = ({ cohort: initialCohort, id: initialId }: { cohort: string; id: string }) => {
+    const t = useTranslations('games.view.gamePage');
     const api = useApi();
     const request = useRequest<Game>();
     const featureRequest = useRequest();
@@ -245,7 +247,7 @@ const GamePage = ({ cohort: initialCohort, id: initialId }: { cohort: string; id
                     onSubmit={onSave}
                     onClose={() => updateSearchParams({ firstLoad: 'false' })}
                 >
-                    You can fill this data out now or later in settings.
+                    {t('preflightHint')}
                 </MissingGameDataPreflight>
             )}
         </Box>

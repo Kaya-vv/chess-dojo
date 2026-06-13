@@ -4,6 +4,7 @@ import { PersonSearch } from '@mui/icons-material';
 import CloudIcon from '@mui/icons-material/Cloud';
 import { TabContext } from '@mui/lab';
 import { Box, CardContent, Tab, Tabs } from '@mui/material';
+import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SiLichess } from 'react-icons/si';
@@ -43,6 +44,7 @@ const Explorer: React.FC<ExplorerProps> = ({ storageKey = explorerTabKey }) => {
     const [tab, setTab] = useLocalStorage(storageKey, ExplorerDatabaseType.Dojo);
     const searchParams = useSearchParams();
     const { chess } = useChess();
+    const t = useTranslations('analysisBoard.explorer');
 
     const hasSetTabFromParams = useRef(false);
     useEffect(() => {
@@ -182,11 +184,11 @@ const Explorer: React.FC<ExplorerProps> = ({ storageKey = explorerTabKey }) => {
                     <Tabs
                         value={tab}
                         onChange={(_, val: ExplorerDatabaseType) => setTab(val)}
-                        aria-label='Position database type'
+                        aria-label={t('tabsAriaLabel')}
                         variant='scrollable'
                     >
                         <Tab
-                            label='Dojo'
+                            label={t('tabDojo')}
                             value={ExplorerDatabaseType.Dojo}
                             icon={<ChessDojoIcon />}
                             iconPosition='start'
@@ -194,7 +196,7 @@ const Explorer: React.FC<ExplorerProps> = ({ storageKey = explorerTabKey }) => {
                             data-testid='explorer-tab-button-dojo'
                         />
                         <Tab
-                            label='Masters'
+                            label={t('tabMasters')}
                             value={ExplorerDatabaseType.Masters}
                             icon={<KingIcon sx={{ fontSize: '1rem' }} />}
                             iconPosition='start'
@@ -202,7 +204,7 @@ const Explorer: React.FC<ExplorerProps> = ({ storageKey = explorerTabKey }) => {
                             data-testid='explorer-tab-button-masters'
                         />
                         <Tab
-                            label='CloudDB'
+                            label={t('tabCloudDb')}
                             value={ExplorerDatabaseType.ChessDB}
                             icon={<CloudIcon sx={{ fontSize: '1rem' }} />}
                             iconPosition='start'
@@ -210,7 +212,7 @@ const Explorer: React.FC<ExplorerProps> = ({ storageKey = explorerTabKey }) => {
                             data-cy='explorer-tab-button-chessdb'
                         />
                         <Tab
-                            label='Lichess'
+                            label={t('tabLichess')}
                             value={ExplorerDatabaseType.Lichess}
                             icon={<SiLichess />}
                             iconPosition='start'
@@ -218,7 +220,7 @@ const Explorer: React.FC<ExplorerProps> = ({ storageKey = explorerTabKey }) => {
                             data-testid='explorer-tab-button-lichess'
                         />
                         <Tab
-                            label='Repertoire Spy'
+                            label={t('tabRepertoireSpy')}
                             value={ExplorerDatabaseType.Player}
                             icon={<PersonSearch />}
                             iconPosition='start'
@@ -226,7 +228,7 @@ const Explorer: React.FC<ExplorerProps> = ({ storageKey = explorerTabKey }) => {
                             data-testid='explorer-tab-button-player'
                         />
                         <Tab
-                            label='Tablebase'
+                            label={t('tabTablebase')}
                             value={ExplorerDatabaseType.Tablebase}
                             icon={<RookIcon sx={{ fontSize: '1rem' }} />}
                             iconPosition='start'

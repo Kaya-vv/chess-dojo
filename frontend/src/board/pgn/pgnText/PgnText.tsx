@@ -70,7 +70,7 @@ export function PgnTextBanners() {
 
     return (
         <>
-            {game && game.unlisted === true && isOwner && <UnpublishedGameBanner dismissable />}
+            {game?.unlisted && isOwner && <UnpublishedGameBanner dismissable />}
             {unsaved && <UnsavedGameBanner dismissable />}
             <SaveAllVariationsButton />
         </>
