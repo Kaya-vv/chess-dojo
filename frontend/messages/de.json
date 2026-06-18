@@ -3426,7 +3426,15 @@
                 "hideSourceTooltip": "Quelle aus Ergebnissen ausblenden",
                 "removeSourceTooltip": "Quelle entfernen",
                 "clearDataButton": "Daten löschen",
-                "addSourceButton": "Quelle hinzufügen"
+                "addSourceButton": "Quelle hinzufügen",
+                "playModeTitle": "Gegen Repertoire spielen",
+                "playModeDescription": "Nutze die gefilterte Datenbank dieses Spielers, bis die Stichprobe klein wird, dann setzt Maia die Partie fort.",
+                "playAsLabel": "Spiele als",
+                "databasePlaysLabel": "Datenbank spielt {color}",
+                "minimumGamesLabel": "Mindestens Datenbankpartien",
+                "maiaFallbackRatingLabel": "Maia-Fallback-Wertung",
+                "startPlayModeButton": "Sparring starten",
+                "stopPlayModeButton": "Sparring stoppen"
             }
         },
         "boardButtons": {

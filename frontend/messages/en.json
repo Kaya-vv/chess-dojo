@@ -3449,7 +3449,15 @@
                 "hideSourceTooltip": "Hide source from results",
                 "removeSourceTooltip": "Remove source",
                 "clearDataButton": "Clear Data",
-                "addSourceButton": "Add Source"
+                "addSourceButton": "Add Source",
+                "playModeTitle": "Play vs Repertoire",
+                "playModeDescription": "Use this player's filtered database until the sample gets small, then let Maia continue the game.",
+                "playAsLabel": "Play as",
+                "databasePlaysLabel": "Database plays {color}",
+                "minimumGamesLabel": "Minimum database games",
+                "maiaFallbackRatingLabel": "Maia fallback rating",
+                "startPlayModeButton": "Start Sparring",
+                "stopPlayModeButton": "Stop Sparring"
             }
         },
         "boardButtons": {

@@ -18,7 +18,11 @@ import Database from '../Database';
 import { ExplorerDatabaseType } from '../Explorer';
 import { Filters } from './Filters';
 import { usePlayerOpeningTree } from './PlayerOpeningTree';
+import { Color } from './PlayerSource';
 import { PlayerSources } from './PlayerSources';
+import { createRepertoireSpyMoveProvider } from './repertoireSpyMoveProvider';
+import { DEFAULT_REPERTOIRE_SPY_START_FEN, useRepertoireSpyPlay } from './RepertoireSpyPlayContext';
+import { RepertoireSpyPlayControls } from './RepertoireSpyPlayControls';
 import { usePlayerGames } from './usePlayerGames';
 
 function onClickGame(game: GameInfo) {
@@ -41,6 +45,7 @@ export function PlayerTab({ fen }: { fen: string }) {
     const isFreeTier = useFreeTier();
     const pagination = usePlayerGames(fen, openingTree, readonlyFilters);
     const [filtersOpen, setFiltersOpen] = useState(false);
+    const { isAvailable, startRepertoireSpyGame } = useRepertoireSpyPlay();
 
     if (isFreeTier) {
         return (
@@ -54,6 +59,8 @@ export function PlayerTab({ fen }: { fen: string }) {
         setFiltersOpen(false);
         void parentOnLoad();
     };
+
+    const position = openingTree.current?.getPosition(fen, readonlyFilters);
 
     return (
         <Stack>
@@ -97,10 +104,36 @@ export function PlayerTab({ fen }: { fen: string }) {
                 <Database
                     type={ExplorerDatabaseType.Player}
                     fen={fen}
-                    position={openingTree.current?.getPosition(fen, readonlyFilters)}
+                    position={position}
                     isLoading={false}
                     pagination={pagination}
                     onClickGame={onClickGame}
+                />
+            )}
+
+            {isAvailable && openingTree.current && (
+                <RepertoireSpyPlayControls
+                    filters={readonlyFilters}
+                    performanceRating={position?.performanceData?.performanceRating}
+                    onStart={({ playerColor, maiaRating, minGames, timeControl }) => {
+                        if (!openingTree.current) {
+                            return;
+                        }
+                        const databaseColor = playerColor === 'white' ? Color.Black : Color.White;
+                        startRepertoireSpyGame({
+                            playerColor,
+                            maiaRating,
+                            minGames,
+                            timeControl,
+                            startFen: fen || DEFAULT_REPERTOIRE_SPY_START_FEN,
+                            botMoveProvider: createRepertoireSpyMoveProvider({
+                                openingTree: openingTree.current,
+                                filters: readonlyFilters,
+                                databaseColor,
+                                minGames,
+                            }),
+                        });
+                    }}
                 />
             )}
 

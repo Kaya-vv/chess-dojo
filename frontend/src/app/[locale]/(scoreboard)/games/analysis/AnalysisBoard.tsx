@@ -1,11 +1,17 @@
 'use client';
 
 import { AuthStatus, useAuth } from '@/auth/Auth';
+import { BoardApi, PrimitiveMove, reconcile } from '@/board/Board';
 import { DefaultUnderboardTab } from '@/board/pgn/boardTools/underboard/underboardTabs';
+import {
+    RepertoireSpyPlayProvider,
+    RepertoireSpyStartOpts,
+} from '@/board/pgn/explorer/player/RepertoireSpyPlayContext';
 import PgnBoard from '@/board/pgn/PgnBoard';
 import { getInitialSidePanelTab, useSidePanelTabs } from '@/board/pgn/sidePanelTabs';
 import SaveGameDialog, { SaveGameDialogType } from '@/components/games/edit/SaveGameDialog';
 import { GameMoveButtonExtras } from '@/components/games/view/GameMoveButtonExtras';
+import { useMaiaGame } from '@/components/playbot/useMaiaGame';
 import { GameContext } from '@/context/useGame';
 import { User } from '@/database/user';
 import PgnErrorBoundary from '@/games/view/PgnErrorBoundary';
@@ -22,7 +28,7 @@ import {
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { useTranslations } from 'next-intl';
 import { useNavigationGuard } from 'next-navigation-guard';
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const gameUrlRegex = /^\/games\/.*\/.*/;
 
@@ -55,6 +61,12 @@ export default function AnalysisBoard() {
         },
     });
     const [chess, setChess] = useState<Chess>();
+    const maiaGame = useMaiaGame();
+    const [playInitKey, setPlayInitKey] = useState(0);
+    const [playFen, setPlayFen] = useState<string | null>(null);
+    const [playOrientation, setPlayOrientation] = useState<GameOrientation>(GameOrientations.white);
+    const [isRepertoireSpyPlaying, setIsRepertoireSpyPlaying] = useState(false);
+    const latestChessRef = useRef<Chess | undefined>(undefined);
     const {
         showDialog: showSaveDialog,
         setShowDialog: setShowSaveDialog,
@@ -62,6 +74,79 @@ export default function AnalysisBoard() {
         request,
     } = useUnsavedGame(chess);
     const { leftTabs, rightTabs } = useSidePanelTabs(analysisTabs);
+
+    const onInitialize = useCallback(
+        (board: BoardApi, c: Chess) => {
+            setChess(c);
+            latestChessRef.current = c;
+            maiaGame.onBoardInit(board, c);
+        },
+        [maiaGame],
+    );
+
+    const startRepertoireSpyGame = useCallback(
+        (opts: RepertoireSpyStartOpts) => {
+            setPlayFen(opts.startFen || FEN.start);
+            setPlayOrientation(opts.playerColor);
+            setIsRepertoireSpyPlaying(true);
+            maiaGame.startGame({
+                playerColor: opts.playerColor,
+                maiaRating: opts.maiaRating,
+                startFen: opts.startFen || FEN.start,
+                timeControl: opts.timeControl,
+                botMoveProvider: opts.botMoveProvider,
+            });
+            setPlayInitKey((value) => value + 1);
+        },
+        [maiaGame],
+    );
+
+    const stopRepertoireSpyGame = useCallback(() => {
+        setIsRepertoireSpyPlaying(false);
+        maiaGame.resign();
+    }, [maiaGame]);
+
+    useEffect(() => {
+        if (maiaGame.result !== null) {
+            setIsRepertoireSpyPlaying(false);
+        }
+    }, [maiaGame.result]);
+
+    const repertoireSpyPlayContext = useMemo(
+        () => ({
+            isAvailable: true,
+            isPlaying: isRepertoireSpyPlaying,
+            startRepertoireSpyGame,
+            stopRepertoireSpyGame,
+        }),
+        [isRepertoireSpyPlaying, startRepertoireSpyGame, stopRepertoireSpyGame],
+    );
+
+    const onPlayModeMove = useCallback(
+        (board: BoardApi, c: Chess, primitive: PrimitiveMove) => {
+            if (!isRepertoireSpyPlaying) {
+                return;
+            }
+            if (maiaGame.result !== null) {
+                return;
+            }
+            if (!maiaGame.playerToMove) {
+                return;
+            }
+            if (c.currentMove() !== c.lastMove()) {
+                return;
+            }
+
+            const uci = primitive.orig + primitive.dest + (primitive.promotion ?? '');
+            const moved = c.move(uci);
+            if (!moved) {
+                return;
+            }
+            reconcile(c, board);
+            maiaGame.onPlayerMoved(uci);
+        },
+        [isRepertoireSpyPlaying, maiaGame],
+    );
 
     if (status === AuthStatus.Loading) {
         return <LoadingPage />;
@@ -75,31 +160,41 @@ export default function AnalysisBoard() {
                     unsaved: true,
                 }}
             >
-                <PgnBoard
-                    pgn={pgn}
-                    fen={searchParams.get('fen') || fen}
-                    startOrientation={getDefaultOrientation(pgn, user)}
-                    underboardTabs={leftTabs}
-                    rightTabs={rightTabs}
-                    sidePanelTabs={analysisTabs}
-                    initialUnderboardTab={getInitialSidePanelTab(
-                        leftTabs,
-                        DefaultUnderboardTab.Explorer,
-                    )}
-                    initialRightTab={getInitialSidePanelTab(
-                        rightTabs,
-                        DefaultUnderboardTab.PgnText,
-                    )}
-                    tabStorageKeyPrefix='analysis'
-                    allowMoveDeletion={true}
-                    allowDeleteBefore={true}
-                    showElapsedMoveTimes
-                    slots={{
-                        moveButtonExtras: GameMoveButtonExtras,
-                    }}
-                    disableNullMoves={false}
-                    onInitialize={(_, c) => setChess(c)}
-                />
+                <RepertoireSpyPlayProvider value={repertoireSpyPlayContext}>
+                    <PgnBoard
+                        pgn={pgn}
+                        fen={playFen || searchParams.get('fen') || fen}
+                        startOrientation={
+                            playFen ? playOrientation : getDefaultOrientation(pgn, user)
+                        }
+                        underboardTabs={leftTabs}
+                        rightTabs={rightTabs}
+                        sidePanelTabs={analysisTabs}
+                        initialUnderboardTab={getInitialSidePanelTab(
+                            leftTabs,
+                            DefaultUnderboardTab.Explorer,
+                        )}
+                        initialRightTab={getInitialSidePanelTab(
+                            rightTabs,
+                            DefaultUnderboardTab.PgnText,
+                        )}
+                        tabStorageKeyPrefix='analysis'
+                        allowMoveDeletion={!isRepertoireSpyPlaying}
+                        allowDeleteBefore={!isRepertoireSpyPlaying}
+                        showElapsedMoveTimes
+                        slots={{
+                            moveButtonExtras: GameMoveButtonExtras,
+                        }}
+                        slotProps={{
+                            board: {
+                                onMove: isRepertoireSpyPlaying ? onPlayModeMove : undefined,
+                            },
+                        }}
+                        disableNullMoves={false}
+                        initKey={playFen ? `repertoire-spy-${playInitKey}` : undefined}
+                        onInitialize={onInitialize}
+                    />
+                </RepertoireSpyPlayProvider>
             </GameContext.Provider>
 
             <Dialog
