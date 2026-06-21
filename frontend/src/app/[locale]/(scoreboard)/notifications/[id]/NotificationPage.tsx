@@ -1,7 +1,7 @@
 'use client';
 
 import { useNotifications } from '@/api/cache/Cache';
-import GameTable from '@/components/games/list/GameTable';
+import GameTable, { getOpenGame } from '@/components/games/list/GameTable';
 import { ListItemContextMenu } from '@/components/games/list/ListItemContextMenu';
 import { GameInfo } from '@/database/game';
 import { useDataGridContextMenu } from '@/hooks/useDataGridContextMenu';
@@ -25,15 +25,6 @@ export function NotificationPage({ id }: { id: string }) {
         return null;
     }
 
-    const onClick = ({ cohort, id }: GameInfo, event: React.MouseEvent) => {
-        const url = `/games/${cohort.replaceAll('+', '%2B')}/${id.replaceAll('?', '%3F')}`;
-        if (event.shiftKey) {
-            window.open(url, '_blank');
-        } else {
-            router.push(url);
-        }
-    };
-
     const games = (notification.explorerGameMetadata as unknown as GameInfo[]) ?? [];
     return (
         <Container maxWidth='xl' sx={{ py: 5 }}>
@@ -52,7 +43,7 @@ export function NotificationPage({ id }: { id: string }) {
                     onSearch: noop,
                     onDelete: noop,
                 }}
-                onRowClick={(params, event) => onClick(params.row, event)}
+                onRowClick={getOpenGame(router)}
                 contextMenu={contextMenu}
             />
             <ListItemContextMenu
