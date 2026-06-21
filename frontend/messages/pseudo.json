@@ -3458,7 +3458,15 @@
                 "hideSourceTooltip": "[T] Hide source from results",
                 "removeSourceTooltip": "[T] Remove source",
                 "clearDataButton": "[T] Clear Data",
-                "addSourceButton": "[T] Add Source"
+                "addSourceButton": "[T] Add Source",
+                "playModeTitle": "[T] Play vs Repertoire",
+                "playModeDescription": "[T] Use this player's filtered database until the sample gets small, then let Maia continue the game.",
+                "playAsLabel": "[T] Play as",
+                "databasePlaysLabel": "[T] Database plays {color}",
+                "minimumGamesLabel": "[T] Minimum database games",
+                "maiaFallbackRatingLabel": "[T] Maia fallback rating",
+                "startPlayModeButton": "[T] Start Sparring",
+                "stopPlayModeButton": "[T] Stop Sparring"
             }
         },
         "boardButtons": {
