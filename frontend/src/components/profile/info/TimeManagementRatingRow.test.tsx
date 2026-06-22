@@ -17,6 +17,9 @@ describe('TimeManagementRatingRow', () => {
         expect(screen.getByText('2100')).toBeInTheDocument();
         expect(screen.getByText('(12 games)')).toBeInTheDocument();
         expect(screen.getByTestId('time-management-fast-icon')).toBeInTheDocument();
+        expect(
+            screen.getByLabelText('You tend to play faster than the ideal clock curve on average.'),
+        ).toBeInTheDocument();
     });
 
     it('shows a sloth for negative average area', () => {
@@ -27,6 +30,9 @@ describe('TimeManagementRatingRow', () => {
         );
 
         expect(screen.getByTestId('time-management-slow-icon')).toBeInTheDocument();
+        expect(
+            screen.getByLabelText('You tend to play slower than the ideal clock curve on average.'),
+        ).toBeInTheDocument();
     });
 
     it('shows no direction icon for neutral or missing area', () => {

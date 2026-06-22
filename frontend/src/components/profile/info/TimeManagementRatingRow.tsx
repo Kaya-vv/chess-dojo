@@ -11,6 +11,9 @@ function gameCountLabel(numGames: number): string {
     return `(${numGames} ${numGames === 1 ? 'game' : 'games'})`;
 }
 
+const fastTooltip = 'You tend to play faster than the ideal clock curve on average.';
+const slowTooltip = 'You tend to play slower than the ideal clock curve on average.';
+
 function TimeManagementDirectionIcon({ area }: { area?: number }) {
     if (!area) {
         return null;
@@ -18,18 +21,26 @@ function TimeManagementDirectionIcon({ area }: { area?: number }) {
 
     if (area > 0) {
         return (
-            <RabbitIcon
-                data-testid='time-management-fast-icon'
-                sx={{ fontSize: 17, color: 'text.secondary' }}
-            />
+            <Tooltip title={fastTooltip}>
+                <span>
+                    <RabbitIcon
+                        data-testid='time-management-fast-icon'
+                        sx={{ fontSize: 17, color: 'text.secondary' }}
+                    />
+                </span>
+            </Tooltip>
         );
     }
 
     return (
-        <SlothIcon
-            data-testid='time-management-slow-icon'
-            sx={{ fontSize: 17, color: 'text.secondary' }}
-        />
+        <Tooltip title={slowTooltip}>
+            <span>
+                <SlothIcon
+                    data-testid='time-management-slow-icon'
+                    sx={{ fontSize: 17, color: 'text.secondary' }}
+                />
+            </span>
+        </Tooltip>
     );
 }
 
