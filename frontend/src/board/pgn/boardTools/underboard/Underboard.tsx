@@ -314,155 +314,165 @@ const Underboard = forwardRef<UnderboardApi, UnderboardProps>(
                         height: `${resizeData.height}px`,
                         order: resizeData.order,
                         visibility: chess ? undefined : 'hidden',
-                        gap: header ? 1 : 0,
                         minHeight: 0,
                     }}
                 >
-                    {header && <Stack sx={{ flexShrink: 0 }}>{header}</Stack>}
+                    <Stack sx={{ maxHeight: 1, flexGrow: 1, gap: 1 }}>
+                        {header}
 
-                    <Card
-                        elevation={light ? undefined : 3}
-                        sx={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            boxShadow: 'none',
-                            maxHeight: { xl: 1 },
-                            flexGrow: 1,
-                            minHeight: 0,
-                        }}
-                        variant={light ? 'outlined' : 'elevation'}
-                    >
-                        {tabs.length > 1 && (
-                            <Paper elevation={10} sx={{ boxShadow: 'none' }}>
-                                <ToggleButtonGroup
-                                    size='small'
-                                    exclusive
-                                    value={underboard}
-                                    onChange={(_, val: string | null) => val && setUnderboard(val)}
-                                    fullWidth
-                                >
-                                    {displayedTabs.map((tab, index) => {
-                                        const info = getTabInfo(tab, tabInfo);
-
-                                        return (
-                                            <UnderboardButton
-                                                key={info.name}
-                                                tooltip={info.tooltip}
-                                                value={info.name}
-                                                shortcut={info.shortcut}
-                                                testIdPrefix={buttonTestIdPrefix}
-                                                sx={{
-                                                    borderTop: light ? 0 : undefined,
-
-                                                    borderLeft:
-                                                        index === 0 && light ? 0 : undefined,
-                                                    borderRight:
-                                                        index === tabs.length - 1 && light
-                                                            ? 0
-                                                            : undefined,
-
-                                                    borderBottomRightRadius: 0,
-                                                    borderBottomLeftRadius: 0,
-                                                }}
-                                            >
-                                                {info.icon}
-                                            </UnderboardButton>
-                                        );
-                                    })}
-
-                                    {hiddenTabs.length > 0 && (
-                                        <UnderboardButton
-                                            tooltip={t('more')}
-                                            value='more'
-                                            testIdPrefix={buttonTestIdPrefix}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                setMoreAnchor(e.currentTarget);
-                                            }}
-                                        >
-                                            <MoreHoriz />
-                                        </UnderboardButton>
-                                    )}
-                                </ToggleButtonGroup>
-                            </Paper>
-                        )}
-
-                        <Menu
-                            anchorEl={moreAnchor}
-                            open={!!moreAnchor}
-                            onClose={() => setMoreAnchor(undefined)}
-                        >
-                            {hiddenTabs.map((tab) => {
-                                const info = getTabInfo(tab, tabInfo);
-
-                                if (info.shortcut) {
-                                    const binding =
-                                        keyBindings[info.shortcut] ||
-                                        ShortcutBindings.default[info.shortcut];
-                                    if (binding.key) {
-                                        const keyLabel = keyLabels[binding.key] ?? binding.key;
-                                        info.tooltip += ` (${binding.modifier ? `${binding.modifier}+` : ''}${keyLabel})`;
-                                    }
-                                }
-
-                                return (
-                                    <MenuItem
-                                        key={info.name}
-                                        onClick={() => {
-                                            setUnderboard(info.name);
-                                            setMoreAnchor(undefined);
-                                        }}
-                                        selected={info.name === underboard}
-                                    >
-                                        <ListItemIcon>{info.icon}</ListItemIcon>
-                                        <ListItemText>{info.tooltip}</ListItemText>
-                                    </MenuItem>
-                                );
-                            })}
-                        </Menu>
-
-                        <Stack
-                            data-testid={`${buttonTestIdPrefix}underboard-tab-content`}
+                        <Card
+                            elevation={light ? undefined : 3}
                             sx={{
-                                overflowY:
-                                    underboard === DefaultUnderboardTab.PgnText ? 'hidden' : 'auto',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                boxShadow: 'none',
+                                maxHeight: { xl: 1 },
                                 flexGrow: 1,
                                 minHeight: 0,
                             }}
+                            variant={light ? 'outlined' : 'elevation'}
                         >
-                            {underboard === DefaultUnderboardTab.Directories && <Directories />}
-                            {underboard === DefaultUnderboardTab.PgnText && <UnderboardPgnText />}
-                            {underboard === DefaultUnderboardTab.Tags && (
-                                <Tags game={game} allowEdits={isOwner} />
-                            )}
-                            {underboard === DefaultUnderboardTab.Editor && (
-                                <Editor focusEditor={focusEditor} setFocusEditor={setFocusEditor} />
-                            )}
-                            {underboard === DefaultUnderboardTab.Explorer && (
-                                <PlayerOpeningTreeProvider>
-                                    <Explorer storageKey={explorerStorageKey} />
-                                </PlayerOpeningTreeProvider>
-                            )}
-                            {underboard === DefaultUnderboardTab.Settings && (
-                                <Settings showEditor={isOwner} sidePanelTabs={sidePanelTabs} />
-                            )}
-                            {underboard === DefaultUnderboardTab.Clocks && (
-                                <ClockUsage showEditor={isOwner} />
-                            )}
-                            {underboard === DefaultUnderboardTab.Comments && (
-                                <Comments
-                                    isReadonly={!isAuthenticated}
-                                    focusEditor={focusCommenter}
-                                    setFocusEditor={setFocusCommenter}
-                                />
-                            )}
-                            {underboard === DefaultUnderboardTab.Share && <ShareTab />}
-                            {underboard === DefaultUnderboardTab.Tools && <Tools />}
+                            {tabs.length > 1 && (
+                                <Paper elevation={10} sx={{ boxShadow: 'none' }}>
+                                    <ToggleButtonGroup
+                                        size='small'
+                                        exclusive
+                                        value={underboard}
+                                        onChange={(_, val: string | null) =>
+                                            val && setUnderboard(val)
+                                        }
+                                        fullWidth
+                                    >
+                                        {displayedTabs.map((tab, index) => {
+                                            const info = getTabInfo(tab, tabInfo);
 
-                            {customTab?.element}
-                        </Stack>
-                    </Card>
+                                            return (
+                                                <UnderboardButton
+                                                    key={info.name}
+                                                    tooltip={info.tooltip}
+                                                    value={info.name}
+                                                    shortcut={info.shortcut}
+                                                    testIdPrefix={buttonTestIdPrefix}
+                                                    sx={{
+                                                        borderTop: light ? 0 : undefined,
+
+                                                        borderLeft:
+                                                            index === 0 && light ? 0 : undefined,
+                                                        borderRight:
+                                                            index === tabs.length - 1 && light
+                                                                ? 0
+                                                                : undefined,
+
+                                                        borderBottomRightRadius: 0,
+                                                        borderBottomLeftRadius: 0,
+                                                    }}
+                                                >
+                                                    {info.icon}
+                                                </UnderboardButton>
+                                            );
+                                        })}
+
+                                        {hiddenTabs.length > 0 && (
+                                            <UnderboardButton
+                                                tooltip={t('more')}
+                                                value='more'
+                                                testIdPrefix={buttonTestIdPrefix}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    setMoreAnchor(e.currentTarget);
+                                                }}
+                                            >
+                                                <MoreHoriz />
+                                            </UnderboardButton>
+                                        )}
+                                    </ToggleButtonGroup>
+                                </Paper>
+                            )}
+
+                            <Menu
+                                anchorEl={moreAnchor}
+                                open={!!moreAnchor}
+                                onClose={() => setMoreAnchor(undefined)}
+                            >
+                                {hiddenTabs.map((tab) => {
+                                    const info = getTabInfo(tab, tabInfo);
+
+                                    if (info.shortcut) {
+                                        const binding =
+                                            keyBindings[info.shortcut] ||
+                                            ShortcutBindings.default[info.shortcut];
+                                        if (binding.key) {
+                                            const keyLabel = keyLabels[binding.key] ?? binding.key;
+                                            info.tooltip += ` (${binding.modifier ? `${binding.modifier}+` : ''}${keyLabel})`;
+                                        }
+                                    }
+
+                                    return (
+                                        <MenuItem
+                                            key={info.name}
+                                            onClick={() => {
+                                                setUnderboard(info.name);
+                                                setMoreAnchor(undefined);
+                                            }}
+                                            selected={info.name === underboard}
+                                        >
+                                            <ListItemIcon>{info.icon}</ListItemIcon>
+                                            <ListItemText>{info.tooltip}</ListItemText>
+                                        </MenuItem>
+                                    );
+                                })}
+                            </Menu>
+
+                            <Stack
+                                data-testid={`${buttonTestIdPrefix}underboard-tab-content`}
+                                sx={{
+                                    overflowY:
+                                        underboard === DefaultUnderboardTab.PgnText
+                                            ? 'hidden'
+                                            : 'auto',
+                                    flexGrow: 1,
+                                    minHeight: 0,
+                                }}
+                            >
+                                {underboard === DefaultUnderboardTab.Directories && <Directories />}
+                                {underboard === DefaultUnderboardTab.PgnText && (
+                                    <UnderboardPgnText />
+                                )}
+                                {underboard === DefaultUnderboardTab.Tags && (
+                                    <Tags game={game} allowEdits={isOwner} />
+                                )}
+                                {underboard === DefaultUnderboardTab.Editor && (
+                                    <Editor
+                                        focusEditor={focusEditor}
+                                        setFocusEditor={setFocusEditor}
+                                    />
+                                )}
+                                {underboard === DefaultUnderboardTab.Explorer && (
+                                    <PlayerOpeningTreeProvider>
+                                        <Explorer storageKey={explorerStorageKey} />
+                                    </PlayerOpeningTreeProvider>
+                                )}
+                                {underboard === DefaultUnderboardTab.Settings && (
+                                    <Settings showEditor={isOwner} sidePanelTabs={sidePanelTabs} />
+                                )}
+                                {underboard === DefaultUnderboardTab.Clocks && (
+                                    <ClockUsage showEditor={isOwner} />
+                                )}
+                                {underboard === DefaultUnderboardTab.Comments && (
+                                    <Comments
+                                        isReadonly={!isAuthenticated}
+                                        focusEditor={focusCommenter}
+                                        setFocusEditor={setFocusCommenter}
+                                    />
+                                )}
+                                {underboard === DefaultUnderboardTab.Share && <ShareTab />}
+                                {underboard === DefaultUnderboardTab.Tools && <Tools />}
+
+                                {customTab?.element}
+                            </Stack>
+                        </Card>
+                    </Stack>
                 </Stack>
             </Resizable>
         );
