@@ -4,7 +4,7 @@ test.describe('DB overlay - course titles per locale', () => {
     test('english bare /courses course titles are plain (no [T] prefix)', async ({ page }) => {
         await page.goto('/courses');
 
-        const firstTitle = page.getByRole('heading', { level: 5 }).first();
+        const firstTitle = page.getByRole('heading', { level: 4 }).first();
         await expect(firstTitle).toBeVisible({ timeout: 15000 });
         await expect(firstTitle).not.toHaveText(/^\[T\]/);
     });
@@ -22,7 +22,7 @@ test.describe('DB overlay - course titles per locale', () => {
         );
         await page.goto('/pseudo/courses');
 
-        const firstTitle = page.getByRole('heading', { level: 5 }).first();
+        const firstTitle = page.getByRole('heading', { level: 4 }).first();
         await expect(firstTitle).toBeVisible({ timeout: 15000 });
         await expect(firstTitle).toHaveText(/^\[T\]/);
     });
