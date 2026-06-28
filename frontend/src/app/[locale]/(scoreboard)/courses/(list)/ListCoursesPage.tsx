@@ -3,10 +3,10 @@
 import { useApi } from '@/api/Api';
 import { RequestSnackbar, useRequest } from '@/api/Request';
 import { useAuth, useFreeTier } from '@/auth/Auth';
-import { Course } from '@/database/course';
+import { Course, CourseType } from '@/database/course';
 import { getCohortRange } from '@/database/user';
 import LoadingPage from '@/loading/LoadingPage';
-import { Container, Grid, Stack, Typography } from '@mui/material';
+import { Container, Divider, Grid, Stack, Typography } from '@mui/material';
 import { useTranslations } from 'next-intl';
 import { useEffect } from 'react';
 import { getCheckoutSessionId } from '../localStorage';
@@ -57,12 +57,62 @@ const ListCoursesPage = () => {
             return true;
         }) ?? [];
 
+    const workshops = request.data?.filter((course) => course.type === CourseType.Workshop) ?? [];
+
     const noItems = !courses.length;
 
     return (
         <Container maxWidth='xl' sx={{ py: 5 }}>
             <RequestSnackbar request={request} />
             <Grid container spacing={3}>
+                {workshops.length > 0 && (
+                    <Grid
+                        container
+                        spacing={2}
+                        size={{
+                            xs: 12,
+                        }}
+                        pb={5}
+                    >
+                        <Grid size={{ xs: 12 }} sx={{ mt: 6, mb: 2 }}>
+                            <Typography variant='h4' fontWeight='bold' mb={1}>
+                                Workshops
+                            </Typography>
+                            <Typography variant='h6'>
+                                These courses contain recordings from our live workshop classes, as
+                                well as other supplementary materials from the classes. These
+                                recordings are unscripted and contain questions and comments from
+                                other students.
+                            </Typography>
+                        </Grid>
+
+                        {workshops.map((workshop) => (
+                            <Grid
+                                key={workshop.id}
+                                size={{
+                                    xs: 12,
+                                    md: 6,
+                                    lg: 4,
+                                }}
+                            >
+                                <CourseListItem
+                                    course={workshop}
+                                    isFreeTier={isFreeTier}
+                                    isPurchased={
+                                        user?.purchasedCourses
+                                            ? user.purchasedCourses[workshop.id]
+                                            : getCheckoutSessionId(workshop.id) !== ''
+                                    }
+                                />
+                            </Grid>
+                        ))}
+
+                        <Grid size={12}>
+                            <Divider sx={{ mt: 4 }} />
+                        </Grid>
+                    </Grid>
+                )}
+
                 <Grid
                     size={{
                         xs: 12,
@@ -80,6 +130,12 @@ const ListCoursesPage = () => {
                         md: 10,
                     }}
                 >
+                    <Grid size={{ xs: 12 }} sx={{ mb: 1 }}>
+                        <Typography variant='h4' fontWeight='bold'>
+                            Courses
+                        </Typography>
+                    </Grid>
+
                     {courses.map((course) => (
                         <Grid
                             key={course.id}
@@ -108,8 +164,11 @@ const ListCoursesPage = () => {
                             <LoadingPage />
                         </Stack>
                     )}
+
                     {noItems && !request.isLoading() && request.isSent() && (
-                        <Typography>{t('noCoursesFound')}</Typography>
+                        <Stack width={1} sx={{ mt: 2, mb: 4 }}>
+                            <Typography color='text.secondary'>{t('noCoursesFound')}</Typography>
+                        </Stack>
                     )}
                 </Grid>
             </Grid>

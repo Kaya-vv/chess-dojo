@@ -161,6 +161,9 @@ const pagesWithVideosRaw = [
     // Play against the caro kann
     '/courses/OPENING/179bf457-05fa-4405-9b61-4c12b6687932/0/1',
     '/courses/OPENING/179bf457-05fa-4405-9b61-4c12b6687932/0/2',
+
+    // Basic Board Visualization
+    '/courses/WORKSHOP/6746ee1a-d029-4ff0-89e2-962a5c64a6b6/:path*',
 ];
 
 // Under localePrefix: 'as-needed', default-locale URLs are bare ('/profile',
