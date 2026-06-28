@@ -35,6 +35,7 @@ import {
     enUS as dateFnsEnUS,
     es as dateFnsEs,
     fr as dateFnsFr,
+    it as dateFnsIt,
     ptBR as dateFnsPtBR,
 } from 'date-fns/locale';
 import { useLocale, useTranslations } from 'next-intl';
@@ -45,6 +46,7 @@ const SCHEDULER_LOCALES = {
     en: dateFnsEnUS,
     pseudo: dateFnsEnUS,
     de: dateFnsDe,
+    it: dateFnsIt,
     fr: dateFnsFr,
     es: dateFnsEs,
     pt: dateFnsPtBR,

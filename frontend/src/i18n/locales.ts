@@ -2,6 +2,7 @@ export const SUPPORTED_LOCALES = [
     { code: 'en', label: 'English' },
     { code: 'pseudo', label: '[T] Pseudo' },
     { code: 'de', label: 'Deutsch' },
+    { code: 'it', label: 'Italiano' },
     { code: 'fr', label: 'Français' },
     { code: 'es', label: 'Español' },
     { code: 'pt', label: 'Português' },
