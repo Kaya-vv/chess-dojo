@@ -83,6 +83,48 @@ functions:
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/prod-masters-explorer
           - !GetAtt ExplorerTable.Arn
 
+  indexGameSearch:
+    handler: search/indexGame.handler
+    timeout: 120
+    events:
+      - stream:
+          type: dynamodb
+          arn: ${param:GamesTableStreamArn}
+          batchWindow: 20
+          batchSize: 100
+          # Upserts/deletes are idempotent, so retrying a batch is safe.
+          maximumRetryAttempts: 2
+          parallelizationFactor: 2
+    environment:
+      gameSearchEndpoint: ${param:GameSearchEndpoint}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - es:ESHttpPost
+          - es:ESHttpPut
+          - es:ESHttpDelete
+          - es:ESHttpGet
+          - es:ESHttpHead
+        Resource: arn:aws:es:${aws:region}:${aws:accountId}:domain/chess-dojo-game-search/*
+
+  searchGames:
+    handler: search/searchGames.handler
+    events:
+      - httpApi:
+          path: /game/search
+          method: get
+          authorizer:
+            type: jwt
+            id: ${param:apiAuthorizer}
+    environment:
+      gameSearchEndpoint: ${param:GameSearchEndpoint}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - es:ESHttpGet
+          - es:ESHttpPost
+        Resource: arn:aws:es:${aws:region}:${aws:accountId}:domain/chess-dojo-game-search/*
+
   notifyFollowers:
     handler: explorer/notifyFollowers.handler
     timeout: 300
@@ -387,3 +429,23 @@ resources:
               ProjectionType: INCLUDE
               NonKeyAttributes:
                 - followMetadata
+
+    IndexGameSearchErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Condition: IsProd
+      Properties:
+        AlarmName: IndexGameSearchErrors-${sls:stage}
+        AlarmDescription: 'Errors in the game search indexer Lambda'
+        AlarmActions:
+          - ${param:AlertNotificationsTopic}
+        Namespace: AWS/Lambda
+        MetricName: Errors
+        Statistic: Sum
+        Dimensions:
+          - Name: FunctionName
+            Value: chess-dojo-pgn-${sls:stage}-indexGameSearch
+        Period: 3600
+        EvaluationPeriods: 1
+        Threshold: 0
+        ComparisonOperator: GreaterThanThreshold
+        TreatMissingData: notBreaching
