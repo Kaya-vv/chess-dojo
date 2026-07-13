@@ -42,10 +42,14 @@ test.describe('List Games Page', () => {
     });
 
     test('allows searching by player', async ({ page }) => {
-        await page.getByRole('button', { name: 'Search By Player' }).click();
+        await page.getByRole('button', { name: 'Search Games' }).click();
 
         const searchForm = page.getByTestId('search-by-player');
         await expect(searchForm.getByTestId('player-name')).toBeVisible();
+        await expect(searchForm.getByTestId('player-min-elo')).toBeVisible();
+        await expect(searchForm.getByTestId('player-result')).toBeVisible();
+        await expect(searchForm.getByTestId('player-opening')).toBeVisible();
+        await expect(searchForm.getByTestId('player-time-class')).toBeVisible();
         await expect(searchForm.getByTestId('player-search-button')).toBeVisible();
 
         await searchForm.getByTestId('player-name').locator('input').fill('JackStenglein');
@@ -53,7 +57,7 @@ test.describe('List Games Page', () => {
 
         await waitForNavigation(
             page,
-            /\/(?:(?:en|pseudo|de)\/)?games\?type=player&player=JackStenglein&color=either&startDate=&endDate=$/,
+            /\/(?:(?:en|pseudo|de)\/)?games\?type=player&player=JackStenglein&color=either&minElo=&maxElo=&result=&playerCohort=&opening=&minMoves=&maxMoves=&timeClass=&startDate=&endDate=$/,
         );
     });
 
@@ -114,7 +118,7 @@ test.describe('List Games Page (Free Tier)', () => {
     });
 
     test('prevents searching by player', async ({ page }) => {
-        await page.getByRole('button', { name: 'Search By Player' }).click();
+        await page.getByRole('button', { name: 'Search Games' }).click();
 
         await expect(page.getByTestId('player-search-button')).toBeDisabled();
         await expect(

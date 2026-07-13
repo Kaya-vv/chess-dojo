@@ -216,39 +216,56 @@ const SearchByOwner: React.FC<BaseFilterProps> = ({
 type SearchByPlayerProps = BaseFilterProps & {
     player: string;
     color: string;
+    minElo: string;
+    maxElo: string;
+    result: string;
+    cohort: string;
+    opening: string;
+    minMoves: string;
+    maxMoves: string;
+    timeClass: string;
     setPlayer: React.Dispatch<React.SetStateAction<string>>;
     setColor: React.Dispatch<React.SetStateAction<string>>;
+    setMinElo: React.Dispatch<React.SetStateAction<string>>;
+    setMaxElo: React.Dispatch<React.SetStateAction<string>>;
+    setResult: React.Dispatch<React.SetStateAction<string>>;
+    setCohort: React.Dispatch<React.SetStateAction<string>>;
+    setOpening: React.Dispatch<React.SetStateAction<string>>;
+    setMinMoves: React.Dispatch<React.SetStateAction<string>>;
+    setMaxMoves: React.Dispatch<React.SetStateAction<string>>;
+    setTimeClass: React.Dispatch<React.SetStateAction<string>>;
 };
 
 const SearchByPlayer: React.FC<SearchByPlayerProps> = ({
     player,
     color,
+    minElo,
+    maxElo,
+    result,
+    cohort,
+    opening,
+    minMoves,
+    maxMoves,
+    timeClass,
     startDate,
     endDate,
     isLoading,
     setPlayer,
     setColor,
+    setMinElo,
+    setMaxElo,
+    setResult,
+    setCohort,
+    setOpening,
+    setMinMoves,
+    setMaxMoves,
+    setTimeClass,
     setStartDate,
     setEndDate,
     onSearch,
 }) => {
     const t = useTranslations('games.list.searchFilters');
     const isFreeTier = useFreeTier();
-    const [errors, setErrors] = useState<Record<string, string>>({});
-
-    const handleSearch = () => {
-        const errors: Record<string, string> = {};
-        if (player === '') {
-            errors.player = t('fieldRequired');
-        }
-        setErrors(errors);
-
-        if (Object.entries(errors).length > 0) {
-            return;
-        }
-
-        onSearch();
-    };
 
     return (
         <Stack data-testid='search-by-player' spacing={2}>
@@ -257,9 +274,12 @@ const SearchByPlayer: React.FC<SearchByPlayerProps> = ({
                 data-testid='player-name'
                 label={t('playerName')}
                 value={player}
-                onChange={(e) => setPlayer(e.target.value)}
-                error={!!errors.player}
-                helperText={errors.player}
+                onChange={(e) => {
+                    setPlayer(e.target.value);
+                    if (!e.target.value && (result === 'win' || result === 'loss')) {
+                        setResult('');
+                    }
+                }}
             />
 
             <Select
@@ -272,6 +292,129 @@ const SearchByPlayer: React.FC<SearchByPlayerProps> = ({
                 <MenuItem value='white'>{t('white')}</MenuItem>
                 <MenuItem value='black'>{t('black')}</MenuItem>
             </Select>
+
+            <Grid container rowGap={1} columnGap={{ md: 0, lg: 1 }}>
+                <Grid size={{ xs: 12, lg: 'grow' }}>
+                    <TextField
+                        data-testid='player-min-elo'
+                        label={t('minElo')}
+                        type='number'
+                        fullWidth
+                        value={minElo}
+                        onChange={(e) => setMinElo(e.target.value)}
+                    />
+                </Grid>
+                <Grid size={{ xs: 12, lg: 'grow' }}>
+                    <TextField
+                        data-testid='player-max-elo'
+                        label={t('maxElo')}
+                        type='number'
+                        fullWidth
+                        value={maxElo}
+                        onChange={(e) => setMaxElo(e.target.value)}
+                    />
+                </Grid>
+            </Grid>
+
+            <FormControl>
+                <InputLabel>{t('resultLabel')}</InputLabel>
+                <Select
+                    data-testid='player-result'
+                    value={result}
+                    label={t('resultLabel')}
+                    onChange={(e) => setResult(e.target.value)}
+                >
+                    <MenuItem value=''>{t('anyResult')}</MenuItem>
+                    {player
+                        ? [
+                              <MenuItem key='win' value='win'>
+                                  {t('win')}
+                              </MenuItem>,
+                              <MenuItem key='draw' value='draw'>
+                                  {t('draw')}
+                              </MenuItem>,
+                              <MenuItem key='loss' value='loss'>
+                                  {t('loss')}
+                              </MenuItem>,
+                          ]
+                        : [
+                              <MenuItem key='whiteWin' value='whiteWin'>
+                                  {t('whiteWins')}
+                              </MenuItem>,
+                              <MenuItem key='blackWin' value='blackWin'>
+                                  {t('blackWins')}
+                              </MenuItem>,
+                              <MenuItem key='draw' value='draw'>
+                                  {t('draw')}
+                              </MenuItem>,
+                          ]}
+                </Select>
+            </FormControl>
+
+            <FormControl>
+                <InputLabel>{t('cohortLabel')}</InputLabel>
+                <Select
+                    data-testid='player-cohort'
+                    value={cohort}
+                    label={t('cohortLabel')}
+                    onChange={(e) => setCohort(e.target.value)}
+                >
+                    <MenuItem value=''>{t('anyCohort')}</MenuItem>
+                    {dojoCohorts.concat(MastersCohort).map((c) => (
+                        <MenuItem key={c} value={c}>
+                            {c === MastersCohort ? t('mastersDb') : c}
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+
+            <TextField
+                data-testid='player-opening'
+                label={t('openingLabel')}
+                helperText={t('openingHelp')}
+                value={opening}
+                onChange={(e) => setOpening(e.target.value)}
+            />
+
+            <Grid container rowGap={1} columnGap={{ md: 0, lg: 1 }}>
+                <Grid size={{ xs: 12, lg: 'grow' }}>
+                    <TextField
+                        data-testid='player-min-moves'
+                        label={t('minMoves')}
+                        type='number'
+                        fullWidth
+                        value={minMoves}
+                        onChange={(e) => setMinMoves(e.target.value)}
+                    />
+                </Grid>
+                <Grid size={{ xs: 12, lg: 'grow' }}>
+                    <TextField
+                        data-testid='player-max-moves'
+                        label={t('maxMoves')}
+                        type='number'
+                        fullWidth
+                        value={maxMoves}
+                        onChange={(e) => setMaxMoves(e.target.value)}
+                    />
+                </Grid>
+            </Grid>
+
+            <FormControl>
+                <InputLabel>{t('timeClassLabel')}</InputLabel>
+                <Select
+                    data-testid='player-time-class'
+                    value={timeClass}
+                    label={t('timeClassLabel')}
+                    onChange={(e) => setTimeClass(e.target.value)}
+                >
+                    <MenuItem value=''>{t('anyTimeClass')}</MenuItem>
+                    <MenuItem value='bullet'>{t('bullet')}</MenuItem>
+                    <MenuItem value='blitz'>{t('blitz')}</MenuItem>
+                    <MenuItem value='rapid'>{t('rapid')}</MenuItem>
+                    <MenuItem value='classical'>{t('classical')}</MenuItem>
+                    <MenuItem value='daily'>{t('daily')}</MenuItem>
+                </Select>
+            </FormControl>
 
             <Grid container rowGap={1} columnGap={{ md: 0, lg: 1 }}>
                 <Grid size={{ xs: 12, lg: 'grow' }}>
@@ -305,7 +448,7 @@ const SearchByPlayer: React.FC<SearchByPlayerProps> = ({
                 data-testid='player-search-button'
                 variant='outlined'
                 loading={isLoading}
-                onClick={handleSearch}
+                onClick={onSearch}
                 disabled={isFreeTier}
                 startIcon={<Icon name='search' color='primary' />}
             >
@@ -525,6 +668,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
         cohort: user?.dojoCohort || '',
         player: '',
         color: 'either',
+        minElo: '',
+        maxElo: '',
+        result: '',
+        playerCohort: '',
         eco: '',
         fen: '',
         type: SearchType.Cohort,
@@ -542,6 +689,14 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
     );
     const [editPlayer, setPlayer] = useState(searchParams.get('player') || '');
     const [editColor, setColor] = useState(searchParams.get('color') || '');
+    const [editMinElo, setMinElo] = useState(searchParams.get('minElo') || '');
+    const [editMaxElo, setMaxElo] = useState(searchParams.get('maxElo') || '');
+    const [editResult, setResult] = useState(searchParams.get('result') || '');
+    const [editPlayerCohort, setPlayerCohort] = useState(searchParams.get('playerCohort') || '');
+    const [editOpening, setOpening] = useState(searchParams.get('opening') || '');
+    const [editMinMoves, setMinMoves] = useState(searchParams.get('minMoves') || '');
+    const [editMaxMoves, setMaxMoves] = useState(searchParams.get('maxMoves') || '');
+    const [editTimeClass, setTimeClass] = useState(searchParams.get('timeClass') || '');
     const [editEco, setEditEco] = useState(searchParams.get('eco') || '');
     const [editFen, setEditFen] = useState(searchParams.get('fen') || '');
 
@@ -560,6 +715,14 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
     const cohort = searchParams.get('cohort') || user?.dojoCohort || '';
     const player = searchParams.get('player') || '';
     const color = searchParams.get('color') || 'either';
+    const minElo = searchParams.get('minElo') || '';
+    const maxElo = searchParams.get('maxElo') || '';
+    const result = searchParams.get('result') || '';
+    const playerCohort = searchParams.get('playerCohort') || '';
+    const opening = searchParams.get('opening') || '';
+    const minMoves = searchParams.get('minMoves') || '';
+    const maxMoves = searchParams.get('maxMoves') || '';
+    const timeClass = searchParams.get('timeClass') || '';
     const eco = searchParams.get('eco') || '';
     const fen = searchParams.get('fen') || '';
     const mastersOnly = searchParams.get('masters') === 'true';
@@ -587,8 +750,43 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
 
     const searchByPlayer = useCallback(
         (startKey: string) =>
-            api.listGamesByOwner(undefined, startKey, startDateStr, endDateStr, player, color),
-        [api, startDateStr, endDateStr, player, color],
+            api.searchGames(
+                {
+                    player: player || undefined,
+                    color,
+                    minElo: minElo || undefined,
+                    maxElo: maxElo || undefined,
+                    // win/loss are relative to the player; drop them if the
+                    // name was cleared after selecting one.
+                    result:
+                        !player && (result === 'win' || result === 'loss')
+                            ? undefined
+                            : result || undefined,
+                    cohort: playerCohort || undefined,
+                    opening: opening || undefined,
+                    minMoves: minMoves || undefined,
+                    maxMoves: maxMoves || undefined,
+                    timeClass: timeClass || undefined,
+                    startDate: startDateStr?.replaceAll('.', '-'),
+                    endDate: endDateStr?.replaceAll('.', '-'),
+                },
+                startKey,
+            ),
+        [
+            api,
+            startDateStr,
+            endDateStr,
+            player,
+            color,
+            minElo,
+            maxElo,
+            result,
+            playerCohort,
+            opening,
+            minMoves,
+            maxMoves,
+            timeClass,
+        ],
     );
 
     const searchByOwner = useCallback(
@@ -661,6 +859,14 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
             type: SearchType.Player,
             player: editPlayer,
             color: editColor,
+            minElo: editMinElo,
+            maxElo: editMaxElo,
+            result: editResult,
+            playerCohort: editPlayerCohort,
+            opening: editOpening,
+            minMoves: editMinMoves,
+            maxMoves: editMaxMoves,
+            timeClass: editTimeClass,
             startDate: editStartDate?.toUTC().toISO() || '',
             endDate: editEndDate?.toUTC().toISO() || '',
         });
@@ -729,6 +935,22 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
                         setPlayer={setPlayer}
                         color={editColor}
                         setColor={setColor}
+                        minElo={editMinElo}
+                        setMinElo={setMinElo}
+                        maxElo={editMaxElo}
+                        setMaxElo={setMaxElo}
+                        result={editResult}
+                        setResult={setResult}
+                        cohort={editPlayerCohort}
+                        setCohort={setPlayerCohort}
+                        opening={editOpening}
+                        setOpening={setOpening}
+                        minMoves={editMinMoves}
+                        setMinMoves={setMinMoves}
+                        maxMoves={editMaxMoves}
+                        setMaxMoves={setMaxMoves}
+                        timeClass={editTimeClass}
+                        setTimeClass={setTimeClass}
                         startDate={editStartDate}
                         setStartDate={setStartDate}
                         endDate={editEndDate}

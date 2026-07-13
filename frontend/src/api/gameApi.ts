@@ -97,6 +97,17 @@ export interface GameApiContextType {
     ) => Promise<AxiosResponse<ListGamesResponse>>;
 
     /**
+     * searchGames returns a list of GameInfo objects matching the search request.
+     * @param request The search request.
+     * @param startKey The optional startKey to use when searching.
+     * @returns A list of games matching the request.
+     */
+    searchGames: (
+        request: SearchGamesRequest,
+        startKey?: string,
+    ) => Promise<AxiosResponse<ListGamesResponse>>;
+
+    /**
      * listGamesByOpening returns a list of GameInfo objects with the provided ECO code,
      * as well as the next start key for pagination.
      * @param eco The ECO to search for.
@@ -304,6 +315,37 @@ export interface ListGamesResponse {
     lastEvaluatedKey?: string;
 }
 
+/** A request to the game search API. */
+export interface SearchGamesRequest {
+    /**
+     * The player name to search for. Partial names and small typos match.
+     * When omitted, the search is filter-only.
+     */
+    player?: string;
+    /** The color to search: white, black or either. */
+    color: string;
+    /** The minimum rating of the matched player. */
+    minElo?: string;
+    /** The maximum rating of the matched player. */
+    maxElo?: string;
+    /** The result from the matched player's perspective: win, draw or loss. */
+    result?: string;
+    /** The cohort to restrict the search to, including masters. */
+    cohort?: string;
+    /** An ECO code/prefix (B12) or opening name (Caro-Kann) to filter by. */
+    opening?: string;
+    /** The minimum number of full moves. */
+    minMoves?: string;
+    /** The maximum number of full moves. */
+    maxMoves?: string;
+    /** The time control class: bullet, blitz, rapid, classical or daily. */
+    timeClass?: string;
+    /** The start date to limit the search to. */
+    startDate?: string;
+    /** The end date to limit the search to. */
+    endDate?: string;
+}
+
 /**
  * listGamesByCohort returns a list of GameInfo objects corresponding to the provided cohort,
  * as well as the next start key for pagination.
@@ -359,6 +401,23 @@ export function listGamesByOwner(
             Authorization: 'Bearer ' + idToken,
         },
         functionName: 'listGamesByOwner',
+    });
+}
+
+/**
+ * searchGames returns a list of GameInfo objects matching the search request,
+ * as well as the next start key for pagination.
+ * @param idToken The id token of the current signed-in user.
+ * @param request The search request.
+ * @param startKey The optional startKey to use when searching.
+ */
+export function searchGames(idToken: string, request: SearchGamesRequest, startKey?: string) {
+    return axiosService.get<ListGamesResponse>('/game/search', {
+        params: { ...request, startKey },
+        headers: {
+            Authorization: 'Bearer ' + idToken,
+        },
+        functionName: 'searchGames',
     });
 }
 

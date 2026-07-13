@@ -96,6 +96,7 @@ import {
 import {
     DeleteCommentRequest,
     GameApiContextType,
+    SearchGamesRequest,
     UpdateCommentRequest,
     createComment,
     createGame,
@@ -112,6 +113,7 @@ import {
     markReviewed,
     mergePgn,
     requestReview,
+    searchGames,
     updateComment,
     updateGame,
 } from './gameApi';
@@ -314,6 +316,8 @@ export function ApiProvider({ children }: { children: ReactNode }) {
                 player?: string,
                 color?: string,
             ) => listGamesByOwner(idToken, owner, startKey, startDate, endDate, player, color),
+            searchGames: (request: SearchGamesRequest, startKey?: string) =>
+                searchGames(idToken, request, startKey),
             listGamesByOpening: (
                 eco: string,
                 startKey?: string,
