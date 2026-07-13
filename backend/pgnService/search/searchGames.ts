@@ -1,7 +1,8 @@
 'use strict';
 
-import { APIGatewayProxyHandlerV2, APIGatewayProxyResultV2 } from 'aws-lambda';
+import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import { z } from 'zod';
+import { ApiError, errToApiGatewayProxyResultV2 } from '../../directoryService/api';
 import { gamesIndex, getClient, isSearchEnabled } from './client';
 import { SearchDocument } from './document';
 
@@ -26,6 +27,9 @@ const requestSchema = z
     })
     .refine((req) => req.player || (req.result !== 'win' && req.result !== 'loss'), {
         message: 'result win/loss requires a player',
+    })
+    .refine((req) => !req.player || (req.result !== 'whiteWin' && req.result !== 'blackWin'), {
+        message: 'result whiteWin/blackWin cannot be used with a player',
     });
 
 export type SearchGamesRequest = z.infer<typeof requestSchema>;
@@ -203,18 +207,24 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
 
     if (!isSearchEnabled()) {
         // Simple deployments have no search domain.
-        return handleError(503, {
-            publicMessage: 'Game search is not available on this deployment',
-        });
+        return errToApiGatewayProxyResultV2(
+            new ApiError({
+                statusCode: 503,
+                publicMessage: 'Game search is not available on this deployment',
+            }),
+        );
     }
 
     const parsed = requestSchema.safeParse(event.queryStringParameters ?? {});
     if (!parsed.success) {
-        return handleError(400, {
-            publicMessage: `Invalid request: ${parsed.error.issues
-                .map((i) => `${i.path.join('.')}: ${i.message}`)
-                .join(', ')}`,
-        });
+        return errToApiGatewayProxyResultV2(
+            new ApiError({
+                statusCode: 400,
+                publicMessage: `Invalid request: ${parsed.error.issues
+                    .map((i) => `${i.path.join('.')}: ${i.message}`)
+                    .join(', ')}`,
+            }),
+        );
     }
     const request = parsed.data;
 
@@ -230,10 +240,13 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         });
 
         const hits = response.body.hits;
-        const games = hits.hits.map((hit: { _source: SearchDocument }) => toGameInfo(hit._source));
+        const games = hits.hits
+            .map((hit) => hit._source)
+            .filter((source): source is SearchDocument => source !== undefined)
+            .map(toGameInfo);
 
         const next = request.startKey + PAGE_SIZE;
-        const total = typeof hits.total === 'number' ? hits.total : hits.total.value;
+        const total = typeof hits.total === 'number' ? hits.total : (hits.total?.value ?? 0);
         const lastEvaluatedKey = total > next && next < MAX_RESULTS ? String(next) : undefined;
 
         return {
@@ -242,19 +255,12 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         };
     } catch (err) {
         console.error('Failed to search games for request %j:', request, err);
-        return handleError(500, err);
+        return errToApiGatewayProxyResultV2(
+            new ApiError({
+                statusCode: 500,
+                publicMessage: 'Temporary server error',
+                cause: err,
+            }),
+        );
     }
 };
-
-function handleError(code: number, err: unknown): APIGatewayProxyResultV2 {
-    console.error(err);
-    return {
-        statusCode: code,
-        isBase64Encoded: false,
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-        },
-        body: JSON.stringify(err),
-    };
-}

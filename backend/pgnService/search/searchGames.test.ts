@@ -167,7 +167,34 @@ describe('handler', () => {
                 () => null,
             )) as { statusCode?: number; body?: string };
             expect(response.statusCode).toBe(503);
-            expect(response.body).toContain('not available');
+            expect(JSON.parse(response.body ?? '{}')).toEqual({
+                message: 'Game search is not available on this deployment',
+                code: 503,
+            });
+        } finally {
+            process.env.gameSearchEndpoint = previous;
+        }
+    });
+
+    it('rejects absolute results when a player is provided', async () => {
+        const previous = process.env.gameSearchEndpoint;
+        process.env.gameSearchEndpoint = 'http://localhost:9200';
+        try {
+            const response = (await handler(
+                {
+                    queryStringParameters: {
+                        player: 'carlsen',
+                        result: 'whiteWin',
+                    },
+                } as never,
+                undefined as never,
+                () => null,
+            )) as { statusCode?: number; body?: string };
+            expect(response.statusCode).toBe(400);
+            expect(JSON.parse(response.body ?? '{}')).toEqual({
+                message: 'Invalid request: : result whiteWin/blackWin cannot be used with a player',
+                code: 400,
+            });
         } finally {
             process.env.gameSearchEndpoint = previous;
         }
@@ -177,7 +204,8 @@ describe('handler', () => {
 const runIntegration = process.env.OPENSEARCH_INTEGRATION === 'true';
 
 describe.runIf(runIntegration)('search query semantics (integration)', () => {
-    const index = `test-search-${Date.now()}`;
+    const stage = `test-search-${Date.now()}`;
+    const index = `${stage}-games`;
     const client = new Client({ node: 'http://localhost:9200' });
 
     const docs = [
@@ -239,7 +267,7 @@ describe.runIf(runIntegration)('search query semantics (integration)', () => {
                 } as never),
             },
         });
-        return res.body.hits.hits.map((h: { _source: { id: string } }) => h._source.id).sort();
+        return res.body.hits.hits.map((h) => (h._source as { id: string }).id).sort();
     }
 
     it('finds both colors for a partial name', async () => {
@@ -285,5 +313,30 @@ describe.runIf(runIntegration)('search query semantics (integration)', () => {
     it('filters by time class', async () => {
         expect(await ids({ timeClass: 'blitz' })).toEqual(['g2']);
         expect(await ids({ timeClass: 'bullet' })).toEqual([]);
+    });
+
+    it('does not expose OpenSearch details when a search fails', async () => {
+        const previousEndpoint = process.env.gameSearchEndpoint;
+        const previousStage = process.env.stage;
+        process.env.gameSearchEndpoint = 'http://localhost:9200';
+        process.env.stage = stage;
+        try {
+            const response = (await handler(
+                { queryStringParameters: { startKey: '10000' } } as never,
+                undefined as never,
+                () => null,
+            )) as { statusCode?: number; body?: string };
+
+            expect(response.statusCode).toBe(500);
+            expect(JSON.parse(response.body ?? '{}')).toEqual({
+                message: 'Temporary server error',
+                code: 500,
+            });
+            expect(response.body).not.toContain('ResponseError');
+            expect(response.body).not.toContain('test-games');
+        } finally {
+            process.env.gameSearchEndpoint = previousEndpoint;
+            process.env.stage = previousStage;
+        }
     });
 });

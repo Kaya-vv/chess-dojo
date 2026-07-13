@@ -87,9 +87,7 @@ describe('buildSearchDocument', () => {
             )?.date,
         ).toBe('2025-01-15');
         expect(
-            buildSearchDocument(
-                testGame({ date: '', createdAt: '', id: 'no-date-id' }),
-            )?.date,
+            buildSearchDocument(testGame({ date: '', createdAt: '', id: 'no-date-id' }))?.date,
         ).toBe('1970-01-01');
     });
 

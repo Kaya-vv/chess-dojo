@@ -5,8 +5,14 @@
 // Usage (requires AWS credentials for the target stage):
 //   stage=dev gameSearchEndpoint=https://<domain-endpoint> npx tsx pgnService/search/backfill.ts
 
-import { AttributeValue, DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
-import { Context, DynamoDBStreamEvent } from 'aws-lambda';
+import {
+    AttributeValue,
+    DynamoDBClient,
+    ScanCommand,
+    ScanCommandOutput,
+} from '@aws-sdk/client-dynamodb';
+import { Context, DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda';
+import { runBackfill } from './backfillRunner';
 import { gamesIndex, getClient } from './client';
 import { handler } from './indexGame';
 import { createGamesIndex } from './mapping';
@@ -18,42 +24,56 @@ async function main() {
     await createGamesIndex(getClient(), gamesIndex());
 
     let processed = 0;
-    let startKey: Record<string, AttributeValue> | undefined = undefined;
 
     try {
-        do {
-            const scanOutput = await dynamo.send(
-                new ScanCommand({
-                    ExclusiveStartKey: startKey,
-                    TableName: gamesTable,
-                    Limit: 250,
-                }),
-            );
+        const result = await runBackfill({
+            scanPage: async (startKey?: Record<string, AttributeValue>) => {
+                const scanOutput: ScanCommandOutput = await dynamo.send(
+                    new ScanCommand({
+                        ExclusiveStartKey: startKey,
+                        TableName: gamesTable,
+                        Limit: 250,
+                    }),
+                );
 
-            const records =
-                scanOutput.Items?.map((item) => ({
+                const records = scanOutput.Items?.map((item) => ({
                     dynamodb: { NewImage: item },
-                })) ?? [];
-
-            await handler(
-                { Records: records } as DynamoDBStreamEvent,
-                undefined as unknown as Context,
-                () => null,
-            );
-
-            processed += records.length;
-            startKey = scanOutput.LastEvaluatedKey;
-            console.log('Processed: ', processed);
-
+                })) as DynamoDBRecord[] | undefined;
+                return {
+                    records: records ?? [],
+                    lastEvaluatedKey: scanOutput.LastEvaluatedKey,
+                };
+            },
+            indexRecords: async (records) => {
+                await handler(
+                    { Records: records } as DynamoDBStreamEvent,
+                    undefined as unknown as Context,
+                    () => null,
+                );
+            },
+            onProgress: (count) => {
+                processed = count;
+                console.log('Processed: ', processed);
+            },
             // Throttle: the shared single-node domain also serves prod queries.
-            await new Promise((resolve) => setTimeout(resolve, 250));
-        } while (startKey);
-    } catch (err) {
-        console.error('Failed to scan games: ', err);
-        console.error('Resume from start key: %j', startKey);
-    }
+            sleep: () => new Promise((resolve) => setTimeout(resolve, 250)),
+        });
 
-    console.log('Done. Processed: ', processed);
+        const count = await getClient().count({ index: gamesIndex() });
+        const summary = `Processed ${result.processed} games; ${gamesIndex()} now has ${count.body.count} documents.`;
+        if (result.failedDocumentIds.length > 0) {
+            console.error(
+                `BACKFILL INCOMPLETE. ${summary} Failed document ids: %j`,
+                result.failedDocumentIds,
+            );
+            process.exitCode = 1;
+        } else {
+            console.log(`Done. ${summary}`);
+        }
+    } catch (err) {
+        console.error('BACKFILL FAILED after processing', processed, 'games:', err);
+        process.exitCode = 1;
+    }
 }
 
 void main();

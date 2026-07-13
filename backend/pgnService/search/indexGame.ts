@@ -7,6 +7,14 @@ import { Game } from '../game/types';
 import { gamesIndex, getClient, isSearchEnabled } from './client';
 import { buildSearchDocument, documentId } from './document';
 
+/** An OpenSearch bulk response containing document-level failures. */
+export class BulkIndexError extends Error {
+    constructor(public readonly documentIds: string[]) {
+        super(`Failed to index ${documentIds.length} games`);
+        this.name = 'BulkIndexError';
+    }
+}
+
 /**
  * Converts DynamoDB stream records for the games table into an OpenSearch
  * _bulk request body. Listed games are upserted; unlisted, system-owned and
@@ -44,34 +52,66 @@ export function recordsToBulkOperations(records: DynamoDBRecord[]): object[] {
     return operations;
 }
 
+/** Returns the search document id for a stream record, if it has an image. */
+function recordDocumentId(record: DynamoDBRecord): string | undefined {
+    const image = record.dynamodb?.NewImage ?? record.dynamodb?.OldImage;
+    if (!image) {
+        return undefined;
+    }
+    return documentId(unmarshall(image as Record<string, AttributeValue>) as Game);
+}
+
 /**
- * Keeps the games search index in sync with the games table. Throws on
- * bulk failures so the stream batch is retried (all operations are
- * idempotent upserts/deletes).
+ * Keeps the games search index in sync with the games table. Bulk-item
+ * failures are reported individually (ReportBatchItemFailures) so the stream
+ * retries only the failed records; retrying is safe because all operations
+ * are idempotent upserts/deletes. A failed bulk request as a whole (e.g. the
+ * domain is unreachable) throws, retrying the entire batch.
  */
 export const handler: DynamoDBStreamHandler = async (event) => {
     if (!isSearchEnabled()) {
         // Simple deployments have no search domain.
-        return;
+        return { batchItemFailures: [] };
     }
 
     const operations = recordsToBulkOperations(event.Records);
     if (operations.length === 0) {
-        return;
+        return { batchItemFailures: [] };
     }
 
     const response = await getClient().bulk({ body: operations });
+
+    const failedIds = new Set<string>();
     if (response.body.errors) {
-        const failures = response.body.items.filter(
-            (item: Record<string, { error?: object; result?: string }>) => {
-                const result = item.index || item.delete;
-                return result?.error && result?.result !== 'not_found';
-            },
-        );
-        if (failures.length > 0) {
-            console.error('Bulk indexing failures: %j', failures);
-            throw new Error(`Failed to index ${failures.length} games`);
+        for (const item of response.body.items as Record<
+            string,
+            { _id?: string; error?: object; result?: string }
+        >[]) {
+            const result = item.index || item.delete;
+            if (result?.error && result.result !== 'not_found' && result._id) {
+                console.error('Bulk indexing failure: %j', item);
+                failedIds.add(result._id);
+            }
         }
     }
-    console.log(`Applied ${operations.length} bulk operations`);
+
+    if (failedIds.size === 0) {
+        console.log(`Applied ${operations.length} bulk operations`);
+        return { batchItemFailures: [] };
+    }
+
+    const batchItemFailures = event.Records.filter((record) => {
+        const id = recordDocumentId(record);
+        return id !== undefined && failedIds.has(id) && record.dynamodb?.SequenceNumber;
+    }).map((record) => ({ itemIdentifier: record.dynamodb?.SequenceNumber ?? '' }));
+
+    if (batchItemFailures.length === 0) {
+        // Synthetic events without sequence numbers (the backfill) cannot use
+        // partial-batch reporting. Include the failed document ids so the
+        // backfill can report them, continue, and still finish nonzero.
+        throw new BulkIndexError([...failedIds]);
+    }
+
+    console.error(`Failed to index ${batchItemFailures.length} games; reporting for retry`);
+    return { batchItemFailures };
 };

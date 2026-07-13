@@ -2,7 +2,7 @@ import { marshall } from '@aws-sdk/util-dynamodb';
 import { Client } from '@opensearch-project/opensearch';
 import { Context, DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { handler, recordsToBulkOperations } from './indexGame';
+import { BulkIndexError, handler, recordsToBulkOperations } from './indexGame';
 import { createGamesIndex } from './mapping';
 
 process.env.stage = 'test';
@@ -11,12 +11,14 @@ function record(
     eventName: 'INSERT' | 'MODIFY' | 'REMOVE',
     newImage?: object,
     oldImage?: object,
+    sequenceNumber?: string,
 ): DynamoDBRecord {
     return {
         eventName,
         dynamodb: {
             NewImage: newImage ? (marshall(newImage) as never) : undefined,
             OldImage: oldImage ? (marshall(oldImage) as never) : undefined,
+            SequenceNumber: sequenceNumber,
         },
     } as DynamoDBRecord;
 }
@@ -68,7 +70,7 @@ describe('handler', () => {
                 undefined as unknown as Context,
                 () => null,
             ),
-        ).resolves.toBeUndefined();
+        ).resolves.toEqual({ batchItemFailures: [] });
     });
 });
 
@@ -109,5 +111,43 @@ describe.runIf(runIntegration)('indexGame handler (integration)', () => {
             body: { query: { match: { white: 'naroditsky' } } },
         });
         expect(res.body.hits.hits).toHaveLength(0);
+    });
+
+    // WhiteElo far beyond integer range fails the bulk item at mapping time.
+    const poison = {
+        ...game,
+        id: 'poison',
+        headers: { ...game.headers, WhiteElo: '99999999999999' },
+    };
+
+    it('reports only the failed records for partial bulk failures', async () => {
+        const result = await handler(
+            {
+                Records: [
+                    record('INSERT', game, undefined, 'seq-good'),
+                    record('INSERT', poison, undefined, 'seq-poison'),
+                ],
+            } as DynamoDBStreamEvent,
+            undefined as unknown as Context,
+            () => null,
+        );
+        expect(result).toEqual({ batchItemFailures: [{ itemIdentifier: 'seq-poison' }] });
+
+        await client.indices.refresh({ index: 'test-games' });
+        const res = await client.search({
+            index: 'test-games',
+            body: { query: { term: { id: 'g1' } } },
+        });
+        expect(res.body.hits.hits).toHaveLength(1);
+    });
+
+    it('throws when failed records have no sequence number (backfill events)', async () => {
+        await expect(
+            handler(
+                { Records: [record('INSERT', poison)] } as DynamoDBStreamEvent,
+                undefined as unknown as Context,
+                () => null,
+            ),
+        ).rejects.toEqual(new BulkIndexError(['1500-1600#poison']));
     });
 });

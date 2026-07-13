@@ -61,6 +61,19 @@ test.describe('List Games Page', () => {
         );
     });
 
+    test('clears an absolute result when adding a player', async ({ page }) => {
+        await page.getByRole('button', { name: 'Search Games' }).click();
+
+        const searchForm = page.getByTestId('search-by-player');
+        await searchForm.getByTestId('player-result').click();
+        await page.getByRole('option', { name: 'White wins' }).click();
+        await searchForm.getByTestId('player-name').locator('input').fill('Carlsen');
+        await searchForm.getByTestId('player-search-button').click();
+
+        await page.waitForURL((url) => url.searchParams.get('player') === 'Carlsen');
+        expect(new URL(page.url()).searchParams.get('result')).toBe('');
+    });
+
     test('allows searching by eco', async ({ page }) => {
         await page.getByRole('button', { name: 'Search By Opening' }).click();
 

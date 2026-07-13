@@ -275,8 +275,12 @@ const SearchByPlayer: React.FC<SearchByPlayerProps> = ({
                 label={t('playerName')}
                 value={player}
                 onChange={(e) => {
-                    setPlayer(e.target.value);
-                    if (!e.target.value && (result === 'win' || result === 'loss')) {
+                    const nextPlayer = e.target.value;
+                    setPlayer(nextPlayer);
+                    if (!nextPlayer && (result === 'win' || result === 'loss')) {
+                        setResult('');
+                    }
+                    if (nextPlayer && (result === 'whiteWin' || result === 'blackWin')) {
                         setResult('');
                     }
                 }}
