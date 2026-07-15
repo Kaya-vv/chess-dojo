@@ -284,7 +284,7 @@
                 "fillInDetails": "[T] Fill in the details below",
                 "cohort": "[T] Cohort",
                 "deleteEntry": "[T] Delete entry",
-                "totalCount": "[T] Total {label} : {total}. Current Cohort: {cohortCount}",
+                "totalCount": "[T] Total {label}: {total}. Current Cohort: {cohortCount}",
                 "totalTime": "[T] Total Time: {totalHours}h {totalMinutes}m. Current Cohort: {cohortHours}h {cohortMinutes}m",
                 "deleteAriaLabel": "[T] delete"
             },

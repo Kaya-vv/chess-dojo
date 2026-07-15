@@ -261,7 +261,7 @@
                 "fillInDetails": "Compila i dettagli qui sotto",
                 "cohort": "Coorte",
                 "deleteEntry": "Elimina voce",
-                "totalCount": "Totale {label} : {total}. Coorte attuale: {cohortCount}",
+                "totalCount": "Totale {label}: {total}. Coorte attuale: {cohortCount}",
                 "totalTime": "Tempo totale: {totalHours}h {totalMinutes}m. Coorte attuale: {cohortHours}h {cohortMinutes}m",
                 "deleteAriaLabel": "elimina"
             },

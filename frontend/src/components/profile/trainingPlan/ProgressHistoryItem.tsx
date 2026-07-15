@@ -92,7 +92,7 @@ export const ProgressHistoryItem = memo(function ProgressHistoryItem({
     const countLabel = rawSuffix ? rawSuffix.charAt(0).toUpperCase() + rawSuffix.slice(1) : 'Count';
 
     return (
-        <Box>
+        <Box sx={{ pb: 3 }}>
             <Stack
                 direction='row'
                 spacing={{ sm: 1 }}
@@ -220,7 +220,7 @@ export const ProgressHistoryItem = memo(function ProgressHistoryItem({
                 </Tooltip>
             </Stack>
 
-            <Divider sx={{ mt: 3, mb: 1 }} />
+            <Divider sx={{ mt: 3 }} />
         </Box>
     );
 });
