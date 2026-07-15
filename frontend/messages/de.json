@@ -284,7 +284,7 @@
                 "fillInDetails": "Trag die Details unten ein",
                 "cohort": "Kohorte",
                 "deleteEntry": "Eintrag löschen",
-                "totalCount": "Gesamt {label} : {total}. Aktuelle Kohorte: {cohortCount}",
+                "totalCount": "Gesamt {label}: {total}. Aktuelle Kohorte: {cohortCount}",
                 "totalTime": "Gesamtzeit: {totalHours}h {totalMinutes}m. Aktuelle Kohorte: {cohortHours}h {cohortMinutes}m",
                 "deleteAriaLabel": "Löschen"
             },
