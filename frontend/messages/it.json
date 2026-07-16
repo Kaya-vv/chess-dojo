@@ -1,4 +1,27 @@
 {
+    "_translationMeta": {
+        "_about": "Instructions for whoever produces a translated copy of this file. Paths listed under skipAutoTranslate should not be passed through an automated translator; manual human translation of those paths is welcome where appropriate. preserveStructure rules apply to every key during translation. This block is stripped at message-load time and never reaches the runtime UI.",
+        "skipAutoTranslate": {
+            "enums.ratingSystem": "Backend wire values plus brand-name display labels. Keep English so users can match the labels on the actual rating-system websites. Manual translation OK if the translator knows the local convention.",
+            "enums.requirementCategory": "Display labels for a backend category enum. Manual translation welcome.",
+            "enums.requirementCategoryShort": "Same as requirementCategory.",
+            "landing.senseis": "Trainer names are proper nouns; bios are credential prose with embedded titles and platform names. Manual translation only.",
+            "coach.stripe.connect": "References a payment processor brand. Manual translation if surrounding text needs it.",
+            "coach.stripe.dashboard": "Same.",
+            "profile.ratings.chesscomUsername": "Brand name in label.",
+            "profile.ratings.lichessUsername": "Brand name in label.",
+            "profile.ratings.fideId": "Acronym for an international chess federation.",
+            "profile.ratings.uscfId": "Acronym for a national chess federation.",
+            "profile.ratings.ecfRatingCode": "Acronym for a national chess federation.",
+            "profile.ratings.cfcId": "Acronym for a national chess federation.",
+            "profile.ratings.dwzId": "Acronym for a national rating system."
+        },
+        "preserveStructure": {
+            "icuPlurals": "Preserve {count, plural, =1 {...} other {...}} syntax verbatim. Translate only the text inside the inner braces.",
+            "tagPlaceholders": "Preserve <tagName>...</tagName> tags including the tag name itself. Translate only the text between tags.",
+            "variables": "Preserve {variableName} placeholders verbatim. Surrounding sentence may be restructured for word order, but placeholder spelling and case must not change."
+        }
+    },
     "common": {
         "timezone": "Fuso orario",
         "language": "Lingua",
@@ -53,13 +76,13 @@
             "customRatingName": "Nome punteggio personalizzato {number}",
             "customRatingHelper": "Tieni traccia manualmente del tuo punteggio",
             "zenMode": "Attiva la modalità Zen (nascondi i punteggi quando visualizzi il tuo profilo)",
-            "chesscomUsername": "Nome utente Chess.com",
-            "lichessUsername": "Nome utente Lichess",
-            "fideId": "ID FIDE",
-            "uscfId": "ID USCF",
-            "ecfRatingCode": "Codice punteggio ECF",
-            "cfcId": "ID CFC",
-            "dwzId": "ID DWZ",
+            "chesscomUsername": "Chess.com Username",
+            "lichessUsername": "Lichess Username",
+            "fideId": "FIDE ID",
+            "uscfId": "USCF ID",
+            "ecfRatingCode": "ECF Rating Code",
+            "cfcId": "CFC ID",
+            "dwzId": "DWZ ID",
             "acfId": "ID ACF",
             "knsbId": "ID KNSB",
             "hideUsername": "Nascondi nome utente",
@@ -959,22 +982,22 @@
             "signUpFree": "Registrati gratis"
         },
         "senseis": {
-            "heading": "I Sensei",
-            "description": "Guidato da allenatori di scacchi di livello mondiale, ChessDojo è stato realizzato con cura per far migliorare giocatori di ogni livello",
+            "heading": "The Senseis",
+            "description": "Led by world class chess trainers, ChessDojo has been meticulously crafted to improve players of any level",
             "jesse": {
-                "title": "Grande Maestro",
+                "title": "Grandmaster",
                 "name": "Jesse Kraai",
-                "bio": "Il GM Kraai gioca e insegna scacchi fin da tempi remoti del millennio scorso. È diventato GM nel 2007 analizzando con costanza le proprie partite, un pilastro del ChessDojo Training Program. Ha giocato in sette US Championships e ha ottenuto un secondo posto netto al US Senior Closed del 2024. Quando non gioca a scacchi, bada a due bambini piccoli e trova il tempo per sollevare cose pesanti."
+                "bio": "GM Kraai has been playing and teaching chess since deep in the last millennium. He became a GM in 2007 by consistently examining his games, a pillar of the ChessDojo Training Program. He's played in seven US Championships and scored clear second in the 2024 US Senior Closed. When not chessing he herds two smallish children and finds time to lift heavy things."
             },
             "kostya": {
-                "title": "Maestro Internazionale",
+                "title": "International Master",
                 "name": "Kostya Kavutskiy",
-                "bio": "Kostya ha conquistato il titolo di MI all'età di 24 anni e insegna scacchi a tutti i livelli e a tutte le età da oltre 15 anni. In passato è stato allenatore degli Stati Uniti in diversi World Youth & Pan-American Championships, con vari suoi allievi che hanno vinto medaglie d'oro. Kostya è anche un autore pubblicato e ha realizzato diversi corsi popolari per Chess.com, Chessable e altri siti."
+                "bio": "Kostya earned the IM title at the age of 24 and has been teaching chess to all levels and ages for over 15 years. He previously served as a coach for the United States at several World Youth & Pan-American Championships, with multiple students earning gold medals. Kostya is also a published author and has produced several popular courses for Chess.com, Chessable, and other sites."
             },
             "david": {
-                "title": "Maestro Internazionale",
+                "title": "International Master",
                 "name": "David Pruess",
-                "bio": "David è un massimalista degli scacchi, che non si tira mai indietro di fronte a quella che ritiene la strada più coerente da seguire. Con questo approccio da folle, ha raggiunto il titolo di Maestro Internazionale nel 2003 e poi, nel 2006, ha vinto il prestigioso Samford Chess Fellowship. Ha tutte e tre le norme da Grande Maestro e gli basta superare i 2500 per raggiungere il titolo. David ha contribuito a progettare il ChessDojo Training Program con il sogno di poter superare quella difficile barriera dei 2500 grazie alla sua guida e alla sua struttura."
+                "bio": "David is a chess maximalist, never shying away from what he believes is the most principled path forward. With this madman approach, he attained the rank of International Master in 2003 and then in 2006 he won the prestigious Samford Chess Fellowship. He has all three Grandmaster norms and just needs to cross 2500 to reach the title. David helped design the ChessDojo Training Program with the dream that he could cross that difficult 2500 barrier using its guidance and structure."
             }
         },
         "footer": {
@@ -2045,28 +2068,28 @@
                 "search": "Cerca",
                 "fieldRequired": "Questo campo è obbligatorio",
                 "ownerDescription": "Trova le partite che hai caricato nel Dojo Database. Tieni presente che le partite caricate in precedenza tramite il modulo Google di Dojo 1.0 non verranno riconosciute.",
-                "playerDescription": "Find games by player name and filters. Partial names and small typos will match. Leave the name empty to search by filters only.",
-                "minElo": "Min Rating",
-                "maxElo": "Max Rating",
-                "resultLabel": "Result",
-                "anyResult": "Any",
-                "win": "Win",
-                "draw": "Draw",
-                "loss": "Loss",
-                "whiteWins": "White wins",
-                "blackWins": "Black wins",
-                "anyCohort": "All Cohorts",
-                "openingLabel": "Opening",
-                "openingHelp": "Opening name (Caro-Kann) or ECO code (B12)",
-                "minMoves": "Min Moves",
-                "maxMoves": "Max Moves",
-                "timeClassLabel": "Time Control",
-                "anyTimeClass": "Any",
-                "bullet": "Bullet",
+                "playerDescription": "Trova le partite per nome del giocatore e tramite filtri. Verranno considerati anche nomi parziali e piccoli errori di battitura. Lascia il campo del nome vuoto per cercare solo tramite filtri.",
+                "minElo": "Valutazione minima",
+                "maxElo": "Valutazione massima",
+                "resultLabel": "Risultato",
+                "anyResult": "Qualunque",
+                "win": "Vincita",
+                "draw": "Disegno",
+                "loss": "Perdita",
+                "whiteWins": "Il bianco vince",
+                "blackWins": "Il nero vince",
+                "anyCohort": "Tutte le coorti",
+                "openingLabel": "Apertura",
+                "openingHelp": "Nome di apertura (Caro-Kann) o codice ECO (B12)",
+                "minMoves": "Mini Mosse",
+                "maxMoves": "Mosse massime",
+                "timeClassLabel": "Controllo del tempo",
+                "anyTimeClass": "Qualunque",
+                "bullet": "Proiettile",
                 "blitz": "Blitz",
                 "rapid": "Rapid",
-                "classical": "Classical",
-                "daily": "Daily",
+                "classical": "Classico",
+                "daily": "Quotidiano",
                 "playerName": "Nome del giocatore",
                 "color": "Colore",
                 "either": "Entrambi",
@@ -2079,6 +2102,7 @@
                 "freeTierPosition": "Gli utenti del piano gratuito non possono cercare per posizione",
                 "positionExplorer": "Esploratore di posizioni",
                 "goToMyFiles": "Vai a I miei file",
+                "searchGames": "SearchGames",
                 "searchByCohort": " Cerca per coorte ",
                 "searchByPlayer": "Cerca partite",
                 "searchByPosition": "Cerca per posizione",
@@ -2704,14 +2728,14 @@
         },
         "stripe": {
             "connect": {
-                "title": "Configura l'account Stripe",
-                "body": "ChessDojo utilizza Stripe per elaborare i pagamenti. Prima di poter prelevare fondi, programmare lezioni o creare corsi, devi configurare il tuo account Stripe. Clicca il pulsante qui sotto per essere reindirizzato a Stripe.",
-                "button": "Configura Stripe"
+                "title": "Setup Stripe Account",
+                "body": "ChessDojo uses Stripe to process payments. Before you can withdraw funds, schedule lessons or create courses, you must setup your Stripe account. Click the button below to be redirected to Stripe.",
+                "button": "Setup Stripe"
             },
             "dashboard": {
-                "title": "Dashboard Stripe",
-                "body": "ChessDojo utilizza Stripe per elaborare i pagamenti. Clicca il pulsante qui sotto per andare alla tua dashboard Stripe, dove puoi vedere il tuo saldo attuale, visualizzare i prossimi versamenti e monitorare i tuoi guadagni.",
-                "button": "Vai alla dashboard"
+                "title": "Stripe Dashboard",
+                "body": "ChessDojo uses Stripe to process payments. Click the button below to go to your Stripe dashboard, where you can see your current balance, view upcoming payouts and track your earnings.",
+                "button": "Go to Dashboard"
             },
             "accountStatus": {
                 "title": "Stato dell'account",
@@ -4040,32 +4064,32 @@
     },
     "enums": {
         "requirementCategory": {
-            "Welcome to the Dojo": "Benvenuto nel Dojo",
-            "Games + Analysis": "Partite + Analisi",
-            "Tactics": "Tattica",
-            "Middlegames + Strategy": "Mediogioco",
-            "Endgame": "Finale",
-            "Opening": "Apertura",
-            "Graduation": "Passaggio al livello successivo",
+            "Welcome to the Dojo": "Welcome to the Dojo",
+            "Games + Analysis": "Games + Analysis",
+            "Tactics": "Tactics",
+            "Middlegames + Strategy": "Middlegame",
+            "Endgame": "Endgame",
+            "Opening": "Opening",
+            "Graduation": "Graduation",
             "Non-Dojo": "Non-Dojo",
-            "Suggested Tasks": "Compiti suggeriti",
-            "Pinned Tasks": "Compiti fissati"
+            "Suggested Tasks": "Suggested Tasks",
+            "Pinned Tasks": "Pinned Tasks"
         },
         "requirementCategoryShort": {
-            "Welcome to the Dojo": "Benvenuto",
-            "Games + Analysis": "Partite",
-            "Tactics": "Tattica",
-            "Middlegames + Strategy": "Mediogioco",
-            "Endgame": "Finale",
-            "Opening": "Apertura",
-            "Graduation": "Passaggio",
+            "Welcome to the Dojo": "Welcome",
+            "Games + Analysis": "Games",
+            "Tactics": "Tactics",
+            "Middlegames + Strategy": "Middlegame",
+            "Endgame": "Endgame",
+            "Opening": "Opening",
+            "Graduation": "Graduation",
             "Non-Dojo": "Non-Dojo",
-            "Suggested Tasks": "Compiti suggeriti",
-            "Pinned Tasks": "Compiti fissati"
+            "Suggested Tasks": "Suggested Tasks",
+            "Pinned Tasks": "Pinned Tasks"
         },
         "ratingSystem": {
             "CHESSCOM": "Chess.com Rapid",
-            "LICHESS": "Lichess Classica",
+            "LICHESS": "Lichess Classical",
             "FIDE": "FIDE",
             "USCF": "USCF",
             "ECF": "ECF",
@@ -4073,9 +4097,9 @@
             "DWZ": "DWZ",
             "ACF": "ACF",
             "KNSB": "KNSB",
-            "CUSTOM": "Personalizzato",
-            "CUSTOM_2": "Personalizzato",
-            "CUSTOM_3": "Personalizzato"
+            "CUSTOM": "Custom",
+            "CUSTOM_2": "Custom",
+            "CUSTOM_3": "Custom"
         }
     },
     "material": {
