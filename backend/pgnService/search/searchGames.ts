@@ -200,7 +200,7 @@ function toGameInfo(doc: SearchDocument): object {
 
 /**
  * Searches the games index by player name with optional color, elo,
- * result, cohort and date filters. See docs/game-search-design.md.
+ * result, cohort and date filters.
  */
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     console.log('Event: %j', event);
