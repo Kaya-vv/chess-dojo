@@ -97,17 +97,6 @@ export interface GameApiContextType {
     ) => Promise<AxiosResponse<ListGamesResponse>>;
 
     /**
-     * searchGames returns a list of GameInfo objects matching the search request.
-     * @param request The search request.
-     * @param startKey The optional startKey to use when searching.
-     * @returns A list of games matching the request.
-     */
-    searchGames: (
-        request: SearchGamesRequest,
-        startKey?: string,
-    ) => Promise<AxiosResponse<ListGamesResponse>>;
-
-    /**
      * listGamesByOpening returns a list of GameInfo objects with the provided ECO code,
      * as well as the next start key for pagination.
      * @param eco The ECO to search for.
@@ -407,16 +396,12 @@ export function listGamesByOwner(
 /**
  * searchGames returns a list of GameInfo objects matching the search request,
  * as well as the next start key for pagination.
- * @param idToken The id token of the current signed-in user.
  * @param request The search request.
  * @param startKey The optional startKey to use when searching.
  */
-export function searchGames(idToken: string, request: SearchGamesRequest, startKey?: string) {
+export function searchGames(request: SearchGamesRequest, startKey?: string) {
     return axiosService.get<ListGamesResponse>('/game/search', {
         params: { ...request, startKey },
-        headers: {
-            Authorization: 'Bearer ' + idToken,
-        },
         functionName: 'searchGames',
     });
 }

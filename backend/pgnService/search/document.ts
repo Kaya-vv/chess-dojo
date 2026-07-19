@@ -12,6 +12,7 @@ export interface SearchDocument {
     black: string;
     whiteElo?: number;
     blackElo?: number;
+    avgElo?: number;
     result?: string;
     eco?: string;
     opening?: string;
@@ -38,13 +39,21 @@ export function buildSearchDocument(game: Game): SearchDocument | undefined {
         return undefined;
     }
 
+    const whiteElo = optionalInt('whiteElo', game.headers?.WhiteElo);
+    const blackElo = optionalInt('blackElo', game.headers?.BlackElo);
+    const avgElo: Record<string, number> = {};
+    if (whiteElo.whiteElo && blackElo.blackElo) {
+        avgElo.avgElo = Math.round((whiteElo.whiteElo + blackElo.blackElo) / 2);
+    }
+
     return {
         cohort: game.cohort,
         id: game.id,
         white: game.headers?.White || game.white,
         black: game.headers?.Black || game.black,
-        ...optionalInt('whiteElo', game.headers?.WhiteElo),
-        ...optionalInt('blackElo', game.headers?.BlackElo),
+        ...whiteElo,
+        ...blackElo,
+        ...avgElo,
         ...optionalString('result', game.headers?.Result),
         ...optionalString('eco', game.headers?.ECO),
         ...optionalString('opening', game.headers?.Opening),

@@ -49,6 +49,7 @@ describe('buildSearchDocument', () => {
             black: 'Magnus Carlsen',
             whiteElo: 2650,
             blackElo: 2830,
+            avgElo: 2740,
             result: '1-0',
             eco: 'B12',
             opening: 'Caro-Kann Defense',
@@ -104,6 +105,16 @@ describe('buildSearchDocument', () => {
         );
         expect(doc?.whiteElo).toBeUndefined();
         expect(doc?.blackElo).toBeUndefined();
+        expect(doc?.avgElo).toBeUndefined();
+    });
+
+    it('omits avg elo if both players are not defined', () => {
+        const doc = buildSearchDocument(
+            testGame({ headers: { White: 'A', Black: 'B', WhiteElo: '2650' } }),
+        );
+        expect(doc?.whiteElo).toBe(2650);
+        expect(doc?.blackElo).toBeUndefined();
+        expect(doc?.avgElo).toBeUndefined();
     });
 
     it('falls back to createdAt for partial or missing dates', () => {

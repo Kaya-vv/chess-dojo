@@ -31,6 +31,7 @@ export const GAMES_INDEX_SETTINGS: API.Indices_Create_RequestBody = {
             },
             whiteElo: { type: 'integer' },
             blackElo: { type: 'integer' },
+            avgElo: { type: 'integer' },
             result: { type: 'keyword' },
             eco: { type: 'keyword' },
             opening: { type: 'text' },

@@ -36,4 +36,4 @@ finishedUploadsDriveFolder: '1mU7cW4z8UWm21c4lyRlf7E4_Lvk5BrXX'
 # created by the prod stack; replace 'unset' with its endpoint after the first
 # prod deploy (Console -> OpenSearch -> chess-dojo-game-search -> Domain
 # endpoint), prefixed with https://. 'unset' disables search.
-gameSearchEndpoint: unset
+gameSearchEndpoint: https://search-chess-dojo-game-search-sedvk25stijjxunhbjwmgfq76a.us-east-1.es.amazonaws.com

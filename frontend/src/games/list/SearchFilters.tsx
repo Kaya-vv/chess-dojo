@@ -1,5 +1,6 @@
 import { EventType, trackEvent } from '@/analytics/events';
 import { useApi } from '@/api/Api';
+import { searchGames } from '@/api/gameApi';
 import { useAuth, useFreeTier } from '@/auth/Auth';
 import { Link } from '@/components/navigation/Link';
 import { MastersCohort } from '@/database/game';
@@ -754,7 +755,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
 
     const searchByPlayer = useCallback(
         (startKey: string) =>
-            api.searchGames(
+            searchGames(
                 {
                     player: player || undefined,
                     color,
@@ -777,7 +778,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
                 startKey,
             ),
         [
-            api,
             startDateStr,
             endDateStr,
             player,
