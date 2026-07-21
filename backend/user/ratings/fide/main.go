@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
@@ -49,14 +50,23 @@ var listUrl = "https://ratings.fide.com/download/players_list.zip"
 var downloadClient = &http.Client{Timeout: 5 * time.Minute}
 
 type dynamoClient interface {
-	BatchWriteItem(input *dynamodb.BatchWriteItemInput) (*dynamodb.BatchWriteItemOutput, error)
-	GetItem(input *dynamodb.GetItemInput) (*dynamodb.GetItemOutput, error)
-	PutItem(input *dynamodb.PutItemInput) (*dynamodb.PutItemOutput, error)
+	BatchWriteItemWithContext(ctx aws.Context, input *dynamodb.BatchWriteItemInput, opts ...request.Option) (*dynamodb.BatchWriteItemOutput, error)
+	GetItemWithContext(ctx aws.Context, input *dynamodb.GetItemInput, opts ...request.Option) (*dynamodb.GetItemOutput, error)
+	PutItemWithContext(ctx aws.Context, input *dynamodb.PutItemInput, opts ...request.Option) (*dynamodb.PutItemOutput, error)
 }
 
 var svc dynamoClient = dynamodb.New(session.Must(session.NewSession()))
 var fideRatingsTable = os.Getenv("stage") + "-fide-ratings"
-var sleepFunc = time.Sleep
+var sleepFunc = func(ctx context.Context, duration time.Duration) error {
+	timer := time.NewTimer(duration)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
 
 // fideParser extracts FIDE ID and standard rating from fixed-width lines of
 // the combined players list. Column offsets are derived from the header line
@@ -67,10 +77,11 @@ type fideParser struct {
 }
 
 func newFideParser(header string) (*fideParser, error) {
+	idStart := strings.Index(header, "ID Number")
 	idEnd := strings.Index(header, "Name")
 	ratingStart := strings.Index(header, "SRtng")
-	if idEnd <= 0 || ratingStart <= 0 {
-		return nil, errors.New(500, "Temporary server error", "FIDE list header is missing Name or SRtng column; wrong file?")
+	if idStart != 0 || idEnd <= len("ID Number") || ratingStart <= idEnd {
+		return nil, errors.New(500, "Temporary server error", "FIDE list header is missing or misorders ID Number, Name, or SRtng columns; wrong file?")
 	}
 	return &fideParser{idEnd: idEnd, ratingStart: ratingStart}, nil
 }
@@ -100,9 +111,9 @@ func (p *fideParser) parse(line string) (string, int, bool) {
 // writeBatch sends one BatchWriteItem, retrying unprocessed items with
 // exponential backoff. The existing database.batchWrite is not used because
 // it errors out on UnprocessedItems, which are expected at ~76K batches.
-func writeBatch(reqs []*dynamodb.WriteRequest) error {
+func writeBatch(ctx context.Context, reqs []*dynamodb.WriteRequest) error {
 	for attempt := 1; ; attempt++ {
-		output, err := svc.BatchWriteItem(&dynamodb.BatchWriteItemInput{
+		output, err := svc.BatchWriteItemWithContext(ctx, &dynamodb.BatchWriteItemInput{
 			RequestItems: map[string][]*dynamodb.WriteRequest{fideRatingsTable: reqs},
 		})
 		if err != nil {
@@ -116,15 +127,21 @@ func writeBatch(reqs []*dynamodb.WriteRequest) error {
 			return errors.New(500, "Temporary server error", fmt.Sprintf("%d items still unprocessed after %d attempts", len(unprocessed), attempt))
 		}
 		reqs = unprocessed
-		sleepFunc(time.Duration(1<<attempt) * 100 * time.Millisecond)
+		if err := sleepFunc(ctx, time.Duration(1<<attempt)*100*time.Millisecond); err != nil {
+			return errors.Wrap(500, "Temporary server error", "DynamoDB BatchWriteItem retry canceled", err)
+		}
 	}
 }
 
 // download fetches the list zip to ephemeral storage and returns the local
 // path and the Last-Modified header. Downloading fully before parsing means
 // no DynamoDB writes can happen on a failed or truncated download.
-func download() (string, time.Time, error) {
-	resp, err := downloadClient.Get(listUrl)
+func download(ctx context.Context) (string, time.Time, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, listUrl, nil)
+	if err != nil {
+		return "", time.Time{}, errors.Wrap(500, "Temporary server error", "Failed to create FIDE rating list request", err)
+	}
+	resp, err := downloadClient.Do(req)
 	if err != nil {
 		return "", time.Time{}, errors.Wrap(500, "Temporary server error", "Failed to download FIDE rating list", err)
 	}
@@ -155,10 +172,11 @@ func download() (string, time.Time, error) {
 
 // lastImportedModified returns the Last-Modified recorded by the previous
 // successful import, or ok=false if none exists.
-func lastImportedModified() (time.Time, bool, error) {
-	output, err := svc.GetItem(&dynamodb.GetItemInput{
-		Key:       map[string]*dynamodb.AttributeValue{"id": {S: aws.String(metadataId)}},
-		TableName: aws.String(fideRatingsTable),
+func lastImportedModified(ctx context.Context) (time.Time, bool, error) {
+	output, err := svc.GetItemWithContext(ctx, &dynamodb.GetItemInput{
+		Key:            map[string]*dynamodb.AttributeValue{"id": {S: aws.String(metadataId)}},
+		TableName:      aws.String(fideRatingsTable),
+		ConsistentRead: aws.Bool(true),
 	})
 	if err != nil {
 		return time.Time{}, false, errors.Wrap(500, "Temporary server error", "Failed to get FIDE import metadata", err)
@@ -173,14 +191,20 @@ func lastImportedModified() (time.Time, bool, error) {
 	return stored, true, nil
 }
 
-func recordImport(lastModified time.Time, written int) error {
-	_, err := svc.PutItem(&dynamodb.PutItemInput{
-		TableName: aws.String(fideRatingsTable),
+func recordImport(ctx context.Context, lastModified time.Time, written int) error {
+	lastModifiedUnix := strconv.FormatInt(lastModified.Unix(), 10)
+	_, err := svc.PutItemWithContext(ctx, &dynamodb.PutItemInput{
+		TableName:           aws.String(fideRatingsTable),
+		ConditionExpression: aws.String("attribute_not_exists(lastModifiedUnix) OR lastModifiedUnix < :lastModifiedUnix"),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":lastModifiedUnix": {N: aws.String(lastModifiedUnix)},
+		},
 		Item: map[string]*dynamodb.AttributeValue{
-			"id":           {S: aws.String(metadataId)},
-			"lastModified": {S: aws.String(lastModified.UTC().Format(http.TimeFormat))},
-			"importedAt":   {S: aws.String(time.Now().Format(time.RFC3339))},
-			"written":      {N: aws.String(strconv.Itoa(written))},
+			"id":               {S: aws.String(metadataId)},
+			"lastModified":     {S: aws.String(lastModified.UTC().Format(http.TimeFormat))},
+			"lastModifiedUnix": {N: aws.String(lastModifiedUnix)},
+			"importedAt":       {S: aws.String(time.Now().Format(time.RFC3339))},
+			"written":          {N: aws.String(strconv.Itoa(written))},
 		},
 	})
 	return errors.Wrap(500, "Temporary server error", "Failed to record FIDE import metadata", err)
@@ -190,12 +214,12 @@ func recordImport(lastModified time.Time, written int) error {
 // number of rows written and the number of malformed lines skipped.
 func writeRatings(ctx context.Context, scanner *bufio.Scanner, parser *fideParser) (int, int, error) {
 	expiresAt := time.Now().Add(ttlDuration).Unix()
-	group, ctx := errgroup.WithContext(ctx)
+	group, groupCtx := errgroup.WithContext(ctx)
 	batches := make(chan []*dynamodb.WriteRequest)
 	for range numWriters {
 		group.Go(func() error {
 			for reqs := range batches {
-				if err := writeBatch(reqs); err != nil {
+				if err := writeBatch(groupCtx, reqs); err != nil {
 					return err
 				}
 			}
@@ -207,7 +231,7 @@ func writeRatings(ctx context.Context, scanner *bufio.Scanner, parser *fideParse
 		select {
 		case batches <- reqs:
 			return true
-		case <-ctx.Done():
+		case <-groupCtx.Done():
 			return false
 		}
 	}
@@ -233,6 +257,7 @@ func writeRatings(ctx context.Context, scanner *bufio.Scanner, parser *fideParse
 		reqs = append(reqs, &dynamodb.WriteRequest{PutRequest: &dynamodb.PutRequest{Item: item}})
 		if len(reqs) == batchSize {
 			if !send(reqs) {
+				loopErr = errors.Wrap(500, "Temporary server error", "FIDE list import canceled", groupCtx.Err())
 				break
 			}
 			written += batchSize
@@ -244,12 +269,19 @@ func writeRatings(ctx context.Context, scanner *bufio.Scanner, parser *fideParse
 			loopErr = errors.Wrap(500, "Temporary server error", "Failed reading FIDE list", err)
 		}
 	}
-	if loopErr == nil && len(reqs) > 0 && send(reqs) {
-		written += len(reqs)
+	if loopErr == nil && len(reqs) > 0 {
+		if send(reqs) {
+			written += len(reqs)
+		} else {
+			loopErr = errors.Wrap(500, "Temporary server error", "FIDE list import canceled", groupCtx.Err())
+		}
 	}
 	close(batches)
 	if err := group.Wait(); err != nil {
 		return written, malformed, err
+	}
+	if loopErr == nil && ctx.Err() != nil {
+		loopErr = errors.Wrap(500, "Temporary server error", "FIDE list import canceled", ctx.Err())
 	}
 	return written, malformed, loopErr
 }
@@ -257,14 +289,14 @@ func writeRatings(ctx context.Context, scanner *bufio.Scanner, parser *fideParse
 func Handler(ctx context.Context, event events.CloudWatchEvent) error {
 	log.SetRequestId(event.ID)
 
-	path, lastModified, err := download()
+	path, lastModified, err := download(ctx)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 	defer os.Remove(path)
 
-	stored, ok, err := lastImportedModified()
+	stored, ok, err := lastImportedModified(ctx)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -325,7 +357,12 @@ func Handler(ctx context.Context, event events.CloudWatchEvent) error {
 		log.Error(err)
 		return err
 	}
-	if err := recordImport(lastModified, written); err != nil {
+	if err := ctx.Err(); err != nil {
+		err = errors.Wrap(500, "Temporary server error", "FIDE list import canceled before recording metadata", err)
+		log.Error(err)
+		return err
+	}
+	if err := recordImport(ctx, lastModified, written); err != nil {
 		log.Error(err)
 		return err
 	}

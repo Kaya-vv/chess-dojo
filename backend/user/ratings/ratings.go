@@ -28,6 +28,13 @@ var chesscomHost = "https://api.chess.com"
 var lichessHost = "https://lichess.org"
 var sleepFunc = time.Sleep
 
+func ratingResponseErrorCode(status int) int {
+	if status == http.StatusNotFound {
+		return http.StatusNotFound
+	}
+	return http.StatusBadRequest
+}
+
 const chesscomUserAgent = "ChessDojo rating updater (https://www.chessdojo.club)"
 const maxChesscomAttempts = 3
 const maxRetryAfter = 10 * time.Second
@@ -301,7 +308,7 @@ func FetchUscfRating(uscfId string) (*database.Rating, error) {
 	}
 
 	if resp.StatusCode != 200 {
-		err = errors.New(400, fmt.Sprintf("Invalid request: USCF returned status `%d` for given ID", resp.StatusCode), "")
+		err = errors.New(ratingResponseErrorCode(resp.StatusCode), fmt.Sprintf("Invalid request: USCF returned status `%d` for given ID", resp.StatusCode), "")
 		return nil, err
 	}
 
@@ -339,7 +346,7 @@ func FetchEcfRating(ecfId string) (*database.Rating, error) {
 	}
 
 	if resp.StatusCode != 200 {
-		err = errors.New(400, fmt.Sprintf("Invalid request: ECF API returned status `%d`", resp.StatusCode), "")
+		err = errors.New(ratingResponseErrorCode(resp.StatusCode), fmt.Sprintf("Invalid request: ECF API returned status `%d`", resp.StatusCode), "")
 		return nil, err
 	}
 
@@ -412,7 +419,7 @@ func FetchAcfRating(acfId string) (*database.Rating, error) {
 	}
 
 	if resp.StatusCode != 200 {
-		err = errors.New(400, fmt.Sprintf("Invalid request: ACF site returned status `%d`", resp.StatusCode), "")
+		err = errors.New(ratingResponseErrorCode(resp.StatusCode), fmt.Sprintf("Invalid request: ACF site returned status `%d`", resp.StatusCode), "")
 		return nil, err
 	}
 
@@ -461,7 +468,7 @@ func fetchKnsbListRating(knsbId string, listId int) (*database.Rating, error) {
 	}
 
 	if resp.StatusCode != 200 {
-		return nil, errors.New(400, fmt.Sprintf("Invalid request: KNSB API returned status `%d`", resp.StatusCode), "")
+		return nil, errors.New(ratingResponseErrorCode(resp.StatusCode), fmt.Sprintf("Invalid request: KNSB API returned status `%d`", resp.StatusCode), "")
 	}
 
 	var r KnsbResponse

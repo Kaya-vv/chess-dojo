@@ -13,6 +13,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
@@ -37,6 +38,12 @@ func TestNewFideParser_RejectsWrongHeader(t *testing.T) {
 	}
 	if _, err := newFideParser(""); err == nil {
 		t.Error("expected error for empty header")
+	}
+	if _, err := newFideParser("prefix Name SRtng"); err == nil {
+		t.Error("expected error for header without ID Number column")
+	}
+	if _, err := newFideParser("ID Number SRtng Name"); err == nil {
+		t.Error("expected error when SRtng appears before Name")
 	}
 }
 
@@ -89,16 +96,21 @@ type fakeDynamo struct {
 	// return none.
 	unprocessed [][]*dynamodb.WriteRequest
 	batchErr    error
+	batchHook   func()
 
+	getInputs []*dynamodb.GetItemInput
 	getOutput *dynamodb.GetItemOutput
 	getErr    error
 	putInputs []*dynamodb.PutItemInput
 	putErr    error
 }
 
-func (f *fakeDynamo) BatchWriteItem(input *dynamodb.BatchWriteItemInput) (*dynamodb.BatchWriteItemOutput, error) {
+func (f *fakeDynamo) BatchWriteItemWithContext(ctx aws.Context, input *dynamodb.BatchWriteItemInput, opts ...request.Option) (*dynamodb.BatchWriteItemOutput, error) {
 	call := len(f.batchInputs)
 	f.batchInputs = append(f.batchInputs, input)
+	if f.batchHook != nil {
+		f.batchHook()
+	}
 	if f.batchErr != nil {
 		return nil, f.batchErr
 	}
@@ -109,7 +121,8 @@ func (f *fakeDynamo) BatchWriteItem(input *dynamodb.BatchWriteItemInput) (*dynam
 	return out, nil
 }
 
-func (f *fakeDynamo) GetItem(input *dynamodb.GetItemInput) (*dynamodb.GetItemOutput, error) {
+func (f *fakeDynamo) GetItemWithContext(ctx aws.Context, input *dynamodb.GetItemInput, opts ...request.Option) (*dynamodb.GetItemOutput, error) {
+	f.getInputs = append(f.getInputs, input)
 	if f.getErr != nil {
 		return nil, f.getErr
 	}
@@ -119,7 +132,7 @@ func (f *fakeDynamo) GetItem(input *dynamodb.GetItemInput) (*dynamodb.GetItemOut
 	return &dynamodb.GetItemOutput{}, nil
 }
 
-func (f *fakeDynamo) PutItem(input *dynamodb.PutItemInput) (*dynamodb.PutItemOutput, error) {
+func (f *fakeDynamo) PutItemWithContext(ctx aws.Context, input *dynamodb.PutItemInput, opts ...request.Option) (*dynamodb.PutItemOutput, error) {
 	f.putInputs = append(f.putInputs, input)
 	return &dynamodb.PutItemOutput{}, f.putErr
 }
@@ -129,7 +142,7 @@ func setupDynamo(t *testing.T, fake *fakeDynamo) {
 	origSvc, origSleep := svc, sleepFunc
 	t.Cleanup(func() { svc, sleepFunc = origSvc, origSleep })
 	svc = fake
-	sleepFunc = func(time.Duration) {}
+	sleepFunc = func(context.Context, time.Duration) error { return nil }
 }
 
 func putReq(id string) *dynamodb.WriteRequest {
@@ -142,7 +155,7 @@ func TestWriteBatch_SucceedsFirstTry(t *testing.T) {
 	fake := &fakeDynamo{}
 	setupDynamo(t, fake)
 
-	if err := writeBatch([]*dynamodb.WriteRequest{putReq("1")}); err != nil {
+	if err := writeBatch(context.Background(), []*dynamodb.WriteRequest{putReq("1")}); err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}
 	if len(fake.batchInputs) != 1 {
@@ -154,7 +167,7 @@ func TestWriteBatch_RetriesOnlyUnprocessedItems(t *testing.T) {
 	fake := &fakeDynamo{unprocessed: [][]*dynamodb.WriteRequest{{putReq("2")}}}
 	setupDynamo(t, fake)
 
-	if err := writeBatch([]*dynamodb.WriteRequest{putReq("1"), putReq("2")}); err != nil {
+	if err := writeBatch(context.Background(), []*dynamodb.WriteRequest{putReq("1"), putReq("2")}); err != nil {
 		t.Fatalf("expected success after retry, got %v", err)
 	}
 	if len(fake.batchInputs) != 2 {
@@ -174,7 +187,7 @@ func TestWriteBatch_GivesUpAfterMaxAttempts(t *testing.T) {
 	fake := &fakeDynamo{unprocessed: stuck}
 	setupDynamo(t, fake)
 
-	if err := writeBatch([]*dynamodb.WriteRequest{putReq("1")}); err == nil {
+	if err := writeBatch(context.Background(), []*dynamodb.WriteRequest{putReq("1")}); err == nil {
 		t.Fatal("expected error when items never process")
 	}
 	if len(fake.batchInputs) != maxBatchAttempts {
@@ -186,7 +199,7 @@ func TestWriteBatch_RequestErrorFails(t *testing.T) {
 	fake := &fakeDynamo{batchErr: fmt.Errorf("network down")}
 	setupDynamo(t, fake)
 
-	if err := writeBatch([]*dynamodb.WriteRequest{putReq("1")}); err == nil {
+	if err := writeBatch(context.Background(), []*dynamodb.WriteRequest{putReq("1")}); err == nil {
 		t.Fatal("expected error")
 	}
 }
@@ -236,12 +249,13 @@ func handlerEvent() events.CloudWatchEvent {
 }
 
 func TestHandler_ImportsListAndRecordsMetadata(t *testing.T) {
+	published := time.Date(2026, 7, 20, 21, 3, 32, 0, time.UTC)
 	lines := []string{
 		testHeader,
 		testLine("1503014", "Carlsen, Magnus", "2839"),
 		testLine("537001345", "A Arbhin Vanniarajan", "0"),
 	}
-	serveZip(t, buildZip(t, lines), time.Date(2026, 7, 20, 21, 3, 32, 0, time.UTC))
+	serveZip(t, buildZip(t, lines), published)
 	fake := &fakeDynamo{}
 	setupDynamo(t, fake)
 
@@ -268,6 +282,15 @@ func TestHandler_ImportsListAndRecordsMetadata(t *testing.T) {
 	meta := fake.putInputs[0].Item
 	if *meta["id"].S != metadataId || *meta["lastModified"].S != "Mon, 20 Jul 2026 21:03:32 GMT" {
 		t.Errorf("unexpected metadata item: %+v", meta)
+	}
+	if meta["lastModifiedUnix"] == nil || *meta["lastModifiedUnix"].N != fmt.Sprintf("%d", published.Unix()) {
+		t.Errorf("metadata must include numeric Last-Modified for ordering: %+v", meta)
+	}
+	if fake.putInputs[0].ConditionExpression == nil {
+		t.Error("metadata write must be conditional so Last-Modified cannot move backward")
+	}
+	if len(fake.getInputs) != 1 || !aws.BoolValue(fake.getInputs[0].ConsistentRead) {
+		t.Error("freshness metadata must use a strongly consistent read")
 	}
 }
 
@@ -368,5 +391,27 @@ func TestHandler_SkipsMalformedLinesButCountsThem(t *testing.T) {
 	items := fake.batchInputs[0].RequestItems[fideRatingsTable]
 	if len(items) != 2 {
 		t.Errorf("expected 2 items (malformed skipped), got %d", len(items))
+	}
+}
+
+func TestHandler_CancellationAfterWritesSkipsMetadata(t *testing.T) {
+	lines := []string{testHeader}
+	for i := 0; i < batchSize; i++ {
+		lines = append(lines, testLine(fmt.Sprintf("%d", i+1), "A", "1000"))
+	}
+	serveZip(t, buildZip(t, lines), time.Now())
+
+	ctx, cancel := context.WithCancel(context.Background())
+	fake := &fakeDynamo{batchHook: cancel}
+	setupDynamo(t, fake)
+
+	if err := Handler(ctx, handlerEvent()); err == nil {
+		t.Fatal("expected cancellation error")
+	}
+	if len(fake.batchInputs) != 1 {
+		t.Fatalf("expected first batch to be submitted before cancellation, got %d", len(fake.batchInputs))
+	}
+	if len(fake.putInputs) != 0 {
+		t.Error("metadata must not be recorded after cancellation")
 	}
 }

@@ -647,6 +647,7 @@ functions:
   downloadFideRatings:
     handler: ratings/fide/main.go
     timeout: 900
+    reservedConcurrency: 1
     events:
       - schedule:
           rate: cron(0 12 1 * ? *)
