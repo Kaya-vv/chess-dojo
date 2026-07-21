@@ -32,7 +32,6 @@ const chesscomUserAgent = "ChessDojo rating updater (https://www.chessdojo.club)
 const maxChesscomAttempts = 3
 const maxRetryAfter = 10 * time.Second
 
-var fideRegexp, _ = regexp.Compile(`<p>(\d+)</p>\s*<p.*>STANDARD`)
 var acfRegexp, _ = regexp.Compile(`Current Rating:\s*</div>\s*<div id="stats-box-data-col">\s*[-\d]*\s*</div>\s*<div id="stats-box-data-col">\s*(\d+)`)
 
 type ChesscomResponse struct {
@@ -291,30 +290,7 @@ func findRating(body []byte, regex *regexp.Regexp) (int, error) {
 }
 
 func FetchFideRating(fideId string) (*database.Rating, error) {
-	resp, err := client.Get(fmt.Sprintf("https://ratings.fide.com/profile/%s", fideId))
-	if err != nil {
-		err = errors.Wrap(500, "Temporary server error", "Failed to get Fide page", err)
-		return nil, err
-	}
-
-	if resp.StatusCode != 200 {
-		err = errors.New(400, fmt.Sprintf("Invalid request: FIDE returned status `%d` for given ID", resp.StatusCode), "")
-		return nil, err
-	}
-
-	b, err := io.ReadAll(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		err = errors.Wrap(500, "Temporary server error", "Failed to read FIDE response", err)
-		return nil, err
-	}
-
-	rating, err := findRating(b, fideRegexp)
-	if err != nil {
-		log.Warnf("FIDE id %q: no rating found on website", fideId)
-		rating = 0
-	}
-	return &database.Rating{CurrentRating: rating}, nil
+	return database.DynamoDB.GetFideRating(strings.TrimSpace(fideId))
 }
 
 func FetchUscfRating(uscfId string) (*database.Rating, error) {

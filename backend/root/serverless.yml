@@ -343,6 +343,22 @@ resources:
             Projection:
               ProjectionType: ALL
 
+    FideRatingsTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: !If [IsNotSimple, 'Retain', 'Delete']
+      Properties:
+        TableName: ${sls:stage}-fide-ratings
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TimeToLiveSpecification:
+          AttributeName: expiresAt
+          Enabled: true
+
     EventsTable:
       Type: AWS::DynamoDB::Table
       DeletionPolicy: !If [IsNotSimple, 'Retain', 'Delete']
@@ -762,6 +778,8 @@ resources:
       Value: !GetAtt CognitoUserPool.ProviderURL
     UsersTableArn:
       Value: !GetAtt UsersTable.Arn
+    FideRatingsTableArn:
+      Value: !GetAtt FideRatingsTable.Arn
     RequirementsTableArn:
       Value: !GetAtt RequirementsTable.Arn
     GraduationsTableArn:
