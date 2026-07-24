@@ -18,6 +18,9 @@ updates:
       aws_sdk:
         patterns:
           - "@aws-sdk/*"
+      mui:
+        patterns:
+          - "@mui/*"
   - package-ecosystem: 'gomod' # See documentation for possible values
     directory: '/backend' # Location of package manifests
     schedule:
