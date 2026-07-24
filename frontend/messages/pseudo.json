@@ -2317,7 +2317,7 @@
                 "disputesThen": "[T] Then you can:",
                 "disputesAction1": "[T] Submit the game as a forfeit win for yourself",
                 "disputesAction2": "[T] When submitting your game will be given the option to report your opponent - this alerts the TD that your opponent should be considered for removal from this and future tournaments",
-                "disputesAction3": "[T] DM the TD on Discord with screenshots of your attempts to reach out to your opponent",
+                "disputesAction3": "[T] Submit screenshots of your attempt(s) to reach out to your opponent when you submit the result. You do not need to message the TD directly.",
                 "disputesFootnote": "[T] *A concerted effort consists of either reaching out first or responding to an initial contact within 48 hours; and offering at least 3 different times, on at least 2 separate days, that you are available to play that week. If both players make a concerted effort to schedule a game and are still unable to find a time to play, the game can be submitted as a draw (1/2-1/2). In case of a dispute, please contact the TD on Discord.",
                 "winnersTitle": "[T] Winners",
                 "winnersBody": "[T] To view the standings for any round, you can navigate to the <tournamentLink>Tournament Page</tournamentLink>. The winners of each section will receive an invitation to play in a Champions' Round Robin. Winners from the previous year will be invited to play via email each January."
@@ -2553,6 +2553,8 @@
                 "columnChesscom": "[T] Chess.com Username",
                 "columnDiscord": "[T] Discord Username",
                 "columnScore": "[T] Score",
+                "columnActions": "[T] Actions",
+                "editPlayer": "[T] Edit player",
                 "withdrawnSuffix": "[T]  (Withdrawn)"
             },
             "pairings": {
@@ -2563,9 +2565,37 @@
                 "columnWhite": "[T] White",
                 "columnBlack": "[T] Black",
                 "columnResult": "[T] Result",
+                "columnActions": "[T] Actions",
+                "editResult": "[T] Update result",
                 "noPairings": "[T] No pairings available for this round.",
                 "bye": "[T] Bye",
                 "byeWithdrew": "[T] Bye (<player></player> withdrew)"
+            },
+            "adminSetResult": {
+                "title": "[T] Update Result",
+                "pairing": "[T] {white} vs {black}",
+                "labelResult": "[T] Result",
+                "resultHelper": "[T] Leave blank and provide a game URL to auto-fill from the PGN, or choose Clear to remove the result.",
+                "resultWhiteWins": "[T] White Wins (1-0)",
+                "resultBlackWins": "[T] Black Wins (0-1)",
+                "resultDraw": "[T] Draw (1/2-1/2)",
+                "resultClear": "[T] Clear Result",
+                "labelGameUrl": "[T] Game URL (optional)",
+                "urlHelper": "[T] Optional Lichess or Chess.com URL. If provided without a result, the result is taken from the game.",
+                "errorResultOrUrl": "[T] Provide a result or a game URL",
+                "cancel": "[T] Cancel",
+                "update": "[T] Update"
+            },
+            "adminEditPlayer": {
+                "title": "[T] Edit Player",
+                "labelDisplayName": "[T] Display Name",
+                "labelLichessUsername": "[T] Lichess Username",
+                "labelChesscomUsername": "[T] Chess.com Username",
+                "labelDiscordUsername": "[T] Discord Username",
+                "labelDiscordId": "[T] Discord ID",
+                "errorRequired": "[T] This field is required",
+                "cancel": "[T] Cancel",
+                "update": "[T] Update"
             },
             "crosstable": {
                 "noData": "[T] No crosstable data available.",
