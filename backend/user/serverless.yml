@@ -631,6 +631,10 @@ functions:
               - ''
               - - ${param:UsersTableArn}
                 - '/index/CohortIdx'
+      - Effect: Allow
+        Action:
+          - lambda:InvokeFunction
+        Resource: arn:aws:lambda:${aws:region}:${aws:accountId}:function:chess-dojo-users-${sls:stage}-updateRatings
 
   updateStatistics:
     handler: statistics/update/main.go
@@ -980,6 +984,26 @@ resources:
         Threshold: 700000
         ComparisonOperator: GreaterThanThreshold
         TreatMissingData: ignore
+
+    UpdateRatingsErrorAlarm:
+      Condition: IsNotSimple
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: UpdateRatingsError-${sls:stage}
+        AlarmDescription: 'Notifications about Lambda errors for the updateRatings function, including continuation-cap hits and failed writes'
+        AlarmActions:
+          - ${param:AlertNotificationsTopic}
+        Namespace: AWS/Lambda
+        MetricName: Errors
+        Statistic: Sum
+        Dimensions:
+          - Name: FunctionName
+            Value: chess-dojo-users-${sls:stage}-updateRatings
+        Period: 86400
+        EvaluationPeriods: 1
+        Threshold: 0
+        ComparisonOperator: GreaterThanThreshold
+        TreatMissingData: notBreaching
 
     UpdateStatisticsTimeoutAlarm:
       Condition: IsNotSimple

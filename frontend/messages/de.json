@@ -2317,7 +2317,7 @@
                 "disputesThen": "Dann kannst du:",
                 "disputesAction1": "Das Spiel als Forfeit-Gewinn für dich einreichen",
                 "disputesAction2": "Wenn du dein Spiel einreichst, hast du die Möglichkeit, deinen Gegner zu melden - dies benachrichtigt den TD, dass dein Gegner zur Entfernung aus diesem und zukünftigen Turnieren in Betracht gezogen werden sollte",
-                "disputesAction3": "Sende dem TD eine Direct Message auf Discord mit Screenshots deiner Versuche, deinen Gegner zu erreichen",
+                "disputesAction3": "Reichen Sie bitte Screenshots Ihrer Versuche, Ihren Gegner zu kontaktieren, zusammen mit dem Ergebnis ein. Sie müssen den Turnierdirektor nicht direkt kontaktieren.",
                 "disputesFootnote": "Eine abgestimmte Anstrengung besteht darin, entweder zuerst Kontakt aufzunehmen oder innerhalb von 48 Stunden auf einen anfänglichen Kontakt zu antworten; und mindestens 3 verschiedene Zeiten an mindestens 2 verschiedenen Tagen anzubieten, an denen du diese Woche spielen kannst. Wenn beide Spieler eine abgestimmte Anstrengung unternehmen, um eine Partie zu planen, und dennoch keinen Spieltermin finden, kann die Partie als Remis eingereicht werden (1/2-1/2). Bei Streitigkeiten wende dich bitte an den TD auf Discord.",
                 "winnersTitle": "Gewinner",
                 "winnersBody": "Um die Rangliste für eine beliebige Runde einzusehen, können Sie die <tournamentLink>Turnierseite</tournamentLink> aufrufen. Die Sieger der jeweiligen Gruppen erhalten eine Einladung zur Teilnahme an einem Champions-Round-Robin-Turnier. Vorjahressieger werden jeweils im Januar per E-Mail zur Teilnahme eingeladen."
@@ -2553,6 +2553,8 @@
                 "columnChesscom": "Chess.com Benutzername",
                 "columnDiscord": "Discord Benutzername",
                 "columnScore": "Punktzahl",
+                "columnActions": "Aktionen",
+                "editPlayer": "Spieler bearbeiten",
                 "withdrawnSuffix": "(Zurückgezogen)"
             },
             "pairings": {
@@ -2563,9 +2565,37 @@
                 "columnWhite": "Weiß",
                 "columnBlack": "Schwarz",
                 "columnResult": "Ergebnis",
+                "columnActions": "Aktionen",
+                "editResult": "Ergebnis aktualisieren",
                 "noPairings": "Keine Paarungen für diese Runde verfügbar.",
                 "bye": "Tschüss",
                 "byeWithdrew": "Tschüss (<player></player> hat sich zurückgezogen)"
+            },
+            "adminSetResult": {
+                "title": "Ergebnis aktualisieren",
+                "pairing": "{white} vs {black}",
+                "labelResult": "Ergebnis",
+                "resultHelper": "Leer lassen und eine Spiel-URL angeben, um das Ergebnis aus der PGN zu übernehmen, oder Löschen wählen, um das Ergebnis zu entfernen.",
+                "resultWhiteWins": "Weiß gewinnt (1-0)",
+                "resultBlackWins": "Schwarz gewinnt (0-1)",
+                "resultDraw": "Remis (1/2-1/2)",
+                "resultClear": "Ergebnis löschen",
+                "labelGameUrl": "Spiel-URL (optional)",
+                "urlHelper": "Optionale Lichess- oder Chess.com-URL. Wenn ohne Ergebnis angegeben, wird das Ergebnis aus der Partie übernommen.",
+                "errorResultOrUrl": "Ergebnis oder Spiel-URL angeben",
+                "cancel": "Abbrechen",
+                "update": "Aktualisieren"
+            },
+            "adminEditPlayer": {
+                "title": "Spieler bearbeiten",
+                "labelDisplayName": "Anzeigename",
+                "labelLichessUsername": "Lichess Benutzername",
+                "labelChesscomUsername": "Chess.com Benutzername",
+                "labelDiscordUsername": "Discord Benutzername",
+                "labelDiscordId": "Discord-ID",
+                "errorRequired": "Dieses Feld ist erforderlich",
+                "cancel": "Abbrechen",
+                "update": "Aktualisieren"
             },
             "crosstable": {
                 "noData": "Keine Kreuztabellendaten verfügbar.",
