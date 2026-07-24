@@ -98,12 +98,9 @@ func (p *fideParser) parse(line string) (string, int, bool) {
 	if field == "" {
 		return id, 0, true
 	}
-	rating := 0
-	for _, r := range field {
-		if r < '0' || r > '9' {
-			return "", 0, false
-		}
-		rating = rating*10 + int(r-'0')
+	rating, err := strconv.Atoi(field)
+	if err != nil {
+		return "", 0, false
 	}
 	return id, rating, true
 }
