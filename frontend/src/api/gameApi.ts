@@ -307,18 +307,30 @@ export interface ListGamesResponse {
 /** A request to the game search API. */
 export interface SearchGamesRequest {
     /**
-     * The player name to search for. Partial names and small typos match.
-     * When omitted, the search is filter-only.
+     * White / player-1 name. Partial names and small typos match.
+     * When both white and black are omitted, the search is filter-only.
      */
-    player?: string;
-    /** The color to search: white, black or either. */
-    color: string;
-    /** The minimum rating of the matched player. */
+    white?: string;
+    /** Black / player-2 name. Partial names and small typos match. */
+    black?: string;
+    /**
+     * When true, white/black names may match either color
+     * (player 1 as white or black).
+     */
+    ignoreColors?: boolean;
+    /** The minimum rating to filter by. */
     minElo?: string;
-    /** The maximum rating of the matched player. */
+    /** The maximum rating to filter by. */
     maxElo?: string;
-    /** The result from the matched player's perspective: win, draw or loss. */
-    result?: string;
+    /**
+     * How min/max elo apply: to one player, both players, or the average.
+     */
+    eloMode?: 'one' | 'both' | 'average';
+    /**
+     * Comma-separated PGN results to include (1-0, 0-1, 1/2-1/2).
+     * Omit or pass all three for no result filter.
+     */
+    results?: string;
     /** The cohort to restrict the search to, including masters. */
     cohort?: string;
     /** An ECO code/prefix (B12) or opening name (Caro-Kann) to filter by. */

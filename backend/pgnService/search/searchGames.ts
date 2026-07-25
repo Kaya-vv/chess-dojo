@@ -9,46 +9,50 @@ import { SearchDocument } from './document';
 const PAGE_SIZE = 50;
 const MAX_RESULTS = 10000;
 
-const requestSchema = z
-    .object({
-        player: z.string().trim().min(1).optional(),
-        color: z.enum(['white', 'black', 'either']).default('either'),
-        minElo: z.coerce.number().int().optional(),
-        maxElo: z.coerce.number().int().optional(),
-        result: z.enum(['win', 'draw', 'loss', 'whiteWin', 'blackWin']).optional(),
-        cohort: z.string().optional(),
-        opening: z.string().trim().min(1).optional(),
-        minMoves: z.coerce.number().int().min(0).optional(),
-        maxMoves: z.coerce.number().int().min(0).optional(),
-        timeClass: z.enum(['bullet', 'blitz', 'rapid', 'classical', 'daily']).optional(),
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
-        startKey: z.coerce.number().int().min(0).default(0),
-    })
-    .refine((req) => req.player || (req.result !== 'win' && req.result !== 'loss'), {
-        message: 'result win/loss requires a player',
-    })
-    .refine((req) => !req.player || (req.result !== 'whiteWin' && req.result !== 'blackWin'), {
-        message: 'result whiteWin/blackWin cannot be used with a player',
-    });
+/** Absolute PGN result values that can be filtered on. */
+export const GAME_RESULTS = ['1-0', '0-1', '1/2-1/2'] as const;
+export type GameResult = (typeof GAME_RESULTS)[number];
+
+const gameResultSchema = z.enum(GAME_RESULTS);
+
+const requestSchema = z.object({
+    white: z.string().trim().min(1).optional(),
+    black: z.string().trim().min(1).optional(),
+    ignoreColors: z
+        .string()
+        .optional()
+        .transform((v) => v === 'true'),
+    minElo: z.coerce.number().int().optional(),
+    maxElo: z.coerce.number().int().optional(),
+    eloMode: z.enum(['one', 'both', 'average']).default('one'),
+    /** Comma-separated subset of 1-0, 0-1, 1/2-1/2. Omitted/all three = no filter. */
+    results: z
+        .string()
+        .optional()
+        .transform((v) => {
+            if (!v) {
+                return undefined;
+            }
+            return v
+                .split(',')
+                .map((s) => s.trim())
+                .filter(Boolean);
+        })
+        .pipe(z.array(gameResultSchema).optional()),
+    cohort: z.string().optional(),
+    opening: z.string().trim().min(1).optional(),
+    minMoves: z.coerce.number().int().min(0).optional(),
+    maxMoves: z.coerce.number().int().min(0).optional(),
+    timeClass: z.enum(['bullet', 'blitz', 'rapid', 'classical', 'daily']).optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    startKey: z.coerce.number().int().min(0).default(0),
+});
 
 export type SearchGamesRequest = z.infer<typeof requestSchema>;
 
 /** Matches an ECO code or prefix: a letter A-E plus 0-2 digits. */
 const ECO_REGEX = /^[A-Ea-e]\d{0,2}$/;
-
-/** Result values relative to the matched side. */
-const SIDE_RESULTS = {
-    white: { win: '1-0', loss: '0-1' },
-    black: { win: '0-1', loss: '1-0' },
-} as const;
-
-/** Result values independent of any matched player. */
-const ABSOLUTE_RESULTS = {
-    draw: '1/2-1/2',
-    whiteWin: '1-0',
-    blackWin: '0-1',
-} as const;
 
 /** Returns the range bounds for the request's min/max elo, or undefined when neither is set. */
 function eloRange(request: SearchGamesRequest): object | undefined {
@@ -61,47 +65,112 @@ function eloRange(request: SearchGamesRequest): object | undefined {
     };
 }
 
-/** Builds the clause matching one side of the board. */
-function sideClause(player: string, request: SearchGamesRequest, side: 'white' | 'black'): object {
-    const filter: object[] = [];
-
+/** Builds top-level elo filters based on whether one, both, or average rating must match. */
+function eloFilters(request: SearchGamesRequest): object[] {
     const range = eloRange(request);
-    if (range) {
-        filter.push({ range: { [side === 'white' ? 'whiteElo' : 'blackElo']: range } });
+    if (!range) {
+        return [];
     }
-    if (request.result === 'win' || request.result === 'loss') {
-        filter.push({ term: { result: SIDE_RESULTS[side][request.result] } });
+    if (request.eloMode === 'average') {
+        return [{ range: { avgElo: range } }];
     }
+    if (request.eloMode === 'both') {
+        return [{ range: { whiteElo: range } }, { range: { blackElo: range } }];
+    }
+    return [
+        {
+            bool: {
+                should: [{ range: { whiteElo: range } }, { range: { blackElo: range } }],
+                minimum_should_match: 1,
+            },
+        },
+    ];
+}
 
+/** Fuzzy + prefix name match against one color field. */
+function nameMatch(side: 'white' | 'black', player: string): object {
     return {
         bool: {
-            must: [
+            should: [
                 {
-                    bool: {
-                        should: [
-                            {
-                                match: {
-                                    [side]: {
-                                        query: player,
-                                        fuzziness: 'AUTO',
-                                        operator: 'and',
-                                    },
-                                },
-                            },
-                            { match_phrase_prefix: { [side]: player } },
-                        ],
-                        minimum_should_match: 1,
+                    match: {
+                        [side]: {
+                            query: player,
+                            fuzziness: 'AUTO',
+                            operator: 'and',
+                        },
                     },
                 },
+                { match_phrase_prefix: { [side]: player } },
             ],
-            filter,
+            minimum_should_match: 1,
         },
     };
 }
 
+/**
+ * Builds the player-matching portion of the query: either a list of should
+ * clauses (OR) or must clauses to merge into the top-level filter (AND).
+ */
+function playerClauses(request: SearchGamesRequest): {
+    should?: object[];
+    must?: object[];
+} {
+    const { white, black, ignoreColors } = request;
+
+    if (!white && !black) {
+        return {};
+    }
+
+    if (white && black) {
+        if (ignoreColors) {
+            return {
+                should: [
+                    {
+                        bool: {
+                            must: [nameMatch('white', white), nameMatch('black', black)],
+                        },
+                    },
+                    {
+                        bool: {
+                            must: [nameMatch('white', black), nameMatch('black', white)],
+                        },
+                    },
+                ],
+            };
+        }
+        return {
+            must: [nameMatch('white', white), nameMatch('black', black)],
+        };
+    }
+
+    const player = (white || black) as string;
+    if (!ignoreColors) {
+        return {
+            must: [nameMatch(white ? 'white' : 'black', player)],
+        };
+    }
+    return {
+        should: [nameMatch('white', player), nameMatch('black', player)],
+    };
+}
+
+/** Builds a filter for the selected PGN results, or empty when all/omitted. */
+function resultFilters(request: SearchGamesRequest): object[] {
+    const selected = request.results;
+    if (
+        selected === undefined ||
+        selected.length === 0 ||
+        selected.length === GAME_RESULTS.length
+    ) {
+        return [];
+    }
+    return [{ terms: { result: selected } }];
+}
+
 /** Builds the OpenSearch query for a game search request. */
 export function buildSearchQuery(request: SearchGamesRequest): object {
-    const filter: object[] = [];
+    const filter: object[] = [...eloFilters(request), ...resultFilters(request)];
     if (request.cohort) {
         filter.push({ term: { cohort: request.cohort } });
     }
@@ -112,13 +181,6 @@ export function buildSearchQuery(request: SearchGamesRequest): object {
                     ...(request.startDate ? { gte: request.startDate } : {}),
                     ...(request.endDate ? { lte: request.endDate } : {}),
                 },
-            },
-        });
-    }
-    if (request.result && request.result in ABSOLUTE_RESULTS) {
-        filter.push({
-            term: {
-                result: ABSOLUTE_RESULTS[request.result as keyof typeof ABSOLUTE_RESULTS],
             },
         });
     }
@@ -152,24 +214,21 @@ export function buildSearchQuery(request: SearchGamesRequest): object {
         filter.push({ term: { timeClass: request.timeClass } });
     }
 
-    if (!request.player) {
-        // Filter-only search: the elo range must hold for both players.
-        const range = eloRange(request);
-        if (range) {
-            filter.push({ range: { whiteElo: range } });
-            filter.push({ range: { blackElo: range } });
-        }
-        return { bool: { filter } };
+    const players = playerClauses(request);
+    if (players.must) {
+        filter.push(...players.must);
     }
 
-    const should: object[] = [];
-    if (request.color !== 'black') {
-        should.push(sideClause(request.player, request, 'white'));
+    if (players.should) {
+        return {
+            bool: {
+                should: players.should,
+                minimum_should_match: 1,
+                filter,
+            },
+        };
     }
-    if (request.color !== 'white') {
-        should.push(sideClause(request.player, request, 'black'));
-    }
-    return { bool: { should, minimum_should_match: 1, filter } };
+    return { bool: { filter } };
 }
 
 /** Converts a SearchDocument into the GameInfo shape the frontend renders. */

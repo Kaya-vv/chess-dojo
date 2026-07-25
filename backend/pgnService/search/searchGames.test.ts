@@ -3,14 +3,19 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createGamesIndex } from './mapping';
 import { buildSearchQuery, handler } from './searchGames';
 
-const base = { player: 'naroditsky', color: 'either', startKey: 0 } as const;
+const base = {
+    white: 'naroditsky',
+    ignoreColors: true,
+    eloMode: 'one',
+    startKey: 0,
+} as const;
 
 describe('buildSearchQuery', () => {
-    it('searches both colors with fuzzy and prefix matching', () => {
+    it('searches both colors with fuzzy and prefix matching when ignoreColors', () => {
         const query = buildSearchQuery({ ...base }) as never;
         const should = query['bool']['should'];
         expect(should).toHaveLength(2);
-        const whiteName = should[0]['bool']['must'][0]['bool']['should'];
+        const whiteName = should[0]['bool']['should'];
         expect(whiteName).toEqual([
             {
                 match: {
@@ -26,37 +31,113 @@ describe('buildSearchQuery', () => {
         expect(query['bool']['minimum_should_match']).toBe(1);
     });
 
-    it('restricts to one side for color=white', () => {
-        const query = buildSearchQuery({ ...base, color: 'white' }) as never;
-        expect(query['bool']['should']).toHaveLength(1);
-        expect(JSON.stringify(query['bool']['should'][0])).toContain('"white"');
+    it('restricts to white when ignoreColors is false', () => {
+        const query = buildSearchQuery({
+            white: 'naroditsky',
+            ignoreColors: false,
+            eloMode: 'one',
+            startKey: 0,
+        }) as never;
+        expect(query['bool']['should']).toBeUndefined();
+        expect(JSON.stringify(query['bool']['filter'])).toContain('"white"');
+        expect(JSON.stringify(query['bool']['filter'])).not.toContain('"black":');
     });
 
-    it('applies elo range to the matched side only', () => {
-        const query = buildSearchQuery({ ...base, minElo: 1500, maxElo: 1800 }) as never;
-        const whiteFilter = query['bool']['should'][0]['bool']['filter'];
-        expect(whiteFilter).toContainEqual({
+    it('matches both players in either order when ignoreColors', () => {
+        const query = buildSearchQuery({
+            white: 'carlsen',
+            black: 'nakamura',
+            ignoreColors: true,
+            eloMode: 'one',
+            startKey: 0,
+        }) as never;
+        const should = query['bool']['should'];
+        expect(should).toHaveLength(2);
+        expect(JSON.stringify(should[0])).toContain('carlsen');
+        expect(JSON.stringify(should[0])).toContain('nakamura');
+        expect(JSON.stringify(should[1])).toContain('carlsen');
+        expect(JSON.stringify(should[1])).toContain('nakamura');
+    });
+
+    it('matches white and black in fixed colors when not ignoring', () => {
+        const query = buildSearchQuery({
+            white: 'carlsen',
+            black: 'nakamura',
+            ignoreColors: false,
+            eloMode: 'one',
+            startKey: 0,
+        }) as never;
+        expect(query['bool']['should']).toBeUndefined();
+        const filter = query['bool']['filter'];
+        expect(JSON.stringify(filter[0])).toContain('"white"');
+        expect(JSON.stringify(filter[0])).toContain('carlsen');
+        expect(JSON.stringify(filter[1])).toContain('"black"');
+        expect(JSON.stringify(filter[1])).toContain('nakamura');
+    });
+
+    it('applies eloMode=one as either-side range', () => {
+        const query = buildSearchQuery({
+            ...base,
+            minElo: 1500,
+            maxElo: 1800,
+            eloMode: 'one',
+        }) as never;
+        expect(query['bool']['filter']).toContainEqual({
+            bool: {
+                should: [
+                    { range: { whiteElo: { gte: 1500, lte: 1800 } } },
+                    { range: { blackElo: { gte: 1500, lte: 1800 } } },
+                ],
+                minimum_should_match: 1,
+            },
+        });
+    });
+
+    it('applies eloMode=both to both sides', () => {
+        const query = buildSearchQuery({
+            eloMode: 'both',
+            ignoreColors: false,
+            startKey: 0,
+            minElo: 1500,
+            maxElo: 1800,
+        }) as never;
+        expect(query['bool']['filter']).toContainEqual({
             range: { whiteElo: { gte: 1500, lte: 1800 } },
         });
-        const blackFilter = query['bool']['should'][1]['bool']['filter'];
-        expect(blackFilter).toContainEqual({
+        expect(query['bool']['filter']).toContainEqual({
             range: { blackElo: { gte: 1500, lte: 1800 } },
         });
     });
 
-    it('maps win/loss relative to the matched side', () => {
-        const query = buildSearchQuery({ ...base, result: 'win' }) as never;
-        const whiteFilter = query['bool']['should'][0]['bool']['filter'];
-        const blackFilter = query['bool']['should'][1]['bool']['filter'];
-        expect(whiteFilter).toContainEqual({ term: { result: '1-0' } });
-        expect(blackFilter).toContainEqual({ term: { result: '0-1' } });
+    it('applies eloMode=average to avgElo', () => {
+        const query = buildSearchQuery({
+            eloMode: 'average',
+            ignoreColors: false,
+            startKey: 0,
+            minElo: 2000,
+            maxElo: 2200,
+        }) as never;
+        expect(query['bool']['filter']).toContainEqual({
+            range: { avgElo: { gte: 2000, lte: 2200 } },
+        });
     });
 
-    it('treats draw and absolute results as top-level filters', () => {
-        const query = buildSearchQuery({ ...base, result: 'draw' }) as never;
-        expect(query['bool']['filter']).toContainEqual({ term: { result: '1/2-1/2' } });
-        const whiteFilter = query['bool']['should'][0]['bool']['filter'];
-        expect(whiteFilter).toEqual([]);
+    it('filters by a subset of PGN results', () => {
+        const query = buildSearchQuery({
+            ...base,
+            results: ['1-0', '1/2-1/2'],
+        }) as never;
+        expect(query['bool']['filter']).toContainEqual({
+            terms: { result: ['1-0', '1/2-1/2'] },
+        });
+    });
+
+    it('skips the result filter when all results are selected', () => {
+        const query = buildSearchQuery({
+            ...base,
+            results: ['1-0', '0-1', '1/2-1/2'],
+        }) as never;
+        expect(JSON.stringify(query['bool']['filter'])).not.toContain('"terms"');
     });
 
     it('applies cohort and date filters at the top level', () => {
@@ -74,10 +155,11 @@ describe('buildSearchQuery', () => {
 
     it('builds filter-only queries without a player', () => {
         const query = buildSearchQuery({
-            color: 'either',
+            ignoreColors: false,
             startKey: 0,
+            eloMode: 'both',
             minElo: 2600,
-            result: 'whiteWin',
+            results: ['1-0'],
             cohort: 'masters',
         }) as never;
         expect(query['bool']['should']).toBeUndefined();
@@ -87,24 +169,34 @@ describe('buildSearchQuery', () => {
         expect(query['bool']['filter']).toContainEqual({
             range: { blackElo: { gte: 2600 } },
         });
-        expect(query['bool']['filter']).toContainEqual({ term: { result: '1-0' } });
+        expect(query['bool']['filter']).toContainEqual({ terms: { result: ['1-0'] } });
         expect(query['bool']['filter']).toContainEqual({ term: { cohort: 'masters' } });
     });
 
     it('matches everything with no criteria', () => {
-        const query = buildSearchQuery({ color: 'either', startKey: 0 }) as never;
+        const query = buildSearchQuery({
+            ignoreColors: false,
+            eloMode: 'one',
+            startKey: 0,
+        }) as never;
         expect(query['bool']['should']).toBeUndefined();
         expect(query['bool']['filter']).toEqual([]);
     });
 
     it('routes ECO codes in opening to a prefix filter', () => {
-        const query = buildSearchQuery({ color: 'either', startKey: 0, opening: 'b1' }) as never;
+        const query = buildSearchQuery({
+            ignoreColors: false,
+            eloMode: 'one',
+            startKey: 0,
+            opening: 'b1',
+        }) as never;
         expect(query['bool']['filter']).toContainEqual({ prefix: { eco: 'B1' } });
     });
 
     it('routes opening names to text matching', () => {
         const query = buildSearchQuery({
-            color: 'either',
+            ignoreColors: false,
+            eloMode: 'one',
             startKey: 0,
             opening: 'caro kann',
         }) as never;
@@ -121,7 +213,8 @@ describe('buildSearchQuery', () => {
 
     it('converts a move range to a plyCount range', () => {
         const query = buildSearchQuery({
-            color: 'either',
+            ignoreColors: false,
+            eloMode: 'one',
             startKey: 0,
             minMoves: 20,
             maxMoves: 40,
@@ -133,7 +226,8 @@ describe('buildSearchQuery', () => {
 
     it('filters by time class', () => {
         const query = buildSearchQuery({
-            color: 'either',
+            ignoreColors: false,
+            eloMode: 'one',
             startKey: 0,
             timeClass: 'blitz',
         }) as never;
@@ -162,7 +256,7 @@ describe('handler', () => {
         process.env.gameSearchEndpoint = 'unset';
         try {
             const response = (await handler(
-                { queryStringParameters: { player: 'naroditsky' } } as never,
+                { queryStringParameters: { white: 'naroditsky' } } as never,
                 undefined as never,
                 () => null,
             )) as { statusCode?: number; body?: string };
@@ -176,25 +270,21 @@ describe('handler', () => {
         }
     });
 
-    it('rejects absolute results when a player is provided', async () => {
+    it('rejects invalid result values', async () => {
         const previous = process.env.gameSearchEndpoint;
         process.env.gameSearchEndpoint = 'http://localhost:9200';
         try {
             const response = (await handler(
                 {
                     queryStringParameters: {
-                        player: 'carlsen',
-                        result: 'whiteWin',
+                        results: 'win',
                     },
                 } as never,
                 undefined as never,
                 () => null,
             )) as { statusCode?: number; body?: string };
             expect(response.statusCode).toBe(400);
-            expect(JSON.parse(response.body ?? '{}')).toEqual({
-                message: 'Invalid request: : result whiteWin/blackWin cannot be used with a player',
-                code: 400,
-            });
+            expect(JSON.parse(response.body ?? '{}').message).toContain('Invalid request');
         } finally {
             process.env.gameSearchEndpoint = previous;
         }
@@ -262,7 +352,8 @@ describe.runIf(runIntegration)('search query semantics (integration)', () => {
             body: {
                 query: buildSearchQuery({
                     startKey: 0,
-                    color: 'either',
+                    ignoreColors: true,
+                    eloMode: 'one',
                     ...request,
                 } as never),
             },
@@ -271,32 +362,35 @@ describe.runIf(runIntegration)('search query semantics (integration)', () => {
     }
 
     it('finds both colors for a partial name', async () => {
-        expect(await ids({ player: 'naroditsky' })).toEqual(['g1', 'g2']);
+        expect(await ids({ white: 'naroditsky' })).toEqual(['g1', 'g2']);
     });
 
     it('finds a first-name prefix', async () => {
-        expect(await ids({ player: 'daniel n' })).toEqual(['g1', 'g2']);
-    });
-
-    it('filters wins relative to the player', async () => {
-        expect(await ids({ player: 'naroditsky', result: 'win' })).toEqual(['g1']);
+        expect(await ids({ white: 'daniel n' })).toEqual(['g1', 'g2']);
     });
 
     it('filters by cohort', async () => {
-        expect(await ids({ player: 'naroditsky', cohort: 'masters' })).toEqual(['g2']);
+        expect(await ids({ white: 'naroditsky', cohort: 'masters' })).toEqual(['g2']);
     });
 
-    it('applies elo to the matched side', async () => {
-        expect(await ids({ player: 'naroditsky', minElo: 2600 })).toEqual(['g1', 'g2']);
-        expect(await ids({ player: 'naroditsky', minElo: 2700 })).toEqual([]);
+    it('applies eloMode=one to either side', async () => {
+        expect(await ids({ white: 'naroditsky', minElo: 2600 })).toEqual(['g1', 'g2']);
+        expect(await ids({ white: 'naroditsky', minElo: 2700 })).toEqual([]);
     });
 
     it('supports filter-only searches', async () => {
         expect(await ids({ cohort: 'masters' })).toEqual(['g2']);
-        expect(await ids({ result: 'whiteWin' })).toEqual(['g1', 'g2']);
+        expect(await ids({ results: ['1-0'] })).toEqual(['g1', 'g2']);
         // Both docs are missing one side's elo, so a both-sides range matches neither.
-        expect(await ids({ minElo: 2600 })).toEqual([]);
+        expect(await ids({ minElo: 2600, eloMode: 'both' })).toEqual([]);
+        expect(await ids({ minElo: 2600, eloMode: 'one' })).toEqual(['g1', 'g2']);
         expect(await ids({})).toEqual(['g1', 'g2']);
+    });
+
+    it('filters wins for a player via absolute results', async () => {
+        // g1: naroditsky white, 1-0; g2: naroditsky black, 1-0 (loss for black)
+        expect(await ids({ white: 'naroditsky', results: ['1-0'] })).toEqual(['g1', 'g2']);
+        expect(await ids({ white: 'naroditsky', results: ['0-1'] })).toEqual([]);
     });
 
     it('filters by opening name and eco prefix', async () => {

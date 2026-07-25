@@ -16,14 +16,20 @@ import {
     AccordionProps,
     AccordionSummaryProps,
     Button,
+    Checkbox,
     FormControl,
+    FormControlLabel,
+    FormLabel,
     Grid,
     InputLabel,
     MenuItem,
     Accordion as MuiAccordion,
     AccordionDetails as MuiAccordionDetails,
     AccordionSummary as MuiAccordionSummary,
+    Radio,
+    RadioGroup,
     Select,
+    SelectChangeEvent,
     Stack,
     TextField,
     Typography,
@@ -215,21 +221,25 @@ const SearchByOwner: React.FC<BaseFilterProps> = ({
 };
 
 type SearchByPlayerProps = BaseFilterProps & {
-    player: string;
-    color: string;
+    white: string;
+    black: string;
+    ignoreColors: boolean;
     minElo: string;
     maxElo: string;
-    result: string;
+    eloMode: string;
+    results: string[];
     cohort: string;
     opening: string;
     minMoves: string;
     maxMoves: string;
     timeClass: string;
-    setPlayer: React.Dispatch<React.SetStateAction<string>>;
-    setColor: React.Dispatch<React.SetStateAction<string>>;
+    setWhite: React.Dispatch<React.SetStateAction<string>>;
+    setBlack: React.Dispatch<React.SetStateAction<string>>;
+    setIgnoreColors: React.Dispatch<React.SetStateAction<boolean>>;
     setMinElo: React.Dispatch<React.SetStateAction<string>>;
     setMaxElo: React.Dispatch<React.SetStateAction<string>>;
-    setResult: React.Dispatch<React.SetStateAction<string>>;
+    setEloMode: React.Dispatch<React.SetStateAction<string>>;
+    setResults: React.Dispatch<React.SetStateAction<string[]>>;
     setCohort: React.Dispatch<React.SetStateAction<string>>;
     setOpening: React.Dispatch<React.SetStateAction<string>>;
     setMinMoves: React.Dispatch<React.SetStateAction<string>>;
@@ -237,12 +247,34 @@ type SearchByPlayerProps = BaseFilterProps & {
     setTimeClass: React.Dispatch<React.SetStateAction<string>>;
 };
 
+/** Absolute PGN results available in the search filter. */
+const GAME_RESULTS = ['1-0', '0-1', '1/2-1/2'] as const;
+
+/** Parses the results URL param into a validated list; defaults to all results. */
+function parseResultsParam(value: string | null): string[] {
+    if (value === null) {
+        return [...GAME_RESULTS];
+    }
+    const selected = value
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s): s is (typeof GAME_RESULTS)[number] =>
+            (GAME_RESULTS as readonly string[]).includes(s),
+        );
+    if (selected.length === 0) {
+        return [...GAME_RESULTS];
+    }
+    return selected;
+}
+
 const SearchByPlayer: React.FC<SearchByPlayerProps> = ({
-    player,
-    color,
+    white,
+    black,
+    ignoreColors,
     minElo,
     maxElo,
-    result,
+    eloMode,
+    results,
     cohort,
     opening,
     minMoves,
@@ -251,11 +283,13 @@ const SearchByPlayer: React.FC<SearchByPlayerProps> = ({
     startDate,
     endDate,
     isLoading,
-    setPlayer,
-    setColor,
+    setWhite,
+    setBlack,
+    setIgnoreColors,
     setMinElo,
     setMaxElo,
-    setResult,
+    setEloMode,
+    setResults,
     setCohort,
     setOpening,
     setMinMoves,
@@ -268,35 +302,36 @@ const SearchByPlayer: React.FC<SearchByPlayerProps> = ({
     const t = useTranslations('games.list.searchFilters');
     const isFreeTier = useFreeTier();
 
+    const onResultsChange = (e: SelectChangeEvent<string[]>) => {
+        const value = e.target.value;
+        setResults(typeof value === 'string' ? value.split(',') : value);
+    };
+
     return (
         <Stack data-testid='search-by-player' spacing={2}>
             <Typography gutterBottom>{t('playerDescription')}</Typography>
             <TextField
-                data-testid='player-name'
-                label={t('playerName')}
-                value={player}
-                onChange={(e) => {
-                    const nextPlayer = e.target.value;
-                    setPlayer(nextPlayer);
-                    if (!nextPlayer && (result === 'win' || result === 'loss')) {
-                        setResult('');
-                    }
-                    if (nextPlayer && (result === 'whiteWin' || result === 'blackWin')) {
-                        setResult('');
-                    }
-                }}
+                data-testid='player-white'
+                label={ignoreColors ? t('player1') : t('white')}
+                value={white}
+                onChange={(e) => setWhite(e.target.value)}
             />
-
-            <Select
-                data-testid='color'
-                value={color}
-                label={t('color')}
-                onChange={(e) => setColor(e.target.value)}
-            >
-                <MenuItem value='either'>{t('either')}</MenuItem>
-                <MenuItem value='white'>{t('white')}</MenuItem>
-                <MenuItem value='black'>{t('black')}</MenuItem>
-            </Select>
+            <TextField
+                data-testid='player-black'
+                label={ignoreColors ? t('player2') : t('black')}
+                value={black}
+                onChange={(e) => setBlack(e.target.value)}
+            />
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        data-testid='ignore-colors'
+                        checked={ignoreColors}
+                        onChange={(e) => setIgnoreColors(e.target.checked)}
+                    />
+                }
+                label={t('ignoreColors')}
+            />
 
             <Grid container rowGap={1} columnGap={{ md: 0, lg: 1 }}>
                 <Grid size={{ xs: 12, lg: 'grow' }}>
@@ -322,37 +357,39 @@ const SearchByPlayer: React.FC<SearchByPlayerProps> = ({
             </Grid>
 
             <FormControl>
+                <FormLabel>{t('eloModeLabel')}</FormLabel>
+                <RadioGroup
+                    row
+                    data-testid='elo-mode'
+                    value={eloMode}
+                    onChange={(e) => setEloMode(e.target.value)}
+                >
+                    <FormControlLabel value='one' control={<Radio />} label={t('eloModeOne')} />
+                    <FormControlLabel value='both' control={<Radio />} label={t('eloModeBoth')} />
+                    <FormControlLabel
+                        value='average'
+                        control={<Radio />}
+                        label={t('eloModeAverage')}
+                    />
+                </RadioGroup>
+            </FormControl>
+
+            <FormControl>
                 <InputLabel>{t('resultLabel')}</InputLabel>
                 <Select
                     data-testid='player-result'
-                    value={result}
+                    multiple
+                    value={results}
                     label={t('resultLabel')}
-                    onChange={(e) => setResult(e.target.value)}
+                    onChange={onResultsChange}
+                    renderValue={(selected) => selected.join(', ')}
                 >
-                    <MenuItem value=''>{t('anyResult')}</MenuItem>
-                    {player
-                        ? [
-                              <MenuItem key='win' value='win'>
-                                  {t('win')}
-                              </MenuItem>,
-                              <MenuItem key='draw' value='draw'>
-                                  {t('draw')}
-                              </MenuItem>,
-                              <MenuItem key='loss' value='loss'>
-                                  {t('loss')}
-                              </MenuItem>,
-                          ]
-                        : [
-                              <MenuItem key='whiteWin' value='whiteWin'>
-                                  {t('whiteWins')}
-                              </MenuItem>,
-                              <MenuItem key='blackWin' value='blackWin'>
-                                  {t('blackWins')}
-                              </MenuItem>,
-                              <MenuItem key='draw' value='draw'>
-                                  {t('draw')}
-                              </MenuItem>,
-                          ]}
+                    {GAME_RESULTS.map((r) => (
+                        <MenuItem key={r} value={r}>
+                            <Checkbox checked={results.includes(r)} />
+                            {r}
+                        </MenuItem>
+                    ))}
                 </Select>
             </FormControl>
 
@@ -671,11 +708,13 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
 
     const { searchParams, setSearchParams } = useNextSearchParams({
         cohort: user?.dojoCohort || '',
-        player: '',
-        color: 'either',
+        white: '',
+        black: '',
+        ignoreColors: 'false',
         minElo: '',
         maxElo: '',
-        result: '',
+        eloMode: 'one',
+        results: GAME_RESULTS.join(','),
         playerCohort: '',
         eco: '',
         fen: '',
@@ -692,11 +731,17 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
     const [editCohort, setCohort] = useState(
         (searchParams.get('cohort') || '').replaceAll('%2B', '+'),
     );
-    const [editPlayer, setPlayer] = useState(searchParams.get('player') || '');
-    const [editColor, setColor] = useState(searchParams.get('color') || '');
+    const [editWhite, setWhite] = useState(searchParams.get('white') || '');
+    const [editBlack, setBlack] = useState(searchParams.get('black') || '');
+    const [editIgnoreColors, setIgnoreColors] = useState(
+        searchParams.get('ignoreColors') === 'true',
+    );
     const [editMinElo, setMinElo] = useState(searchParams.get('minElo') || '');
     const [editMaxElo, setMaxElo] = useState(searchParams.get('maxElo') || '');
-    const [editResult, setResult] = useState(searchParams.get('result') || '');
+    const [editEloMode, setEloMode] = useState(searchParams.get('eloMode') || 'one');
+    const [editResults, setResults] = useState(() =>
+        parseResultsParam(searchParams.get('results')),
+    );
     const [editPlayerCohort, setPlayerCohort] = useState(searchParams.get('playerCohort') || '');
     const [editOpening, setOpening] = useState(searchParams.get('opening') || '');
     const [editMinMoves, setMinMoves] = useState(searchParams.get('minMoves') || '');
@@ -718,11 +763,13 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
     // Submitted variables that should be searched on
     const type = searchParams.get('type') || SearchType.Cohort;
     const cohort = searchParams.get('cohort') || user?.dojoCohort || '';
-    const player = searchParams.get('player') || '';
-    const color = searchParams.get('color') || 'either';
+    const white = searchParams.get('white') || '';
+    const black = searchParams.get('black') || '';
+    const ignoreColors = searchParams.get('ignoreColors') === 'true';
     const minElo = searchParams.get('minElo') || '';
     const maxElo = searchParams.get('maxElo') || '';
-    const result = searchParams.get('result') || '';
+    const eloMode = (searchParams.get('eloMode') || 'one') as 'one' | 'both' | 'average';
+    const resultsParam = searchParams.get('results');
     const playerCohort = searchParams.get('playerCohort') || '';
     const opening = searchParams.get('opening') || '';
     const minMoves = searchParams.get('minMoves') || '';
@@ -757,16 +804,13 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
         (startKey: string) =>
             searchGames(
                 {
-                    player: player || undefined,
-                    color,
+                    white: white || undefined,
+                    black: black || undefined,
+                    ignoreColors,
                     minElo: minElo || undefined,
                     maxElo: maxElo || undefined,
-                    // win/loss are relative to the player; drop them if the
-                    // name was cleared after selecting one.
-                    result:
-                        !player && (result === 'win' || result === 'loss')
-                            ? undefined
-                            : result || undefined,
+                    eloMode,
+                    results: parseResultsParam(resultsParam).join(','),
                     cohort: playerCohort || undefined,
                     opening: opening || undefined,
                     minMoves: minMoves || undefined,
@@ -780,11 +824,13 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
         [
             startDateStr,
             endDateStr,
-            player,
-            color,
+            white,
+            black,
+            ignoreColors,
             minElo,
             maxElo,
-            result,
+            eloMode,
+            resultsParam,
             playerCohort,
             opening,
             minMoves,
@@ -861,11 +907,13 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
     const onSearchByPlayer = () => {
         onSetSearchParams({
             type: SearchType.Player,
-            player: editPlayer,
-            color: editColor,
+            white: editWhite,
+            black: editBlack,
+            ignoreColors: String(editIgnoreColors),
             minElo: editMinElo,
             maxElo: editMaxElo,
-            result: editResult,
+            eloMode: editEloMode,
+            results: editResults.join(','),
             playerCohort: editPlayerCohort,
             opening: editOpening,
             minMoves: editMinMoves,
@@ -935,16 +983,20 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
                 </AccordionSummary>
                 <AccordionDetails>
                     <SearchByPlayer
-                        player={editPlayer}
-                        setPlayer={setPlayer}
-                        color={editColor}
-                        setColor={setColor}
+                        white={editWhite}
+                        setWhite={setWhite}
+                        black={editBlack}
+                        setBlack={setBlack}
+                        ignoreColors={editIgnoreColors}
+                        setIgnoreColors={setIgnoreColors}
                         minElo={editMinElo}
                         setMinElo={setMinElo}
                         maxElo={editMaxElo}
                         setMaxElo={setMaxElo}
-                        result={editResult}
-                        setResult={setResult}
+                        eloMode={editEloMode}
+                        setEloMode={setEloMode}
+                        results={editResults}
+                        setResults={setResults}
                         cohort={editPlayerCohort}
                         setCohort={setPlayerCohort}
                         opening={editOpening}

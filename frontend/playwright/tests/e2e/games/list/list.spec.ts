@@ -45,33 +45,39 @@ test.describe('List Games Page', () => {
         await page.getByRole('button', { name: 'Search Games' }).click();
 
         const searchForm = page.getByTestId('search-by-player');
-        await expect(searchForm.getByTestId('player-name')).toBeVisible();
+        await expect(searchForm.getByTestId('player-white')).toBeVisible();
+        await expect(searchForm.getByTestId('player-black')).toBeVisible();
+        await expect(searchForm.getByTestId('ignore-colors')).toBeVisible();
         await expect(searchForm.getByTestId('player-min-elo')).toBeVisible();
+        await expect(searchForm.getByTestId('elo-mode')).toBeVisible();
         await expect(searchForm.getByTestId('player-result')).toBeVisible();
         await expect(searchForm.getByTestId('player-opening')).toBeVisible();
         await expect(searchForm.getByTestId('player-time-class')).toBeVisible();
         await expect(searchForm.getByTestId('player-search-button')).toBeVisible();
 
-        await searchForm.getByTestId('player-name').locator('input').fill('JackStenglein');
+        await searchForm.getByTestId('player-white').locator('input').fill('JackStenglein');
+        await searchForm.getByTestId('ignore-colors').check();
         await searchForm.getByTestId('player-search-button').click();
 
-        await waitForNavigation(
-            page,
-            /\/(?:(?:en|pseudo|de)\/)?games\?type=player&player=JackStenglein&color=either&minElo=&maxElo=&result=&playerCohort=&opening=&minMoves=&maxMoves=&timeClass=&startDate=&endDate=$/,
-        );
+        await page.waitForURL((url) => url.searchParams.get('white') === 'JackStenglein');
+        const params = new URL(page.url()).searchParams;
+        expect(params.get('type')).toBe('player');
+        expect(params.get('ignoreColors')).toBe('true');
+        expect(params.get('eloMode')).toBe('one');
+        expect(params.get('results')).toBe('1-0,0-1,1/2-1/2');
     });
 
-    test('clears an absolute result when adding a player', async ({ page }) => {
+    test('allows filtering by a subset of results', async ({ page }) => {
         await page.getByRole('button', { name: 'Search Games' }).click();
 
         const searchForm = page.getByTestId('search-by-player');
         await searchForm.getByTestId('player-result').click();
-        await page.getByRole('option', { name: 'White wins' }).click();
-        await searchForm.getByTestId('player-name').locator('input').fill('Carlsen');
+        await page.getByRole('option', { name: '0-1' }).click();
+        await page.keyboard.press('Escape');
         await searchForm.getByTestId('player-search-button').click();
 
-        await page.waitForURL((url) => url.searchParams.get('player') === 'Carlsen');
-        expect(new URL(page.url()).searchParams.get('result')).toBe('');
+        await page.waitForURL((url) => url.searchParams.get('type') === 'player');
+        expect(new URL(page.url()).searchParams.get('results')).toBe('1-0,1/2-1/2');
     });
 
     test('allows searching by eco', async ({ page }) => {
