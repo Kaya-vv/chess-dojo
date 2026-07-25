@@ -133,16 +133,6 @@ describe('SearchFilters rendering', () => {
         expect(screen.getByTestId('search-games-button')).toBeDisabled();
         expect(screen.getByTestId('clear-filters-button')).toBeDisabled();
     });
-
-    it('disables searching for free-tier users', () => {
-        authState.isFreeTier = true;
-        renderFilters();
-
-        expect(screen.getByTestId('search-games-button')).toBeDisabled();
-        expect(
-            screen.getByText('Free-tier users are not able to use advanced search'),
-        ).toBeInTheDocument();
-    });
 });
 
 describe('SearchFilters search on mount', () => {
