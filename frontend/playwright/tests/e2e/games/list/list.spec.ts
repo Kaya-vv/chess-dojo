@@ -102,13 +102,6 @@ test.describe('List Games Page (Free Tier)', () => {
         await expect(page.locator('[aria-label="Go to next page"]')).toBeDisabled();
     });
 
-    test('prevents searching by player', async ({ page }) => {
-        await expect(page.getByTestId('search-games-button')).toBeDisabled();
-        await expect(
-            page.getByText('Free-tier users are not able to use advanced search'),
-        ).toBeVisible();
-    });
-
     test('prevents searching by player through URL', async ({ page }) => {
         await page.goto('/games?type=games&white=JackStenglein&startDate=&endDate=');
 

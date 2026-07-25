@@ -163,7 +163,6 @@ const SearchGames = ({
     onSearch,
 }: SearchGamesProps) => {
     const t = useTranslations('games.list.searchFilters');
-    const isFreeTier = useFreeTier();
 
     const onResultsChange = (e: SelectChangeEvent<string[]>) => {
         const value = e.target.value;
@@ -377,7 +376,6 @@ const SearchGames = ({
                 variant='outlined'
                 loading={isLoading}
                 onClick={onSearch}
-                disabled={isFreeTier}
                 startIcon={<Icon name='search' color='primary' />}
             >
                 {t('search')}
@@ -391,15 +389,6 @@ const SearchGames = ({
             >
                 {t('clearFilters')}
             </Button>
-            {isFreeTier && (
-                <Typography
-                    variant='caption'
-                    color='text.secondary'
-                    sx={{ mt: '0 !important', alignSelf: 'center' }}
-                >
-                    {t('freeTierPlayer')}
-                </Typography>
-            )}
         </Stack>
     );
 };
