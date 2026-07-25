@@ -10,7 +10,7 @@ import { useNextSearchParams } from '@/hooks/useNextSearchParams';
 import { SearchFunc } from '@/hooks/usePagination';
 import CohortIcon from '@/scoreboard/CohortIcon';
 import Icon from '@/style/Icon';
-import { Folder } from '@mui/icons-material';
+import { Search } from '@mui/icons-material';
 import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
 import {
     AccordionProps,
@@ -83,144 +83,7 @@ interface BaseFilterProps {
     onSearch: () => void;
 }
 
-type SearchByCohortProps = BaseFilterProps & {
-    cohort: string;
-    setCohort: (cohort: string) => void;
-};
-
-export const SearchByCohort: React.FC<SearchByCohortProps> = ({
-    cohort,
-    startDate,
-    endDate,
-    isLoading,
-    setCohort,
-    setStartDate,
-    setEndDate,
-    onSearch,
-}) => {
-    const t = useTranslations('games.list.searchFilters');
-    return (
-        <Stack data-testid='search-by-cohort' spacing={2}>
-            <FormControl>
-                <InputLabel>{t('cohortLabel')}</InputLabel>
-                <Select
-                    data-testid='cohort-select'
-                    value={cohort}
-                    label={t('cohortLabel')}
-                    onChange={(e) => setCohort(e.target.value)}
-                >
-                    {dojoCohorts.concat(MastersCohort).map((c) => (
-                        <MenuItem key={c} value={c}>
-                            <CohortIcon
-                                cohort={c}
-                                size={35}
-                                sx={{ marginRight: '0.6rem', verticalAlign: 'middle' }}
-                                tooltip=''
-                                color='primary'
-                            />
-                            {c === MastersCohort ? t('mastersDb') : c}
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
-
-            <Grid container rowGap={1} columnGap={{ md: 0, lg: 1 }}>
-                <Grid size={{ xs: 12, lg: 'grow' }}>
-                    <DatePicker
-                        label={t('startDate')}
-                        value={startDate}
-                        onChange={(newValue) => {
-                            setStartDate(newValue);
-                        }}
-                        slotProps={{
-                            textField: { id: 'cohort-start-date', fullWidth: true },
-                        }}
-                    />
-                </Grid>
-
-                <Grid size={{ xs: 12, lg: 'grow' }}>
-                    <DatePicker
-                        label={t('endDate')}
-                        value={endDate}
-                        onChange={(newValue) => {
-                            setEndDate(newValue);
-                        }}
-                        slotProps={{
-                            textField: { id: 'cohort-end-date', fullWidth: true },
-                        }}
-                    />
-                </Grid>
-            </Grid>
-
-            <Button
-                data-testid='cohort-search-button'
-                variant='outlined'
-                loading={isLoading}
-                onClick={onSearch}
-                startIcon={<Icon name='search' color='primary' />}
-            >
-                {t('search')}
-            </Button>
-        </Stack>
-    );
-};
-
-const SearchByOwner: React.FC<BaseFilterProps> = ({
-    startDate,
-    endDate,
-    isLoading,
-    setStartDate,
-    setEndDate,
-    onSearch,
-}) => {
-    const t = useTranslations('games.list.searchFilters');
-    return (
-        <Stack data-testid='search-by-owner' spacing={2}>
-            <Typography data-testid='owner-search-description' gutterBottom>
-                {t('ownerDescription')}
-            </Typography>
-            <Grid container rowGap={1} columnGap={{ md: 0, lg: 1 }}>
-                <Grid size={{ xs: 12, lg: 'grow' }}>
-                    <DatePicker
-                        label={t('startDate')}
-                        value={startDate}
-                        onChange={(newValue) => {
-                            setStartDate(newValue);
-                        }}
-                        slotProps={{
-                            textField: { id: 'owner-start-date', fullWidth: true },
-                        }}
-                    />
-                </Grid>
-
-                <Grid size={{ xs: 12, lg: 'grow' }}>
-                    <DatePicker
-                        label={t('endDate')}
-                        value={endDate}
-                        onChange={(newValue) => {
-                            setEndDate(newValue);
-                        }}
-                        slotProps={{
-                            textField: { id: 'owner-end-date', fullWidth: true },
-                        }}
-                    />
-                </Grid>
-            </Grid>
-
-            <Button
-                data-testid='owner-search-button'
-                variant='outlined'
-                loading={isLoading}
-                onClick={onSearch}
-                startIcon={<Icon name='search' color='primary' />}
-            >
-                {t('search')}
-            </Button>
-        </Stack>
-    );
-};
-
-type SearchByPlayerProps = BaseFilterProps & {
+type SearchGamesProps = BaseFilterProps & {
     white: string;
     black: string;
     ignoreColors: boolean;
@@ -267,7 +130,7 @@ function parseResultsParam(value: string | null): string[] {
     return selected;
 }
 
-const SearchByPlayer: React.FC<SearchByPlayerProps> = ({
+const SearchGames = ({
     white,
     black,
     ignoreColors,
@@ -298,7 +161,7 @@ const SearchByPlayer: React.FC<SearchByPlayerProps> = ({
     setStartDate,
     setEndDate,
     onSearch,
-}) => {
+}: SearchGamesProps) => {
     const t = useTranslations('games.list.searchFilters');
     const isFreeTier = useFreeTier();
 
@@ -307,9 +170,49 @@ const SearchByPlayer: React.FC<SearchByPlayerProps> = ({
         setResults(typeof value === 'string' ? value.split(',') : value);
     };
 
+    const onClearFilters = () => {
+        setCohort('');
+        setWhite('');
+        setBlack('');
+        setIgnoreColors(false);
+        setMinElo('');
+        setMaxElo('');
+        setEloMode('one');
+        setResults([...GAME_RESULTS]);
+        setOpening('');
+        setMinMoves('');
+        setMaxMoves('');
+        setTimeClass('');
+        setStartDate(null);
+        setEndDate(null);
+    };
+
     return (
-        <Stack data-testid='search-by-player' spacing={2}>
-            <Typography gutterBottom>{t('playerDescription')}</Typography>
+        <Stack data-testid='search-games' spacing={2}>
+            <FormControl>
+                <InputLabel>{t('cohortLabel')}</InputLabel>
+                <Select
+                    data-testid='cohort-select'
+                    value={cohort}
+                    label={t('cohortLabel')}
+                    onChange={(e) => setCohort(e.target.value)}
+                >
+                    <MenuItem value=''>{t('anyCohort')}</MenuItem>
+                    {dojoCohorts.concat(MastersCohort).map((c) => (
+                        <MenuItem key={c} value={c}>
+                            <CohortIcon
+                                cohort={c}
+                                size={23}
+                                sx={{ marginRight: '0.6rem', verticalAlign: 'middle' }}
+                                tooltip=''
+                                color='primary'
+                            />
+                            {c === MastersCohort ? t('mastersDb') : c}
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+
             <TextField
                 data-testid='player-white'
                 label={ignoreColors ? t('player1') : t('white')}
@@ -393,23 +296,6 @@ const SearchByPlayer: React.FC<SearchByPlayerProps> = ({
                 </Select>
             </FormControl>
 
-            <FormControl>
-                <InputLabel>{t('cohortLabel')}</InputLabel>
-                <Select
-                    data-testid='player-cohort'
-                    value={cohort}
-                    label={t('cohortLabel')}
-                    onChange={(e) => setCohort(e.target.value)}
-                >
-                    <MenuItem value=''>{t('anyCohort')}</MenuItem>
-                    {dojoCohorts.concat(MastersCohort).map((c) => (
-                        <MenuItem key={c} value={c}>
-                            {c === MastersCohort ? t('mastersDb') : c}
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
-
             <TextField
                 data-testid='player-opening'
                 label={t('openingLabel')}
@@ -487,7 +373,7 @@ const SearchByPlayer: React.FC<SearchByPlayerProps> = ({
             </Grid>
 
             <Button
-                data-testid='player-search-button'
+                data-testid='search-games-button'
                 variant='outlined'
                 loading={isLoading}
                 onClick={onSearch}
@@ -495,6 +381,15 @@ const SearchByPlayer: React.FC<SearchByPlayerProps> = ({
                 startIcon={<Icon name='search' color='primary' />}
             >
                 {t('search')}
+            </Button>
+            <Button
+                data-testid='clear-filters-button'
+                variant='outlined'
+                color='error'
+                disabled={isLoading}
+                onClick={onClearFilters}
+            >
+                {t('clearFilters')}
             </Button>
             {isFreeTier && (
                 <Typography
@@ -505,93 +400,6 @@ const SearchByPlayer: React.FC<SearchByPlayerProps> = ({
                     {t('freeTierPlayer')}
                 </Typography>
             )}
-        </Stack>
-    );
-};
-
-type SearchByOpeningProps = BaseFilterProps & {
-    eco: string;
-    setEco: React.Dispatch<React.SetStateAction<string>>;
-};
-
-const SearchByOpening: React.FC<SearchByOpeningProps> = ({
-    eco,
-    startDate,
-    endDate,
-    isLoading,
-    setEco,
-    setStartDate,
-    setEndDate,
-    onSearch,
-}) => {
-    const t = useTranslations('games.list.searchFilters');
-    const [errors, setErrors] = useState<Record<string, string>>({});
-
-    const handleSearch = () => {
-        const errors: Record<string, string> = {};
-        if (eco === '') {
-            errors.eco = t('fieldRequired');
-        }
-        setErrors(errors);
-
-        if (Object.entries(errors).length > 0) {
-            return;
-        }
-
-        onSearch();
-    };
-
-    return (
-        <Stack data-testid='search-by-opening' spacing={2}>
-            <FormControl>
-                <Typography gutterBottom>{t('openingDescription')}</Typography>
-                <TextField
-                    data-testid='opening-eco'
-                    value={eco}
-                    label={t('openingEco')}
-                    onChange={(e) => setEco(e.target.value)}
-                    error={!!errors.eco}
-                    helperText={errors.eco}
-                />
-            </FormControl>
-
-            <Grid container rowGap={1} columnGap={{ md: 0, lg: 1 }}>
-                <Grid size={{ xs: 12, lg: 'grow' }}>
-                    <DatePicker
-                        label={t('startDate')}
-                        value={startDate}
-                        onChange={(newValue) => {
-                            setStartDate(newValue);
-                        }}
-                        slotProps={{
-                            textField: { id: 'opening-start-date', fullWidth: true },
-                        }}
-                    />
-                </Grid>
-
-                <Grid size={{ xs: 12, lg: 'grow' }}>
-                    <DatePicker
-                        label={t('endDate')}
-                        value={endDate}
-                        onChange={(newValue) => {
-                            setEndDate(newValue);
-                        }}
-                        slotProps={{
-                            textField: { id: 'opening-end-date', fullWidth: true },
-                        }}
-                    />
-                </Grid>
-            </Grid>
-
-            <Button
-                data-testid='opening-search-button'
-                variant='outlined'
-                loading={isLoading}
-                onClick={handleSearch}
-                startIcon={<Icon name='search' color='primary' />}
-            >
-                {t('search')}
-            </Button>
         </Stack>
     );
 };
@@ -672,24 +480,9 @@ const SearchByPosition: React.FC<SearchByPositionProps> = ({
     );
 };
 
-const SearchFiles = () => {
-    const t = useTranslations('games.list.searchFilters');
-    return (
-        <Stack data-testid='search-files' spacing={2}>
-            <Button href='/profile?view=games' variant='outlined'>
-                {t('goToMyFiles')}
-            </Button>
-        </Stack>
-    );
-};
-
 enum SearchType {
-    Cohort = 'cohort',
-    Player = 'player',
-    Owner = 'owner',
-    Opening = 'opening',
+    Games = 'games',
     Position = 'position',
-    Files = 'files',
 }
 
 function isValid(d: Date | null): boolean {
@@ -715,10 +508,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
         maxElo: '',
         eloMode: 'one',
         results: GAME_RESULTS.join(','),
-        playerCohort: '',
         eco: '',
         fen: '',
-        type: SearchType.Cohort,
+        type: SearchType.Games,
     });
 
     const [expanded, setExpanded] = useState<string | false>(searchParams.get('type') || '');
@@ -742,12 +534,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
     const [editResults, setResults] = useState(() =>
         parseResultsParam(searchParams.get('results')),
     );
-    const [editPlayerCohort, setPlayerCohort] = useState(searchParams.get('playerCohort') || '');
     const [editOpening, setOpening] = useState(searchParams.get('opening') || '');
     const [editMinMoves, setMinMoves] = useState(searchParams.get('minMoves') || '');
     const [editMaxMoves, setMaxMoves] = useState(searchParams.get('maxMoves') || '');
     const [editTimeClass, setTimeClass] = useState(searchParams.get('timeClass') || '');
-    const [editEco, setEditEco] = useState(searchParams.get('eco') || '');
     const [editFen, setEditFen] = useState(searchParams.get('fen') || '');
 
     const paramsStartDate = searchParams.get('startDate');
@@ -761,7 +551,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
     );
 
     // Submitted variables that should be searched on
-    const type = searchParams.get('type') || SearchType.Cohort;
+    const type = searchParams.get('type') || SearchType.Games;
     const cohort = searchParams.get('cohort') || user?.dojoCohort || '';
     const white = searchParams.get('white') || '';
     const black = searchParams.get('black') || '';
@@ -770,12 +560,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
     const maxElo = searchParams.get('maxElo') || '';
     const eloMode = (searchParams.get('eloMode') || 'one') as 'one' | 'both' | 'average';
     const resultsParam = searchParams.get('results');
-    const playerCohort = searchParams.get('playerCohort') || '';
     const opening = searchParams.get('opening') || '';
     const minMoves = searchParams.get('minMoves') || '';
     const maxMoves = searchParams.get('maxMoves') || '';
     const timeClass = searchParams.get('timeClass') || '';
-    const eco = searchParams.get('eco') || '';
     const fen = searchParams.get('fen') || '';
     const mastersOnly = searchParams.get('masters') === 'true';
 
@@ -794,12 +582,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
             .replaceAll('-', '.');
     }
 
-    // Functions that actually perform the search
-    const searchByCohort = useCallback(
-        (startKey: string) => api.listGamesByCohort(cohort, startKey, startDateStr, endDateStr),
-        [cohort, api, startDateStr, endDateStr],
-    );
-
     const searchByPlayer = useCallback(
         (startKey: string) =>
             searchGames(
@@ -811,7 +593,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
                     maxElo: maxElo || undefined,
                     eloMode,
                     results: parseResultsParam(resultsParam).join(','),
-                    cohort: playerCohort || undefined,
+                    cohort: cohort || undefined,
                     opening: opening || undefined,
                     minMoves: minMoves || undefined,
                     maxMoves: maxMoves || undefined,
@@ -831,23 +613,12 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
             maxElo,
             eloMode,
             resultsParam,
-            playerCohort,
+            cohort,
             opening,
             minMoves,
             maxMoves,
             timeClass,
         ],
-    );
-
-    const searchByOwner = useCallback(
-        (startKey: string) =>
-            api.listGamesByOwner(user?.username, startKey, startDateStr, endDateStr),
-        [api, user?.username, startDateStr, endDateStr],
-    );
-
-    const searchByOpening = useCallback(
-        (startKey: string) => api.listGamesByOpening(eco, startKey, startDateStr, endDateStr),
-        [api, eco, startDateStr, endDateStr],
     );
 
     const searchByPosition = useCallback(
@@ -859,35 +630,15 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
     // happen only when the searchParams change
     useEffect(() => {
         switch (type) {
-            case SearchType.Owner:
-                onSearch(searchByOwner);
-                break;
-
-            case SearchType.Player:
+            case SearchType.Games:
                 onSearch(searchByPlayer);
-                break;
-
-            case SearchType.Cohort:
-                onSearch(searchByCohort);
-                break;
-
-            case SearchType.Opening:
-                onSearch(searchByOpening);
                 break;
 
             case SearchType.Position:
                 onSearch(searchByPosition);
                 break;
         }
-    }, [
-        type,
-        onSearch,
-        searchByOwner,
-        searchByPlayer,
-        searchByCohort,
-        searchByOpening,
-        searchByPosition,
-    ]);
+    }, [type, onSearch, searchByPlayer, searchByPosition]);
 
     // Functions that change the search params
     const onSetSearchParams = (params: Record<string, string>) => {
@@ -895,18 +646,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
         setSearchParams(params);
     };
 
-    const onSearchByCohort = () => {
-        onSetSearchParams({
-            type: SearchType.Cohort,
-            cohort: editCohort,
-            startDate: editStartDate?.toUTC().toISO() || '',
-            endDate: editEndDate?.toUTC().toISO() || '',
-        });
-    };
-
     const onSearchByPlayer = () => {
         onSetSearchParams({
-            type: SearchType.Player,
+            type: SearchType.Games,
+            cohort: editCohort,
             white: editWhite,
             black: editBlack,
             ignoreColors: String(editIgnoreColors),
@@ -914,28 +657,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
             maxElo: editMaxElo,
             eloMode: editEloMode,
             results: editResults.join(','),
-            playerCohort: editPlayerCohort,
             opening: editOpening,
             minMoves: editMinMoves,
             maxMoves: editMaxMoves,
             timeClass: editTimeClass,
-            startDate: editStartDate?.toUTC().toISO() || '',
-            endDate: editEndDate?.toUTC().toISO() || '',
-        });
-    };
-
-    const onSearchByOpening = () => {
-        onSetSearchParams({
-            type: SearchType.Opening,
-            eco: editEco,
-            startDate: editStartDate?.toUTC().toISO() || '',
-            endDate: editEndDate?.toUTC().toISO() || '',
-        });
-    };
-
-    const onSearchByOwner = () => {
-        onSetSearchParams({
-            type: SearchType.Owner,
             startDate: editStartDate?.toUTC().toISO() || '',
             endDate: editEndDate?.toUTC().toISO() || '',
         });
@@ -951,38 +676,16 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
     return (
         <Stack spacing={0}>
             <Accordion
-                id='search-by-cohort'
-                expanded={expanded === SearchType.Cohort}
-                onChange={onChangePanel(SearchType.Cohort)}
+                id='search-games'
+                expanded={expanded === SearchType.Games}
+                onChange={onChangePanel(SearchType.Games)}
             >
                 <AccordionSummary>
-                    <Icon name='cohort' color='primary' sx={{ marginRight: '0.6rem' }} />
-                    <Typography>{t('searchByCohort')}</Typography>
+                    <Search color='primary' sx={{ marginRight: '0.6rem' }} />
+                    <Typography>{t('searchGames')}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
-                    <SearchByCohort
-                        cohort={editCohort}
-                        setCohort={setCohort}
-                        startDate={editStartDate}
-                        setStartDate={setStartDate}
-                        endDate={editEndDate}
-                        setEndDate={setEndDate}
-                        isLoading={isLoading}
-                        onSearch={onSearchByCohort}
-                    />
-                </AccordionDetails>
-            </Accordion>
-            <Accordion
-                id='search-by-player'
-                expanded={expanded === SearchType.Player}
-                onChange={onChangePanel(SearchType.Player)}
-            >
-                <AccordionSummary>
-                    <Icon name='player' color='primary' sx={{ marginRight: '0.6rem' }} />
-                    <Typography>{t('searchByPlayer')}</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                    <SearchByPlayer
+                    <SearchGames
                         white={editWhite}
                         setWhite={setWhite}
                         black={editBlack}
@@ -997,8 +700,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
                         setEloMode={setEloMode}
                         results={editResults}
                         setResults={setResults}
-                        cohort={editPlayerCohort}
-                        setCohort={setPlayerCohort}
+                        cohort={editCohort}
+                        setCohort={setCohort}
                         opening={editOpening}
                         setOpening={setOpening}
                         minMoves={editMinMoves}
@@ -1040,63 +743,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ isLoading, onSearch }) =>
                         isLoading={isLoading}
                         onSearch={onSearchByPosition}
                     />
-                </AccordionDetails>
-            </Accordion>
-            <Accordion
-                id='search-by-opening'
-                expanded={expanded === SearchType.Opening}
-                onChange={onChangePanel(SearchType.Opening)}
-            >
-                <AccordionSummary>
-                    <Icon
-                        name={RequirementCategory.Opening}
-                        color='primary'
-                        sx={{ marginRight: '0.6rem' }}
-                    />
-                    <Typography>{t('searchByOpening')}</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                    <SearchByOpening
-                        eco={editEco}
-                        setEco={setEditEco}
-                        startDate={editStartDate}
-                        setStartDate={setStartDate}
-                        endDate={editEndDate}
-                        setEndDate={setEndDate}
-                        isLoading={isLoading}
-                        onSearch={onSearchByOpening}
-                    />
-                </AccordionDetails>
-            </Accordion>
-            <Accordion
-                expanded={expanded === SearchType.Owner}
-                onChange={onChangePanel(SearchType.Owner)}
-            >
-                <AccordionSummary>
-                    <Icon name='upload' color='primary' sx={{ marginRight: '0.6rem' }} />
-                    <Typography>{t('searchMyUploads')}</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                    <SearchByOwner
-                        startDate={editStartDate}
-                        setStartDate={setStartDate}
-                        endDate={editEndDate}
-                        setEndDate={setEndDate}
-                        isLoading={isLoading}
-                        onSearch={onSearchByOwner}
-                    />
-                </AccordionDetails>
-            </Accordion>
-            <Accordion
-                expanded={expanded === SearchType.Files}
-                onChange={onChangePanel(SearchType.Files)}
-            >
-                <AccordionSummary>
-                    <Folder color='primary' sx={{ mr: '0.6rem' }} />
-                    <Typography>{t('myFiles')}</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                    <SearchFiles />
                 </AccordionDetails>
             </Accordion>
         </Stack>
