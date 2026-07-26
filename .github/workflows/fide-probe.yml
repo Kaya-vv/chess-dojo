@@ -58,3 +58,24 @@ jobs:
             -o players_list.zip \
             https://ratings.fide.com/download/players_list.zip
           ls -la players_list.zip
+
+  https-head-macos:
+    name: HTTPS HEAD from macOS runner
+    runs-on: macos-latest
+    timeout-minutes: 3
+    steps:
+      - run: |
+          curl -sSIv --connect-timeout 20 \
+            https://ratings.fide.com/download/players_list.zip \
+            -w "connect %{time_connect}s total %{time_total}s ip %{remote_ip}\n"
+
+  https-head-windows:
+    name: HTTPS HEAD from Windows runner
+    runs-on: windows-latest
+    timeout-minutes: 3
+    steps:
+      - shell: bash
+        run: |
+          curl -sSIv --connect-timeout 20 \
+            https://ratings.fide.com/download/players_list.zip \
+            -w "connect %{time_connect}s total %{time_total}s ip %{remote_ip}\n"
