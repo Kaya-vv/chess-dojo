@@ -1,0 +1,60 @@
+# Temporary diagnostic: probe ratings.fide.com reachability from GitHub-hosted
+# runners. Each job's pass/fail is the result; delete this branch when done.
+name: FIDE Download Probe
+
+on:
+  push:
+    branches: [test/fide-probe]
+  workflow_dispatch:
+
+jobs:
+  https-head:
+    name: HTTPS HEAD ratings.fide.com
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: |
+          curl -sSIv --connect-timeout 20 \
+            https://ratings.fide.com/download/players_list.zip \
+            -w "connect %{time_connect}s total %{time_total}s ip %{remote_ip}\n"
+
+  http-port-80:
+    name: Plain HTTP ratings.fide.com
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: |
+          curl -sSIv --connect-timeout 20 \
+            http://ratings.fide.com/download/players_list.zip \
+            -w "connect %{time_connect}s total %{time_total}s ip %{remote_ip}\n"
+
+  browser-user-agent:
+    name: HTTPS with browser UA
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: |
+          curl -sSIv --connect-timeout 20 \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36" \
+            https://ratings.fide.com/download/players_list.zip \
+            -w "connect %{time_connect}s total %{time_total}s ip %{remote_ip}\n"
+
+  control-fide-com:
+    name: Control fide.com homepage
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: |
+          curl -sSIv --connect-timeout 20 https://fide.com \
+            -w "connect %{time_connect}s total %{time_total}s ip %{remote_ip}\n"
+
+  full-download:
+    name: Full zip download
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: |
+          curl -fsSL --connect-timeout 20 --retry 2 --retry-delay 5 \
+            -o players_list.zip \
+            https://ratings.fide.com/download/players_list.zip
+          ls -la players_list.zip
