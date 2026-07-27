@@ -8,34 +8,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  http-download:
-    name: Plain HTTP full download
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    strategy:
-      fail-fast: false
-      matrix:
-        attempt: [1, 2, 3]
-    steps:
-      - name: Connect and fetch over port 80
-        run: |
-          curl -fsS --connect-timeout 20 -o players_list.zip \
-            http://ratings.fide.com/download/players_list.zip
-          ls -la players_list.zip
-      - name: Status code is 200
-        run: |
-          code=$(curl -sS -o /dev/null --connect-timeout 20 -w '%{http_code}' \
-            http://ratings.fide.com/download/players_list.zip -r 0-1000)
-          echo "HTTP $code"
-          test "$code" = "200" -o "$code" = "206"
-      - name: Zip is complete and valid
-        run: |
-          size=$(stat -c%s players_list.zip)
-          echo "size $size"
-          test "$size" -gt 40000000
-          unzip -t players_list.zip > /dev/null
-          echo "zip OK"
-
   https-download:
     name: HTTPS full download
     runs-on: ubuntu-latest
