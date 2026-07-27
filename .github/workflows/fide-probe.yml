@@ -58,8 +58,8 @@ jobs:
           unzip -t players_list.zip > /dev/null
           echo "zip OK"
 
-  jack-exact-step:
-    name: Jack's exact download step
+  stage-workflow-step:
+    name: stage-fide-ratings.yml download step
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     strategy:
