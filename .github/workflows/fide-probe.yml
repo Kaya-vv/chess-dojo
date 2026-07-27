@@ -57,3 +57,33 @@ jobs:
           test "$size" -gt 40000000
           unzip -t players_list.zip > /dev/null
           echo "zip OK"
+
+  jack-exact-step:
+    name: Jack's exact download step
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        attempt: [1, 2, 3]
+    steps:
+      - name: Download FIDE players list (verbatim from stage-fide-ratings.yml)
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --retry-delay 5 \
+            -D headers.txt \
+            -o players_list.zip \
+            "https://ratings.fide.com/download/players_list.zip"
+          LAST_MODIFIED_HTTP=$(awk 'BEGIN{IGNORECASE=1} /^Last-Modified:/{sub(/\r$/,""); print substr($0, index($0,$2))}' headers.txt)
+          if [ -z "$LAST_MODIFIED_HTTP" ]; then
+            echo "FIDE response missing Last-Modified header" >&2
+            exit 1
+          fi
+          echo "Downloaded players_list.zip ($(wc -c < players_list.zip) bytes), Last-Modified: $LAST_MODIFIED_HTTP"
+      - name: Would the staged file have been valid
+        run: |
+          size=$(stat -c%s players_list.zip)
+          echo "size $size"
+          test "$size" -gt 40000000
+          unzip -t players_list.zip > /dev/null
+          echo "zip OK"
