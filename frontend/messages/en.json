@@ -3437,6 +3437,7 @@
             "chessDbColumnWinrate": "Winrate",
             "chessDbColumnNote": "Note",
             "queueAnalysisButton": "Queue Analysis",
+            "analysisQueued": "Analysis queued. Check back later.",
             "positionNotInChessDb": "Position not in ChessDB.",
             "chessCloudDatabaseLabel": "Chess Cloud Database",
             "tabDojo": "Dojo",

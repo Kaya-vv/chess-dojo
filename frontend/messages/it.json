@@ -3437,6 +3437,7 @@
             "chessDbColumnWinrate": "Tasso di vittorie",
             "chessDbColumnNote": "Nota",
             "queueAnalysisButton": "Accoda analisi",
+            "analysisQueued": "Analisi aggiunta alla coda. Controlla di nuovo più tardi.",
             "positionNotInChessDb": "Posizione non presente in ChessDB.",
             "chessCloudDatabaseLabel": "Chess Cloud Database",
             "tabDojo": "Dojo",
