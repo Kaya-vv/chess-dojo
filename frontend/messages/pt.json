@@ -2675,7 +2675,8 @@
             "noClubsFound": "Nenhum clube encontrado"
         },
         "chips": {
-            "memberCount": "{count, plural, =1 {# membro} other {# membros}}"
+            "memberCount": "{count, plural, =1 {# membro} other {# membros}}",
+            "mainClub": "Clube principal"
         },
         "filters": {
             "search": "Buscar...",
@@ -2720,6 +2721,8 @@
             "requestToJoinClub": "Solicitar ingresso no clube",
             "joinClub": "Entrar no clube",
             "joinedSnackbar": "Você entrou no clube",
+            "setMainClub": "Definir como clube principal",
+            "mainClubSnackbar": "Clube principal atualizado",
             "tabsAriaLabel": "abas do perfil",
             "tabs": {
                 "scoreboard": "Tabela de classificação",

@@ -2675,7 +2675,8 @@
             "noClubsFound": "Keine Clubs gefunden"
         },
         "chips": {
-            "memberCount": "{count, plural, =1 {# Mitglied} other {# Mitglieder}}"
+            "memberCount": "{count, plural, =1 {# Mitglied} other {# Mitglieder}}",
+            "mainClub": "Hauptclub"
         },
         "filters": {
             "search": "Suchen...",
@@ -2720,6 +2721,8 @@
             "requestToJoinClub": "Anfrage zum Beitreten des Clubs",
             "joinClub": "Club beitreten",
             "joinedSnackbar": "Club beigetreten",
+            "setMainClub": "Als Hauptclub festlegen",
+            "mainClubSnackbar": "Hauptclub aktualisiert",
             "tabsAriaLabel": "Profil-Tabs",
             "tabs": {
                 "scoreboard": "Ergebnisse",
