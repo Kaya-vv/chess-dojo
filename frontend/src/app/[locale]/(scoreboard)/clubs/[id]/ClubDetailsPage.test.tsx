@@ -128,14 +128,10 @@ describe('ClubDetailsPage main club action', () => {
     it('shows the new designation after the update succeeds', async () => {
         renderWithIntl(<ClubDetailsPage id='club-a' />);
 
-        fireEvent.click(
-            await screen.findByRole('button', { name: 'Set as Main Club' }),
-        );
+        fireEvent.click(await screen.findByRole('button', { name: 'Set as Main Club' }));
 
         expect(await screen.findByText('Main Club')).toBeVisible();
-        expect(
-            screen.queryByRole('button', { name: 'Set as Main Club' }),
-        ).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Set as Main Club' })).not.toBeInTheDocument();
     });
 
     it('shows the main club chip instead of the action', async () => {
