@@ -111,7 +111,7 @@ export const ListClubItem: React.FC<ListClubItemProps> = ({
                     }
                 />
                 <CardContent sx={{ pt: 0 }}>
-                    <Stack direction='row' mb={2} spacing={1} flexWrap='wrap' rowGap={1}>
+                    <Stack direction='row' mb={2} gap={1} flexWrap='wrap'>
                         {isMainClub && <MainClubChip />}
                         <MemberCountChip count={club.memberCount} />
                         <LocationChip location={club.location} />
