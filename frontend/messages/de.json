@@ -3440,6 +3440,7 @@
             "chessDbColumnWinrate": "Gewinnrate",
             "chessDbColumnNote": "Hinweis",
             "queueAnalysisButton": "Warteschlangenanalyse",
+            "analysisQueued": "Analyse wurde in die Warteschlange eingereiht. Bitte später erneut prüfen.",
             "positionNotInChessDb": "Position nicht in ChessDB.",
             "chessCloudDatabaseLabel": "Schach-Cloud-Datenbank",
             "tabDojo": "Dojo",
