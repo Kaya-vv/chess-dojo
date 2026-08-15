@@ -26,7 +26,6 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import copy from 'copy-to-clipboard';
 import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import { SiChessdotcom } from 'react-icons/si';
@@ -60,8 +59,8 @@ const Position = ({ position, orientation }: PositionProps) => {
         }, 3000);
     };
 
-    const onCopyFen = (fen: string) => {
-        copy(fen);
+    const onCopyFen = async (fen: string) => {
+        await navigator.clipboard.writeText(fen);
         trackEvent(EventType.CopyFen, {
             position_fen: position.fen.trim(),
             position_name: position.title,
@@ -78,7 +77,7 @@ const Position = ({ position, orientation }: PositionProps) => {
                 fen: position.fen.trim(),
                 name: position.title,
             })
-            .then((resp) => {
+            .then(async (resp) => {
                 trackEvent(EventType.CreateSparringLink, {
                     position_fen: position.fen.trim(),
                     position_name: position.title,
@@ -86,7 +85,7 @@ const Position = ({ position, orientation }: PositionProps) => {
                     clock_increment: position.incrementSeconds,
                 });
                 lichessRequest.onSuccess();
-                copy(resp.data.url);
+                await navigator.clipboard.writeText(resp.data.url);
                 onCopy('lichess');
             })
             .catch((err) => {
