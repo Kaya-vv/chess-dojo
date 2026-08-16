@@ -6,6 +6,8 @@ import {
 } from '@/board/pgn/boardTools/underboard/settings/ViewerSettings';
 import { BlockBoardKeyboardShortcuts } from '@/board/pgn/PgnBoard';
 import { Chess, FEN } from '@jackstenglein/chess';
+import { Api as BoardApi } from '@lichess-org/chessground/api';
+import { Key, Piece } from '@lichess-org/chessground/types';
 import { BackHand, Delete, Replay, WifiProtectedSetup } from '@mui/icons-material';
 import {
     Box,
@@ -23,8 +25,6 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import { Api as BoardApi } from '@lichess-org/chessground/api';
-import { Key, Piece } from '@lichess-org/chessground/types';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { useLocalStorage } from 'usehooks-ts';

@@ -1,10 +1,10 @@
 import { Chess, Move, SQUARES, type Square } from '@jackstenglein/chess';
-import { Box, Button, Dialog, DialogContent, Stack } from '@mui/material';
 import { Chessground } from '@lichess-org/chessground';
 import { Api as BoardApi } from '@lichess-org/chessground/api';
 import { Config } from '@lichess-org/chessground/config';
 import { DrawShape } from '@lichess-org/chessground/draw';
 import { Color, Key } from '@lichess-org/chessground/types';
+import { Box, Button, Dialog, DialogContent, Stack } from '@mui/material';
 import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { Resizable, ResizeCallbackData } from 'react-resizable';
 import { useLocalStorage } from 'usehooks-ts';

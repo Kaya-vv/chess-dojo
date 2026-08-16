@@ -13,6 +13,7 @@ import {
 } from '@jackstenglein/chess-dojo-common/src/mateInOne/api';
 import { fenToPieceList } from '@jackstenglein/chess-dojo-common/src/mateInOne/fen';
 import { PUZZLES_PER_BLOCK } from '@jackstenglein/chess-dojo-common/src/mateInOne/rating';
+import { Key } from '@lichess-org/chessground/types';
 import AccessTime from '@mui/icons-material/AccessTime';
 import ArrowDownward from '@mui/icons-material/ArrowDownward';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
@@ -27,7 +28,6 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
-import { Key } from '@lichess-org/chessground/types';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { computeSessionStats, isCorrectAnswer } from './mateInOneDrillUtils';
 
