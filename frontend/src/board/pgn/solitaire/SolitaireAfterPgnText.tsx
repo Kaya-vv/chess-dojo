@@ -100,7 +100,7 @@ export function InProgressAfterPgnText() {
                     type === 'hint'
                         ? [{ orig: move.from, brush: 'red' }]
                         : [{ orig: move.from, dest: move.to, brush: 'red' }],
-                eraseOnClick: false,
+                eraseOnMovablePieceClick: false,
             },
         });
     };
