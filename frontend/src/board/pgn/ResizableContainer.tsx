@@ -1,6 +1,6 @@
 import { useWindowSizeEffect } from '@/style/useWindowSizeEffect';
 import { Stack } from '@mui/material';
-import { Color } from 'chessground/types';
+import { Color } from '@lichess-org/chessground/types';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import 'react-resizable/css/styles.css';
 import { onInitializeFunc } from '../Board';

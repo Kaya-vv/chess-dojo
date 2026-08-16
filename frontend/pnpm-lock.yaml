@@ -44,6 +44,9 @@ importers:
       '@jackstenglein/react-scheduler':
         specifier: ^5.0.6
         version: 5.0.7(589c4aba42d16c4cdff0e195177f1a3b)
+      '@lichess-org/chessground':
+        specifier: ^10.1.1
+        version: 10.1.1
       '@mui/icons-material':
         specifier: ^9.2.0
         version: 9.2.0(@mui/material@9.2.0(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.8)(supports-color@7.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.8)(supports-color@7.2.0))(@types/react@19.2.17)(react@19.2.8)(supports-color@7.2.0))(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@types/react@19.2.17)(react@19.2.8)
@@ -89,9 +92,6 @@ importers:
       bad-words:
         specifier: ^4.0.0
         version: 4.1.5
-      chessground:
-        specifier: ^9.2.1
-        version: 9.2.1
       comlink:
         specifier: ^4.4.2
         version: 4.4.2
@@ -1223,6 +1223,9 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@lichess-org/chessground@10.1.1':
+    resolution: {integrity: sha512-IBEs8+J64/zE8QB4NXxsvpjm/tHRjfQAdWwUh4xzqqN+RValgthWHemLnxsmtHFwuxvO4lHd+crp1ecgZxKVoQ==}
 
   '@mui/core-downloads-tracker@9.2.0':
     resolution: {integrity: sha512-+XMav+ZaXkZKUFUgzjrfMEedfyJKxxviAske2q8N8CWDMeqZdDU2lWMkiUPiB388hGaDqhwvOAwkrsc/pUyp8g==}
@@ -2707,10 +2710,6 @@ packages:
 
   chess.js@1.4.0:
     resolution: {integrity: sha512-BBJgrrtKQOzFLonR0l+k64A98NLemPwNsCskwb+29bRwobUa4iTm51E1kwGPbWXAcfdDa18nad6vpPPKPWarqw==}
-
-  chessground@9.2.1:
-    resolution: {integrity: sha512-KIdxm0zD69e62XRwdnFB0XUNYSzn5HM3pMazRCwpfruRUowFI8y+1OAK5YSyBff29myeV1/4o5Q8T191+Irbog==}
-    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   ci-info@4.4.0:
     resolution: {integrity: sha512-77PSwercCZU2Fc4sX94eF8k8Pxte6JAwL4/ICZLFjJLqegs7kCuAsqqj/70NQF6TvDpgFjkubQB2FW2ZZddvQg==}
@@ -6296,6 +6295,8 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@lichess-org/chessground@10.1.1': {}
+
   '@mui/core-downloads-tracker@9.2.0': {}
 
   '@mui/icons-material@9.2.0(@mui/material@9.2.0(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.8)(supports-color@7.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.8)(supports-color@7.2.0))(@types/react@19.2.17)(react@19.2.8)(supports-color@7.2.0))(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@types/react@19.2.17)(react@19.2.8)':
@@ -7675,8 +7676,6 @@ snapshots:
   cheminfo-types@1.15.0: {}
 
   chess.js@1.4.0: {}
-
-  chessground@9.2.1: {}
 
   ci-info@4.4.0: {}
 

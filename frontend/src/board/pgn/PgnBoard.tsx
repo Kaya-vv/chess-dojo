@@ -5,7 +5,7 @@ import useGame, { GameContext } from '@/context/useGame';
 import LoadingPage from '@/loading/LoadingPage';
 import { Chess, Event, EventType, Move, Observer } from '@jackstenglein/chess';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { Color } from 'chessground/types';
+import { Color } from '@lichess-org/chessground/types';
 import { useTranslations } from 'next-intl';
 import { useNavigationGuard } from 'next-navigation-guard';
 import React, {

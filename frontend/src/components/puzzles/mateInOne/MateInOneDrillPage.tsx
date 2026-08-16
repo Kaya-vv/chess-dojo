@@ -27,7 +27,7 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
-import { Key } from 'chessground/types';
+import { Key } from '@lichess-org/chessground/types';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { computeSessionStats, isCorrectAnswer } from './mateInOneDrillUtils';
 
@@ -713,7 +713,7 @@ function InProgressScreen({
                                             brush: 'green',
                                         },
                                     ],
-                                    eraseOnClick: false,
+                                    eraseOnMovablePieceClick: false,
                                 },
                             }}
                         />

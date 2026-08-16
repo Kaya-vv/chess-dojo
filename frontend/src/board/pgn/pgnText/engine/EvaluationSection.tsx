@@ -5,7 +5,7 @@ import { CLOUD_EVAL_ENABLED, EngineInfo, LineEval } from '@/stockfish/engine/eng
 import { Chess } from '@jackstenglein/chess';
 import CloudIcon from '@mui/icons-material/Cloud';
 import { List, Paper, Popper, Tooltip } from '@mui/material';
-import { Key } from 'chessground/types';
+import { Key } from '@lichess-org/chessground/types';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useLocalStorage } from 'usehooks-ts';

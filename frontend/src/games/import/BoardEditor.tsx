@@ -23,8 +23,8 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import { Api as BoardApi } from 'chessground/api';
-import { Key, Piece } from 'chessground/types';
+import { Api as BoardApi } from '@lichess-org/chessground/api';
+import { Key, Piece } from '@lichess-org/chessground/types';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
