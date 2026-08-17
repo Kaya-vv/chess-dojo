@@ -174,8 +174,8 @@ export const LargeMenuUnauthenticated = () => {
                     fontWeight: '600',
                     letterSpacing: '2%',
                     textDecoration: 'none',
+                    color: 'white',
                 }}
-                color='white'
             >
                 ChessDojo
             </Typography>
@@ -261,8 +261,8 @@ export const ExtraSmallMenuUnauthenticated = () => {
                         fontWeight: '600',
                         letterSpacing: '2%',
                         textDecoration: 'none',
+                        color: 'white',
                     }}
-                    color='white'
                 >
                     ChessDojo
                 </Typography>

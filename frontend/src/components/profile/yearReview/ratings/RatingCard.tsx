@@ -256,7 +256,7 @@ const RatingCard: React.FC<RatingCardProps> = ({ cohort, system, data, dark, per
                                         lineHeight: 1,
                                         fontWeight: 'bold',
                                     }}
-                                    color={data.ratingChange >= 0 ? 'success.main' : 'error.main'}
+                                    color={data.ratingChange >= 0 ? 'success' : 'error'}
                                 >
                                     {Math.abs(data.ratingChange)}
                                 </Typography>

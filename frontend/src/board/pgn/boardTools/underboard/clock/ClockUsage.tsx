@@ -863,22 +863,22 @@ function TimeRatingCard({
                 <Typography
                     component='div'
                     variant='caption'
-                    color={titleColor}
                     sx={{
                         textAlign: 'center',
                         gridArea: 'title',
+                        color: titleColor,
                     }}
                 >
                     {title}
                 </Typography>
 
                 <Typography
-                    color={ratingColor}
                     variant='body1'
-                    align='center'
                     sx={{
                         fontWeight: 'bold',
                         gridArea: 'rating',
+                        color: ratingColor,
+                        align: 'center',
                     }}
                 >
                     {rating >= 0 ? rating : '?'}

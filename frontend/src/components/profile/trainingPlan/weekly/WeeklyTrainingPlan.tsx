@@ -223,7 +223,7 @@ function WeeklyTrainingPlanDay({
         >
             <Typography
                 variant='subtitle1'
-                color={todayIndex === dayIndex ? 'primary' : 'text.secondary'}
+                color={todayIndex === dayIndex ? 'primary' : 'textSecondary'}
                 sx={{
                     fontWeight: 'bold',
                     ml: 0.25,

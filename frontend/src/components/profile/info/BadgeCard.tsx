@@ -172,7 +172,7 @@ export const BadgeCard = ({ user }: { user: User }) => {
                         {badges.length === 0 && (
                             <Typography
                                 variant='body2'
-                                color='text.secondary'
+                                color='textSecondary'
                                 sx={{ textAlign: 'center', width: 1 }}
                             >
                                 No badges earned yet. Complete tasks in your training plan to unlock

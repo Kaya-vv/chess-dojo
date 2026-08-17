@@ -447,8 +447,8 @@ const RatingCard: React.FC<RatingCardProps> = ({
                                         fontSize: '2.25rem',
                                         lineHeight: 1,
                                         fontWeight: 'bold',
+                                        color: ratingChange >= 0 ? 'success.main' : 'error.main',
                                     }}
-                                    color={ratingChange >= 0 ? 'success.main' : 'error.main'}
                                 >
                                     {Math.abs(ratingChange)}
                                 </Typography>

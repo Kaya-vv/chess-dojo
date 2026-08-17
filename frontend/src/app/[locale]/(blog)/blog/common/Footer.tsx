@@ -41,10 +41,10 @@ export function Footer({
                 >
                     <Image src={logoBlack} alt='' width={80} height={80} />
                     <Typography
-                        color='black'
                         sx={{
                             fontWeight: 'bold',
                             textAlign: 'center',
+                            color: 'black',
                         }}
                     >
                         {t('cta')}

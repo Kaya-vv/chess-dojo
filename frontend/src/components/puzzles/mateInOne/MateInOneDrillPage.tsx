@@ -855,7 +855,7 @@ function BlockCompleteScreen({
                     <Typography
                         variant='h6'
                         sx={{ fontWeight: 'bold' }}
-                        color={ratingDiff > 0 ? 'success.main' : 'error.main'}
+                        color={ratingDiff > 0 ? 'success' : 'error'}
                     >
                         {ratingDiff > 0 ? '+' : ''}
                         {ratingDiff}
@@ -863,7 +863,7 @@ function BlockCompleteScreen({
                 </Stack>
             )}
             {isNewPR && (
-                <Typography variant='h6' sx={{ fontWeight: 'bold', color: 'warning.main', mb: 1 }}>
+                <Typography variant='h6' sx={{ fontWeight: 'bold', color: 'warning', mb: 1 }}>
                     New Personal Best!
                 </Typography>
             )}
@@ -921,7 +921,7 @@ function BlockCompleteScreen({
                         </Typography>
                         <Typography
                             sx={{ flex: 1, textAlign: 'center' }}
-                            color={a.isCorrect ? 'success.main' : 'error.main'}
+                            color={a.isCorrect ? 'success' : 'error'}
                         >
                             {a.isCorrect ? a.userMove : `${a.userMove} (${a.correctMove})`}
                         </Typography>

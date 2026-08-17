@@ -122,9 +122,9 @@ export function BadgCabinetDialog({ isOpen, onClose, allBadges }: BadgeCabinetDi
                             <Box sx={{ flex: 1 }}>
                                 <Typography
                                     variant='h6'
-                                    color={badge.isEarned ? 'text' : 'text.secondary'}
                                     sx={{
                                         fontWeight: 'bold',
+                                        color: badge.isEarned ? 'text' : 'text.secondary',
                                     }}
                                 >
                                     {badge.title}

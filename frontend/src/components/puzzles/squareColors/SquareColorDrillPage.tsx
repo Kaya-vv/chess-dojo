@@ -503,9 +503,7 @@ function CompleteScreen({
                             <Typography
                                 variant='h6'
                                 sx={{ fontWeight: 'bold' }}
-                                color={
-                                    summary.rating > personalBest ? 'success.main' : 'error.main'
-                                }
+                                color={summary.rating > personalBest ? 'success' : 'error'}
                             >
                                 {summary.rating > personalBest ? '+' : ''}
                                 {summary.rating - personalBest}
@@ -573,7 +571,7 @@ function CompleteScreen({
                         </Typography>
                         <Typography
                             sx={{ flex: 1, textAlign: 'center' }}
-                            color={q.userAnswer === q.correctAnswer ? 'success.main' : 'error.main'}
+                            color={q.userAnswer === q.correctAnswer ? 'success' : 'error'}
                         >
                             {q.userAnswer === q.correctAnswer ? t('correct') : t('wrong')}
                         </Typography>

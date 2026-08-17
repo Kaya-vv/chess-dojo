@@ -53,21 +53,21 @@ function ClockDisplay({ ms, isActive, isLow, label }: ClockDisplayProps) {
         >
             <Typography
                 variant='caption'
-                color={isActive ? (isLow ? 'white' : 'text.primary') : 'text.secondary'}
                 sx={{
                     fontWeight: isActive ? 600 : 400,
+                    color: isActive ? (isLow ? 'white' : 'text.primary') : 'text.secondary',
                 }}
             >
                 {label}
             </Typography>
             <Typography
                 variant='h6'
-                color={isActive ? (isLow ? 'white' : 'text.primary') : 'text.secondary'}
                 sx={{
                     fontFamily: 'monospace',
                     fontWeight: 700,
                     letterSpacing: 1,
                     lineHeight: 1,
+                    color: isActive ? (isLow ? 'white' : 'text.primary') : 'text.secondary',
                 }}
             >
                 {isTimed ? formatClock(ms) : '—'}

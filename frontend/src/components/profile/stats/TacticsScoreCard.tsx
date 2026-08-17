@@ -72,8 +72,8 @@ const TacticsScoreCard: React.FC<TacticsScoreCardProps> = ({ user }) => {
                                 tacticsRating.overall < minCohort
                                     ? 'error'
                                     : tacticsRating.overall > maxCohort
-                                      ? 'success.main'
-                                      : 'warning.main'
+                                      ? 'success'
+                                      : 'warning'
                             }
                         >
                             {Math.round(tacticsRating.overall)}
