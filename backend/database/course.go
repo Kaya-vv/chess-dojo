@@ -93,6 +93,12 @@ type Course struct {
 	// Whether the course is a draft or published. Empty is treated as published
 	// for courses created before this field existed.
 	Status CourseStatus `dynamodbav:"status,omitempty" json:"status,omitempty"`
+
+	// Whether to hide the chapter indices in the table of contents.
+	HideChapterIndices bool `dynamodbav:"hideChapterIndices,omitempty" json:"hideChapterIndices,omitempty"`
+
+	// Whether to hide the module indices in the table of contents.
+	HideModuleIndices bool `dynamodbav:"hideModuleIndices,omitempty" json:"hideModuleIndices,omitempty"`
 }
 
 // IsPublished returns true if the course should be visible to non-admin users.
