@@ -23,6 +23,7 @@ import {
 import { useRouter } from '@/hooks/useRouter';
 import { DEFAULT_LOCALE, setLocaleCookie } from '@/i18n/locales';
 import { logger } from '@/logging/logger';
+import { TrainingVisibility } from '@jackstenglein/chess-dojo-common/src/database/user';
 import InfoIcon from '@mui/icons-material/Info';
 import KeyIcon from '@mui/icons-material/Key';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
@@ -44,7 +45,9 @@ import {
     DialogTitle,
     Divider,
     Grid,
+    MenuItem,
     Stack,
+    TextField,
     Typography,
 } from '@mui/material';
 import { useTranslations } from 'next-intl';
@@ -158,6 +161,7 @@ export function ProfileEditorPage({ user }: { user: User }) {
     const router = useRouter();
     const t = useTranslations('profile.editor');
     const tRating = useTranslations('enums.ratingSystem');
+    const tPrivacy = useTranslations('trainingPrivacy');
 
     const [savedUser, setSavedUser] = useState(user);
 
@@ -169,6 +173,9 @@ export function ProfileEditorPage({ user }: { user: User }) {
     const [coachBio, setCoachBio] = useState(user.coachBio || '');
     const [timezone, setTimezone] = useState(user.timezoneOverride || DefaultTimezone);
     const [language, setLanguage] = useState(user.language || DEFAULT_LOCALE);
+    const [trainingVisibility, setTrainingVisibility] = useState(
+        user.trainingVisibility ?? TrainingVisibility.Public,
+    );
 
     const [ratingSystem, setRatingSystem] = useState(user.ratingSystem);
     const [ratingEditors, setRatingEditors] = useState(getRatingEditors(user.ratings));
@@ -190,6 +197,10 @@ export function ProfileEditorPage({ user }: { user: User }) {
         {
             displayName: displayName.trim(),
             bio: bio === '' && savedUser.bio === undefined ? undefined : bio,
+            trainingVisibility:
+                trainingVisibility === (savedUser.trainingVisibility ?? TrainingVisibility.Public)
+                    ? savedUser.trainingVisibility
+                    : trainingVisibility,
             coachBio: coachBio === '' && savedUser.coachBio === undefined ? undefined : coachBio,
             timezoneOverride:
                 timezone === DefaultTimezone && !savedUser.timezoneOverride
@@ -323,6 +334,7 @@ export function ProfileEditorPage({ user }: { user: User }) {
     };
 
     const onCancelPersonal = () => {
+        setTrainingVisibility(savedUser.trainingVisibility ?? TrainingVisibility.Public);
         setDisplayName(savedUser.displayName || '');
         setBio(savedUser.bio || '');
         setCoachBio(savedUser.coachBio || '');
@@ -512,24 +524,50 @@ export function ProfileEditorPage({ user }: { user: User }) {
                         )}
 
                         <Stack spacing={2}>
-                            <PersonalInfoEditor
-                                user={user}
-                                displayName={displayName}
-                                setDisplayName={setDisplayName}
-                                bio={bio}
-                                setBio={setBio}
-                                coachBio={coachBio}
-                                setCoachBio={setCoachBio}
-                                timezone={timezone}
-                                setTimezone={setTimezone}
-                                language={language}
-                                setLanguage={setLanguage}
-                                profilePictureUrl={profilePictureUrl}
-                                setProfilePictureUrl={setProfilePictureUrl}
-                                setProfilePictureData={setProfilePictureData}
-                                errors={errors}
-                                request={request}
-                            />
+                            <Stack spacing={4}>
+                                <PersonalInfoEditor
+                                    user={user}
+                                    displayName={displayName}
+                                    setDisplayName={setDisplayName}
+                                    bio={bio}
+                                    setBio={setBio}
+                                    coachBio={coachBio}
+                                    setCoachBio={setCoachBio}
+                                    timezone={timezone}
+                                    setTimezone={setTimezone}
+                                    language={language}
+                                    setLanguage={setLanguage}
+                                    profilePictureUrl={profilePictureUrl}
+                                    setProfilePictureUrl={setProfilePictureUrl}
+                                    setProfilePictureData={setProfilePictureData}
+                                    errors={errors}
+                                    request={request}
+                                />
+                                <TextField
+                                    select
+                                    label={tPrivacy('label')}
+                                    value={trainingVisibility}
+                                    onChange={(event) =>
+                                        setTrainingVisibility(
+                                            event.target.value as TrainingVisibility,
+                                        )
+                                    }
+                                    helperText={tPrivacy('helperText')}
+                                >
+                                    <MenuItem value={TrainingVisibility.Public}>
+                                        {tPrivacy('public')}
+                                    </MenuItem>
+                                    <MenuItem value={TrainingVisibility.Private}>
+                                        {tPrivacy('private')}
+                                    </MenuItem>
+                                    <MenuItem value={TrainingVisibility.Members}>
+                                        {tPrivacy('members')}
+                                    </MenuItem>
+                                    <MenuItem value={TrainingVisibility.Mutuals}>
+                                        {tPrivacy('mutuals')}
+                                    </MenuItem>
+                                </TextField>
+                            </Stack>
                             <Stack
                                 direction='row'
                                 spacing={2}
