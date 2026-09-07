@@ -30,6 +30,9 @@ export enum TrainingVisibility {
 
 export interface User {
     trainingVisibility?: TrainingVisibility;
+    showTrainingTotals?: boolean;
+    canViewTrainingTotals?: boolean;
+    cohortDojoScore?: number;
     canViewTraining?: boolean;
 
     username: string;

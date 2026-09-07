@@ -37,6 +37,7 @@ import {
     Button,
     Card,
     CardContent,
+    Checkbox,
     Container,
     Dialog,
     DialogActions,
@@ -44,6 +45,8 @@ import {
     DialogContentText,
     DialogTitle,
     Divider,
+    FormControlLabel,
+    FormHelperText,
     Grid,
     MenuItem,
     Stack,
@@ -171,6 +174,7 @@ export function ProfileEditorPage({ user }: { user: User }) {
     const [coachBio, setCoachBio] = useState(user.coachBio || '');
     const [timezone, setTimezone] = useState(user.timezoneOverride || DefaultTimezone);
     const [language, setLanguage] = useState(user.language || DEFAULT_LOCALE);
+    const [showTrainingTotals, setShowTrainingTotals] = useState(user.showTrainingTotals ?? false);
     const [trainingVisibility, setTrainingVisibility] = useState(
         user.trainingVisibility ?? TrainingVisibility.Public,
     );
@@ -195,6 +199,10 @@ export function ProfileEditorPage({ user }: { user: User }) {
         {
             displayName: displayName.trim(),
             bio: bio === '' && user.bio === undefined ? undefined : bio,
+            showTrainingTotals:
+                showTrainingTotals === (user.showTrainingTotals ?? false)
+                    ? user.showTrainingTotals
+                    : showTrainingTotals,
             trainingVisibility:
                 trainingVisibility === (user.trainingVisibility ?? TrainingVisibility.Public)
                     ? user.trainingVisibility
@@ -311,6 +319,7 @@ export function ProfileEditorPage({ user }: { user: User }) {
     };
 
     const onCancelPersonal = () => {
+        setShowTrainingTotals(user.showTrainingTotals ?? false);
         setTrainingVisibility(user.trainingVisibility ?? TrainingVisibility.Public);
         setDisplayName(user.displayName || '');
         setBio(user.bio || '');
@@ -543,6 +552,25 @@ export function ProfileEditorPage({ user }: { user: User }) {
                                         {tPrivacy('mutuals')}
                                     </MenuItem>
                                 </TextField>
+                                {trainingVisibility !== TrainingVisibility.Public && (
+                                    <Stack>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={showTrainingTotals}
+                                                    onChange={(_, checked) =>
+                                                        setShowTrainingTotals(checked)
+                                                    }
+                                                />
+                                            }
+                                            label={tPrivacy('showTotals')}
+                                            sx={{ mx: 0 }}
+                                        />
+                                        <FormHelperText sx={{ ml: '42px' }}>
+                                            {tPrivacy('totalsHelper')}
+                                        </FormHelperText>
+                                    </Stack>
+                                )}
                             </Stack>
                             <Stack
                                 direction='row'

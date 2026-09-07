@@ -4196,6 +4196,11 @@
         "randomColor": "[PlayMaia.randomColor]"
     },
     "trainingPrivacy": {
+        "showTotals": "[T] Show training time and Dojo points to everyone",
+        "totalsHelper": "[T] Training details remain visible only to your selected audience.",
+        "totalsNotice": "[T] Training totals are shared. Training details are private.",
+        "totalPoints": "[T] Dojo points: {points}",
+        "totalTime": "[T] Training time: {time}",
         "label": "[T] Training visibility",
         "helperText": "[T] Controls your training profile, activity, and progress across the site.",
         "public": "[T] Public",

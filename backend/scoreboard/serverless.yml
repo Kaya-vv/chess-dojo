@@ -64,3 +64,8 @@ functions:
               - ''
               - - ${param:FollowersTableArn}
                 - '/index/FollowingIndex'
+
+      - Effect: Allow
+        Action:
+          - dynamodb:Scan
+        Resource: ${param:RequirementsTableArn}

@@ -21,6 +21,8 @@ const (
 var privacyRepository trainingprivacy.Repository = database.DynamoDB
 
 var repository database.ScoreboardSummaryLister = database.DynamoDB
+var requirementsRepository database.RequirementLister = database.DynamoDB
+
 var stage = os.Getenv("stage")
 
 type GetScoreboardResponse struct {
@@ -109,6 +111,22 @@ func handleCohort(cohort, startKey string) api.Response {
 		return api.Failure(err)
 	}
 
+	var requirements []*database.Requirement
+	for startKey := ""; ; {
+		batch, next, err := requirementsRepository.ListRequirements(database.DojoCohort(cohort), false, startKey)
+		if err != nil {
+			return api.Failure(err)
+		}
+		requirements = append(requirements, batch...)
+		if next == "" {
+			break
+		}
+		startKey = next
+	}
+	for i := range users {
+		score := users[i].CalculateScore(requirements)
+		users[i].CohortDojoScore = &score
+	}
 	return api.Success(&GetScoreboardResponse{
 		Data:             users,
 		LastEvaluatedKey: lastKey,

@@ -3,7 +3,7 @@ import { DataGridPro, type GridColDef, type GridSortCellParams } from '@mui/x-da
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ScoreboardRow } from './scoreboardData';
-import { privateTrainingColumn } from './trainingPrivacy';
+import { isTrainingColumnPrivate, privateTrainingColumn } from './trainingPrivacy';
 
 const visible = { username: 'visible', displayName: 'Visible', totalDojoScore: 20 } as User;
 const hidden = { username: 'hidden', displayName: 'Hidden', canViewTraining: false } as User;
@@ -97,4 +97,26 @@ describe('training scoreboard privacy', () => {
             '20 points',
         );
     });
+});
+
+it('permits aggregate columns but never detail columns for stealth rows', () => {
+    const row = { ...hidden, canViewTrainingTotals: true, totalDojoScore: 42 };
+    for (const field of [
+        'totalDojoScore',
+        'cohortScore',
+        'totalTime',
+        'last7DaysTime',
+        'last30DaysTime',
+        'last90DaysTime',
+        'last365DaysTime',
+    ]) {
+        expect(isTrainingColumnPrivate(row, field)).toBe(false);
+    }
+    for (const field of ['percentComplete', 'nonDojoTime', 'previousCohort', 'task-id']) {
+        expect(isTrainingColumnPrivate(row, field)).toBe(true);
+        const col = privateTrainingColumn({ field });
+        expect(col.renderCell?.({ row } as never)).toBe('Private');
+    }
+    const col = privateTrainingColumn({ field: 'totalDojoScore' });
+    expect(col.valueGetter?.(undefined as never, row, col, {} as never)).toBe(42);
 });

@@ -4196,6 +4196,11 @@
         "randomColor": "Random Color"
     },
     "trainingPrivacy": {
+        "showTotals": "Show training time and Dojo points to everyone",
+        "totalsHelper": "Training details remain visible only to your selected audience.",
+        "totalsNotice": "Training totals are shared. Training details are private.",
+        "totalPoints": "Dojo points: {points}",
+        "totalTime": "Training time: {time}",
         "label": "Training visibility",
         "helperText": "Controls your training profile, activity, and progress across the site.",
         "public": "Public",

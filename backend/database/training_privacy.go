@@ -12,7 +12,7 @@ func (repo *dynamoRepository) GetTrainingPrivacyUser(username string) (*User, er
 	err := repo.getItem(&dynamodb.GetItemInput{
 		TableName: aws.String(userTable), ConsistentRead: aws.Bool(true),
 		Key:                  map[string]*dynamodb.AttributeValue{"username": {S: aws.String(username)}},
-		ProjectionExpression: aws.String("username, trainingVisibility, isAdmin, subscriptionStatus"),
+		ProjectionExpression: aws.String("username, trainingVisibility, showTrainingTotals, isAdmin, subscriptionStatus"),
 	}, user)
 	return user, err
 }
@@ -43,7 +43,7 @@ func (repo *dynamoRepository) GetTrainingPrivacyUsers(usernames []string) ([]*Us
 			keys = append(keys, map[string]*dynamodb.AttributeValue{"username": {S: aws.String(username)}})
 		}
 		result, err := repo.svc.BatchGetItem(&dynamodb.BatchGetItemInput{RequestItems: map[string]*dynamodb.KeysAndAttributes{
-			userTable: {Keys: keys, ConsistentRead: aws.Bool(true), ProjectionExpression: aws.String("username, trainingVisibility, isAdmin, subscriptionStatus")},
+			userTable: {Keys: keys, ConsistentRead: aws.Bool(true), ProjectionExpression: aws.String("username, trainingVisibility, showTrainingTotals, isAdmin, subscriptionStatus")},
 		}})
 		if err != nil {
 			return nil, errors.Wrap(500, "Unable to check training visibility", "BatchGetItem failed", err)
