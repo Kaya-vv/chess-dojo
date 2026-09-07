@@ -10,7 +10,7 @@ import (
 type privateRepository struct{}
 
 func (privateRepository) GetTrainingPrivacyUser(name string) (*database.User, error) {
-	return &database.User{Username: name, TrainingVisibility: database.TrainingVisibilityPrivate}, nil
+	return &database.User{Username: name, TrainingVisibility: database.TrainingVisibilityPrivate, ShowTrainingTotals: true}, nil
 }
 func (privateRepository) GetTrainingPrivacyFollower(string, string) (*database.FollowerEntry, error) {
 	return nil, nil

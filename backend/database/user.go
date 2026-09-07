@@ -186,6 +186,8 @@ func (v TrainingVisibility) Valid() bool {
 }
 
 type User struct {
+	ShowTrainingTotals bool               `dynamodbav:"showTrainingTotals,omitempty" json:"showTrainingTotals,omitempty"`
+	CohortDojoScore    *float32           `dynamodbav:"-" json:"cohortDojoScore,omitempty"`
 	TrainingVisibility TrainingVisibility `dynamodbav:"trainingVisibility,omitempty" json:"trainingVisibility,omitempty"`
 
 	// The user's Cognito username. Uniquely identifies a user
@@ -760,6 +762,7 @@ func (u *User) GetIsCalendarAdmin() bool {
 // Some fields from the User type are removed as they cannot be updated. Other fields
 // are ignored by the json encoder because they cannot be manually updated by the user.
 type UserUpdate struct {
+	ShowTrainingTotals *bool               `dynamodbav:"showTrainingTotals,omitempty" json:"showTrainingTotals,omitempty"`
 	TrainingVisibility *TrainingVisibility `dynamodbav:"trainingVisibility,omitempty" json:"trainingVisibility,omitempty"`
 
 	// The user's preferred display name on the site

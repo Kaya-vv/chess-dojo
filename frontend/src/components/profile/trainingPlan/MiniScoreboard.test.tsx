@@ -1,5 +1,5 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MiniScoreboard } from './MiniScoreboard';
 
 const { getScoreboard, viewer } = vi.hoisted(() => ({
@@ -19,6 +19,8 @@ vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }));
 vi.mock('@/profile/Avatar', () => ({ default: () => null }));
 vi.mock('@/scoreboard/CohortIcon', () => ({ default: () => null }));
 vi.mock('@/components/navigation/Link', () => ({ Link: 'a' }));
+
+afterEach(cleanup);
 
 describe('mini scoreboard privacy', () => {
     beforeEach(() => getScoreboard.mockReset());
@@ -46,4 +48,42 @@ describe('mini scoreboard privacy', () => {
         expect(screen.getByText('My profile')).toBeInTheDocument();
         expect(screen.getByText('#7')).toBeInTheDocument();
     });
+});
+
+it('ranks stealth profiles without progress using lifetime time only', async () => {
+    getScoreboard.mockResolvedValue([
+        {
+            username: 'stealth',
+            displayName: 'Stealth player',
+            canViewTraining: false,
+            canViewTrainingTotals: true,
+            totalDojoScore: 100,
+            minutesSpent: { ALL_COHORTS_ALL_TIME: 120 },
+        },
+        {
+            username: 'visible',
+            displayName: 'Visible player',
+            progress: {},
+            totalDojoScore: 50,
+            minutesSpent: {
+                ALL_COHORTS_ALL_TIME: 60,
+                ALL_TIME: 60,
+                LAST_7_DAYS: 60,
+                LAST_30_DAYS: 60,
+            },
+        },
+        {
+            username: 'hidden',
+            displayName: 'Hidden player',
+            canViewTraining: false,
+            totalDojoScore: 999,
+        },
+    ]);
+    render(<MiniScoreboard cohort='1200-1300' />);
+    await waitFor(() => expect(screen.getByText('Stealth player')).toBeInTheDocument());
+    expect(screen.queryByText('Hidden player')).not.toBeInTheDocument();
+    fireEvent.mouseDown(screen.getByRole('combobox'));
+    fireEvent.click(screen.getByRole('option', { name: /time/i }));
+    await waitFor(() => expect(screen.getByText('2h 0m')).toBeInTheDocument());
+    expect(screen.getByText('1h 0m')).toBeInTheDocument();
 });

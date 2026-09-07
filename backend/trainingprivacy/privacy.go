@@ -95,6 +95,19 @@ func (a *Access) canView(owner string) (bool, error) {
 	}
 }
 
+// CanViewTotals never grants access to task-level data.
+func (a *Access) CanViewTotals(owner string) (bool, error) {
+	allowed, err := a.CanView(owner)
+	if err != nil || allowed {
+		return allowed, err
+	}
+	u, err := a.user(owner)
+	if err != nil {
+		return false, err
+	}
+	return u != nil && u.TrainingVisibility.Valid() && u.ShowTrainingTotals, nil
+}
+
 func (a *Access) Require(owner string) error {
 	if owner == "" {
 		return errors.New(400, "Owner is required", "")
@@ -120,7 +133,7 @@ func NoStore(response api.Response) api.Response {
 
 // Training fields are omitted at the serialization boundary, never zeroed on stored users.
 var trainingFields = []string{
-	"progress", "customTasks", "pinnedTasks", "openingProgress", "minutesSpent", "totalDojoScore",
+	"cohortDojoScore", "progress", "customTasks", "pinnedTasks", "openingProgress", "minutesSpent", "totalDojoScore",
 	"numberOfGraduations", "previousCohort", "graduationCohorts", "lastGraduatedAt", "gamesCreated",
 	"workGoal", "workGoalHistory", "weeklyPlan", "gameSchedule", "timerSeconds", "timerStartedAt", "timerTaskId",
 	"exams", "puzzles", "squareColorRating", "mateInOneRating", "timeManagementRating", "sentMilestoneNotifications",
@@ -136,8 +149,28 @@ func (a *Access) redactUser(user map[string]any) error {
 		return err
 	}
 	user["canViewTraining"] = allowed
+	totalsAllowed, err := a.CanViewTotals(owner)
+	if err != nil {
+		return err
+	}
+	user["canViewTrainingTotals"] = totalsAllowed
 	if !allowed {
 		for _, field := range trainingFields {
+			if totalsAllowed && (field == "totalDojoScore" || field == "cohortDojoScore") {
+				continue
+			}
+			if totalsAllowed && field == "minutesSpent" {
+				totals := map[string]any{}
+				if minutes, ok := user[field].(map[string]any); ok {
+					for _, key := range []string{"ALL_TIME", "LAST_7_DAYS", "LAST_30_DAYS", "LAST_90_DAYS", "LAST_365_DAYS", "ALL_COHORTS_ALL_TIME", "ALL_COHORTS_LAST_7_DAYS", "ALL_COHORTS_LAST_30_DAYS", "ALL_COHORTS_LAST_90_DAYS", "ALL_COHORTS_LAST_365_DAYS"} {
+						if value, ok := minutes[key]; ok {
+							totals[key] = value
+						}
+					}
+				}
+				user[field] = totals
+				continue
+			}
 			delete(user, field)
 		}
 	}

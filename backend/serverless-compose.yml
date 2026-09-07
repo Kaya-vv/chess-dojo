@@ -47,6 +47,7 @@ services:
   scoreboard:
     path: scoreboard
     params:
+      RequirementsTableArn: ${chess-dojo-scheduler.RequirementsTableArn}
       httpApiId: ${chess-dojo-scheduler.HttpApiId}
       apiAuthorizer: ${chess-dojo-scheduler.serviceAuthorizer}
       UsersTableArn: ${chess-dojo-scheduler.UsersTableArn}

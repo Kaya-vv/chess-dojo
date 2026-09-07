@@ -39,7 +39,17 @@ import {
     Timeline,
 } from '@mui/icons-material';
 import { TabContext, TabPanel } from '@mui/lab';
-import { Alert, Box, Chip, Container, Stack, Tab, Tabs, useMediaQuery } from '@mui/material';
+import {
+    Alert,
+    Box,
+    Chip,
+    Container,
+    Stack,
+    Tab,
+    Tabs,
+    Typography,
+    useMediaQuery,
+} from '@mui/material';
 import { useTranslations } from 'next-intl';
 import { ReactNode, useEffect, type JSX } from 'react';
 
@@ -63,6 +73,7 @@ export function ProfilePage({ username }: { username?: string }) {
 
 function AuthProfilePage({ currentUser, username }: { currentUser: User; username?: string }) {
     const t = useTranslations('profile.profilePage');
+    const tCommon = useTranslations('common');
     const tPrivacy = useTranslations('trainingPrivacy');
     const api = useApi();
     const request = useRequest<User>();
@@ -298,7 +309,39 @@ function AuthProfilePage({ currentUser, username }: { currentUser: User; usernam
 
                 <Stack spacing={2} sx={{ gridArea: 'userInfo' }}>
                     <UserCard user={user} setFollowerCount={setFollowerCount} />
-                    {!canViewTraining && <Alert severity='info'>{tPrivacy('denied')}</Alert>}
+                    {!canViewTraining && (
+                        <>
+                            {user.canViewTrainingTotals && (
+                                <Stack
+                                    spacing={1}
+                                    sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}
+                                >
+                                    <Typography>
+                                        {tPrivacy('totalPoints', {
+                                            points:
+                                                Math.round((user.totalDojoScore ?? 0) * 100) / 100,
+                                        })}
+                                    </Typography>
+                                    <Typography>
+                                        {tPrivacy('totalTime', {
+                                            time: tCommon('timeHours', {
+                                                hours:
+                                                    Math.round(
+                                                        ((user.minutesSpent?.ALL_COHORTS_ALL_TIME ??
+                                                            0) /
+                                                            60) *
+                                                            10,
+                                                    ) / 10,
+                                            }),
+                                        })}
+                                    </Typography>
+                                </Stack>
+                            )}
+                            <Alert severity='info'>
+                                {tPrivacy(user.canViewTrainingTotals ? 'totalsNotice' : 'denied')}
+                            </Alert>
+                        </>
+                    )}
                 </Stack>
 
                 {canViewTraining && !isSmall && (
