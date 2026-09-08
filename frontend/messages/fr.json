@@ -3545,6 +3545,10 @@
             }
         },
         "boardButtons": {
+            "hideLeftPanel": "Masquer le panneau gauche",
+            "showLeftPanel": "Afficher le panneau gauche",
+            "hideRightPanel": "Masquer le panneau droit",
+            "showRightPanel": "Afficher le panneau droit",
             "firstMove": "Premier coup",
             "firstMoveAria": "premier coup",
             "previousMove": "Coup précédent",

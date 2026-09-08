@@ -26,6 +26,7 @@ function getExplorerStorageKey(prefix: string | undefined, side: 'left' | 'right
 }
 
 interface ResizableContainerProps {
+    allowPanelHiding?: boolean;
     underboardTabs: UnderboardTab[];
     initialUnderboardTab?: string;
     rightTabs?: UnderboardTab[];
@@ -40,6 +41,7 @@ interface ResizableContainerProps {
 }
 
 const ResizableContainer: React.FC<ResizableContainerProps> = ({
+    allowPanelHiding = false,
     underboardTabs,
     initialUnderboardTab,
     rightTabs,
@@ -53,15 +55,24 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
     onInitialize,
 }) => {
     const underboardRef = useRef<UnderboardApi>(null);
-    const showUnderboard = underboardTabs.length > 0;
+    const hasLeftPanel = underboardTabs.length > 0;
+    const hasRightPanel = rightTabs === undefined || rightTabs.length > 0;
+    const [leftVisible, setLeftVisible] = useState(true);
+    const [rightVisible, setRightVisible] = useState(true);
+    const showUnderboard = hasLeftPanel && (!allowPanelHiding || leftVisible);
+    const showPgn = hasRightPanel && (!allowPanelHiding || rightVisible);
+    const showPanelControls = allowPanelHiding && (hasLeftPanel || hasRightPanel);
 
     const [sizes, setSizes] = useState<AreaSizes | null>(null);
 
     const calcSizes = useCallback(() => {
         const parentWidth = getParentWidth();
 
-        return getSizes(parentWidth, showUnderboard, !showPlayerHeaders);
-    }, [showUnderboard, showPlayerHeaders]);
+        return getSizes(parentWidth, showUnderboard, !showPlayerHeaders, {
+            showPgn,
+            showPanelControls,
+        });
+    }, [showUnderboard, showPlayerHeaders, showPgn, showPanelControls]);
 
     const onWindowResize = useCallback(() => {
         setSizes(calcSizes());
@@ -85,10 +96,11 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
                         [area]: { ...sizes[area], width, height },
                     },
                     !showPlayerHeaders,
+                    { showPgn, showPanelControls },
                 );
             });
         },
-        [setSizes, calcSizes, showPlayerHeaders],
+        [setSizes, calcSizes, showPlayerHeaders, showPgn, showPanelControls],
     );
 
     if (!sizes) {
@@ -111,8 +123,10 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
         >
             <KeyboardHandler underboardRef={underboardRef} />
 
-            {showUnderboard && (
+            {hasLeftPanel && (
                 <Underboard
+                    hidden={!showUnderboard}
+                    onReveal={() => setLeftVisible(true)}
                     ref={underboardRef}
                     tabs={underboardTabs}
                     initialTab={initialUnderboardTab}
@@ -135,11 +149,29 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
                     startOrientation,
                     onInitialize,
                     underboardRef,
+                    panelControls: showPanelControls
+                        ? {
+                              left: hasLeftPanel
+                                  ? {
+                                        visible: showUnderboard,
+                                        onToggle: () => setLeftVisible((value) => !value),
+                                    }
+                                  : undefined,
+                              right: hasRightPanel
+                                  ? {
+                                        visible: showPgn,
+                                        onToggle: () => setRightVisible((value) => !value),
+                                    }
+                                  : undefined,
+                          }
+                        : undefined,
                 }}
             />
 
             {rightTabs ? (
                 <Underboard
+                    hidden={!showPgn}
+                    onReveal={() => setRightVisible(true)}
                     tabs={rightTabs}
                     initialTab={initialRightTab}
                     resizeData={sizes.pgn}
@@ -151,7 +183,11 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
                     sidePanelTabs={sidePanelTabs}
                 />
             ) : (
-                <ResizablePgnText resizeData={sizes.pgn} onResize={onResize('pgn')} />
+                <ResizablePgnText
+                    hidden={!showPgn}
+                    resizeData={sizes.pgn}
+                    onResize={onResize('pgn')}
+                />
             )}
         </Stack>
     );

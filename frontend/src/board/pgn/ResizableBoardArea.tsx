@@ -4,11 +4,12 @@ import { ResizeCallbackData } from 'react-resizable';
 import Board, { onInitializeFunc } from '../Board';
 import { useChess } from './PgnBoard';
 import PlayerHeader from './PlayerHeader';
-import BoardButtons from './boardTools/boardButtons/BoardButtons';
+import BoardButtons, { PanelControls } from './boardTools/boardButtons/BoardButtons';
 import { UnderboardApi } from './boardTools/underboard/Underboard';
 import { ResizableData } from './resize';
 
 interface ResizableBoardAreaProps {
+    panelControls?: PanelControls;
     resizeData: ResizableData;
     onResize: (width: number, height: number) => void;
     hideResize?: boolean;
@@ -21,6 +22,7 @@ interface ResizableBoardAreaProps {
 }
 
 const ResizableBoardArea: React.FC<ResizableBoardAreaProps> = ({
+    panelControls,
     resizeData,
     onResize,
     hideResize,
@@ -60,7 +62,7 @@ const ResizableBoardArea: React.FC<ResizableBoardAreaProps> = ({
 
             {showPlayerHeaders && <PlayerHeader type='footer' />}
 
-            <BoardButtons underboardRef={underboardRef} />
+            <BoardButtons underboardRef={underboardRef} panelControls={panelControls} />
         </Stack>
     );
 };

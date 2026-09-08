@@ -3545,6 +3545,10 @@
             }
         },
         "boardButtons": {
+            "hideLeftPanel": "Nascondi pannello sinistro",
+            "showLeftPanel": "Mostra pannello sinistro",
+            "hideRightPanel": "Nascondi pannello destro",
+            "showRightPanel": "Mostra pannello destro",
             "firstMove": "Prima mossa",
             "firstMoveAria": "prima mossa",
             "previousMove": "Mossa precedente",

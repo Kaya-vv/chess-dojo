@@ -3545,6 +3545,10 @@
             }
         },
         "boardButtons": {
+            "hideLeftPanel": "[Ĥïđë ľëƒŧ þåñëľ]",
+            "showLeftPanel": "[Šĥöŵ ľëƒŧ þåñëľ]",
+            "hideRightPanel": "[Ĥïđë řïĝĥŧ þåñëľ]",
+            "showRightPanel": "[Šĥöŵ řïĝĥŧ þåñëľ]",
             "firstMove": "[T] First Move",
             "firstMoveAria": "[T] first move",
             "previousMove": "[T] Previous Move",
