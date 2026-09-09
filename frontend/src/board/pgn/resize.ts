@@ -15,8 +15,6 @@ const controlsHeight = 40;
 const controlsMargin = 8;
 const margin = 64;
 
-export const PANEL_CONTROLS_HEIGHT = 40;
-
 export interface PanelLayoutOptions {
     showPgn?: boolean;
     showPanelControls?: boolean;
@@ -101,8 +99,7 @@ function xsSizes(
                     controlsHeight -
                     controlsMargin -
                     playerHeadersHeight -
-                    16 -
-                    (showPanelControls ? PANEL_CONTROLS_HEIGHT : 0),
+                    16,
             ),
             minHeight: 200,
             maxHeight: Infinity,
@@ -137,7 +134,7 @@ function smSizes(
         ? Math.min(preferredBoardSize, getMaxBoardHeight(hidePlayerHeaders, showPanelControls))
         : preferredBoardSize;
     const pgnWidth = availableWidth - boardSize;
-    const boardAreaHeight = getBoardAreaHeight(boardSize, hidePlayerHeaders, showPanelControls);
+    const boardAreaHeight = getBoardAreaHeight(boardSize, hidePlayerHeaders);
 
     return {
         breakpoint: 'sm',
@@ -292,19 +289,9 @@ export function getNewSizes(
     };
 }
 
-function getBoardAreaHeight(
-    boardSize: number,
-    hidePlayerHeaders?: boolean,
-    showPanelControls?: boolean,
-): number {
+function getBoardAreaHeight(boardSize: number, hidePlayerHeaders?: boolean): number {
     const playerHeadersHeight = hidePlayerHeaders ? 0 : 2 * playerHeaderHeight;
-    return (
-        boardSize +
-        playerHeadersHeight +
-        controlsHeight +
-        controlsMargin +
-        (showPanelControls ? PANEL_CONTROLS_HEIGHT : 0)
-    );
+    return boardSize + playerHeadersHeight + controlsHeight + controlsMargin;
 }
 
 function getMaxBoardHeight(hidePlayerHeaders?: boolean, showPanelControls?: boolean): number {
@@ -316,8 +303,7 @@ function getMaxBoardHeight(hidePlayerHeaders?: boolean, showPanelControls?: bool
             playerHeadersHeight -
             controlsHeight -
             controlsMargin -
-            margin -
-            (showPanelControls ? PANEL_CONTROLS_HEIGHT : 0),
+            margin,
     );
 }
 

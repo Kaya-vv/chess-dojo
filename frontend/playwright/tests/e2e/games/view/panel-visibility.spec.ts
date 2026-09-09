@@ -51,7 +51,7 @@ test.beforeEach(async ({ page }) => {
     );
 });
 
-for (const width of [1400, 390]) {
+for (const width of [2463, 1400, 390]) {
     for (const route of ['/games/analysis', '/games/1500-1600/panel-visibility']) {
         test(`${route}: hide and restore at ${width}px`, async ({ page }) => {
             await page.setViewportSize({ width, height: 1000 });
@@ -63,6 +63,35 @@ for (const width of [1400, 390]) {
             const boardElement = await page.getByTestId('chessground-board').elementHandle();
             if (!boardElement) throw new Error('Expected a mounted board');
             const originalWidth = (await boardBounds(board)).width;
+            const originalLeftWidth = (await boardBounds(left)).width;
+            const originalRightWidth = (await boardBounds(right)).width;
+            const leftToggle = await boardBounds(
+                page.getByRole('button', { name: 'Hide left panel', exact: true }),
+            );
+            const rightToggle = await boardBounds(
+                page.getByRole('button', { name: 'Hide right panel', exact: true }),
+            );
+            const nextButton = await boardBounds(
+                page.getByRole('button', { name: 'next move', exact: true }),
+            );
+            const boardRect = await boardBounds(board);
+            expect(
+                Math.abs(nextButton.x + nextButton.width / 2 - boardRect.x - boardRect.width / 2),
+            ).toBeLessThan(3);
+            expect(Math.abs(leftToggle.y - rightToggle.y)).toBeLessThan(2);
+            expect(leftToggle.x).toBeGreaterThanOrEqual(boardRect.x);
+            expect(rightToggle.x + rightToggle.width).toBeLessThanOrEqual(
+                boardRect.x + boardRect.width + 1,
+            );
+            if (originalWidth >= 480) {
+                expect(
+                    Math.abs(
+                        nextButton.y + nextButton.height / 2 - leftToggle.y - leftToggle.height / 2,
+                    ),
+                ).toBeLessThan(2);
+            } else {
+                expect(nextButton.y).toBeGreaterThanOrEqual(leftToggle.y + leftToggle.height);
+            }
             await page.getByRole('button', { name: 'next move', exact: true }).click();
             const selectedMove = right.locator(
                 '[data-testid="pgn-text-move-button"].MuiButton-contained',
@@ -75,13 +104,27 @@ for (const width of [1400, 390]) {
             await page.getByRole('button', { name: 'Hide left panel', exact: true }).click();
             await expect(left).toBeHidden();
             await expect(right).toBeVisible();
-            if (width >= 900)
-                await expect
-                    .poll(async () => (await boardBounds(board)).width)
-                    .toBeGreaterThan(originalWidth);
+            await expect
+                .poll(async () => (await boardBounds(board)).width)
+                .toBeCloseTo(originalWidth, 0);
+            await expect
+                .poll(async () => (await boardBounds(right)).width)
+                .toBeCloseTo(originalRightWidth, 0);
+            if (width >= 900) {
+                const boardRect = await boardBounds(board);
+                const rightRect = await boardBounds(right);
+                expect(
+                    Math.abs((boardRect.x + rightRect.x + rightRect.width) / 2 - width / 2),
+                ).toBeLessThan(3);
+                await page.screenshot({
+                    path: test.info().outputPath('right-panel-only.png'),
+                    fullPage: true,
+                });
+            }
             await page.getByRole('button', { name: 'Hide right panel', exact: true }).click();
             await expect(right).toBeHidden();
             const bounds = await boardBounds(board);
+            expect(bounds.width).toBeCloseTo(originalWidth, 0);
             expect(Math.abs(bounds.x + bounds.width / 2 - width / 2)).toBeLessThan(3);
             expect(await boardElement.evaluate((element) => element.isConnected)).toBe(true);
             await expect(page.getByTestId('chessground-board')).toHaveClass(/orientation-black/);
@@ -102,13 +145,19 @@ for (const width of [1400, 390]) {
                     .toBeLessThan(bounds.width - 50);
             }
 
+            const resizedWidth = (await boardBounds(board)).width;
             await page.getByRole('button', { name: 'Show right panel', exact: true }).click();
             await expect(selectedMove).toHaveText(moveText);
             await page.getByRole('button', { name: 'Show left panel', exact: true }).click();
             await expect(left).toBeVisible();
             await expect
                 .poll(async () => (await boardBounds(board)).width)
-                .toBeCloseTo(originalWidth, 0);
+                .toBeCloseTo(resizedWidth, 0);
+            expect((await boardBounds(left)).width).toBeCloseTo(originalLeftWidth, 0);
+            expect((await boardBounds(right)).width).toBeCloseTo(originalRightWidth, 0);
+            await page.getByRole('button', { name: 'Hide right panel', exact: true }).click();
+            expect((await boardBounds(left)).width).toBeCloseTo(originalLeftWidth, 0);
+            expect((await boardBounds(board)).width).toBeCloseTo(resizedWidth, 0);
         });
     }
 }

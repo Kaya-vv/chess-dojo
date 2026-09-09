@@ -6,7 +6,6 @@ import ViewSidebarOutlined from '@mui/icons-material/ViewSidebarOutlined';
 import { Box, IconButton, Paper, Stack, Tooltip } from '@mui/material';
 import { useTranslations } from 'next-intl';
 import { useChess } from '../../PgnBoard';
-import { PANEL_CONTROLS_HEIGHT } from '../../resize';
 import { UnderboardApi } from '../underboard/Underboard';
 import ControlButtons from './ControlButtons';
 import StartButtons from './StartButtons';
@@ -20,14 +19,42 @@ export interface PanelControls {
 const BoardButtons = ({
     underboardRef,
     panelControls,
+    boardWidth = Infinity,
 }: {
     underboardRef?: React.RefObject<UnderboardApi | null>;
     panelControls?: PanelControls;
+    boardWidth?: number;
 }) => {
     const t = useTranslations('analysisBoard.boardButtons');
     const light = useLightMode();
     const { game, isOwner: isGameOwner, unsaved } = useGame();
     const { chess } = useChess();
+
+    const panelToggle = (side: 'left' | 'right') => {
+        const control = panelControls?.[side];
+        if (!control) return null;
+        const label =
+            side === 'left'
+                ? t(control.visible ? 'hideLeftPanel' : 'showLeftPanel')
+                : t(control.visible ? 'hideRightPanel' : 'showRightPanel');
+        return (
+            <Tooltip title={label}>
+                <IconButton
+                    size='small'
+                    aria-label={label}
+                    aria-expanded={control.visible}
+                    onClick={control.onToggle}
+                >
+                    <ViewSidebarOutlined
+                        sx={{
+                            color: 'text.secondary',
+                            transform: side === 'left' ? 'scaleX(-1)' : undefined,
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+        );
+    };
 
     return (
         <Paper
@@ -48,57 +75,39 @@ const BoardButtons = ({
                     alignItems: 'center',
                     flexWrap: 'wrap',
                     position: 'relative',
+                    ...(panelControls && {
+                        display: 'grid',
+                        gridTemplateColumns:
+                            boardWidth < 480 ? '1fr 1fr' : 'minmax(0, 1fr) auto minmax(0, 1fr)',
+                        gridTemplateAreas:
+                            boardWidth < 480 ? '"start end" "moves moves"' : '"start moves end"',
+                    }),
                 }}
             >
-                <StartButtons />
-                <ControlButtons />
-                {game && isGameOwner ? (
-                    <Stack direction='row'>
-                        <VisibilityIcon underboardRef={underboardRef} />
-                        <StatusIcon game={game} />
-                    </Stack>
-                ) : unsaved ? (
-                    <UnsavedGameIcon />
-                ) : (
-                    <Box sx={{ width: '40px' }}></Box>
-                )}
-            </Stack>
-            {panelControls && (
+                <Stack direction='row' sx={{ gridArea: 'start', alignItems: 'center' }}>
+                    {panelToggle('left')}
+                    <StartButtons />
+                </Stack>
+                <Box sx={{ gridArea: 'moves', display: 'flex', justifyContent: 'center' }}>
+                    <ControlButtons />
+                </Box>
                 <Stack
                     direction='row'
-                    sx={{
-                        height: PANEL_CONTROLS_HEIGHT,
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                    }}
+                    sx={{ gridArea: 'end', alignItems: 'center', justifyContent: 'flex-end' }}
                 >
-                    {(['left', 'right'] as const).map((side) => {
-                        const control = panelControls[side];
-                        if (!control) return null;
-                        const label =
-                            side === 'left'
-                                ? t(control.visible ? 'hideLeftPanel' : 'showLeftPanel')
-                                : t(control.visible ? 'hideRightPanel' : 'showRightPanel');
-                        return (
-                            <Tooltip key={side} title={label}>
-                                <IconButton
-                                    size='small'
-                                    aria-label={label}
-                                    aria-expanded={control.visible}
-                                    onClick={control.onToggle}
-                                    sx={{ ml: side === 'right' ? 'auto' : 0 }}
-                                >
-                                    <ViewSidebarOutlined
-                                        sx={{
-                                            transform: side === 'left' ? 'scaleX(-1)' : undefined,
-                                        }}
-                                    />
-                                </IconButton>
-                            </Tooltip>
-                        );
-                    })}
+                    {game && isGameOwner ? (
+                        <Stack direction='row'>
+                            <VisibilityIcon underboardRef={underboardRef} />
+                            <StatusIcon game={game} />
+                        </Stack>
+                    ) : unsaved ? (
+                        <UnsavedGameIcon />
+                    ) : (
+                        <Box sx={{ width: '40px' }}></Box>
+                    )}
+                    {panelToggle('right')}
                 </Stack>
-            )}
+            </Stack>
         </Paper>
     );
 };

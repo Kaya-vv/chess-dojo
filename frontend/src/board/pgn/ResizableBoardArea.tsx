@@ -62,7 +62,11 @@ const ResizableBoardArea: React.FC<ResizableBoardAreaProps> = ({
 
             {showPlayerHeaders && <PlayerHeader type='footer' />}
 
-            <BoardButtons underboardRef={underboardRef} panelControls={panelControls} />
+            <BoardButtons
+                underboardRef={underboardRef}
+                panelControls={panelControls}
+                boardWidth={resizeData.width}
+            />
         </Stack>
     );
 };

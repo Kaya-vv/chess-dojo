@@ -103,9 +103,7 @@ describe('ResizableContainer side panels', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Hide left panel' }));
         expect(draft).not.toBeVisible();
         expect(screen.getAllByTestId('underboard-panel')[1]).toBeVisible();
-        expect(Number(screen.getByTestId('board-area').dataset.width)).toBeGreaterThan(
-            initialWidth,
-        );
+        expect(Number(screen.getByTestId('board-area').dataset.width)).toBe(initialWidth);
         fireEvent.click(screen.getByRole('button', { name: 'Hide right panel' }));
         expect(screen.getByRole('button', { name: 'Show right panel' })).toHaveAttribute(
             'aria-expanded',

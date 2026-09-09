@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { getNewSizes, getSizes, PANEL_CONTROLS_HEIGHT } from './resize';
+import { getNewSizes, getSizes } from './resize';
 
 describe('collapsible panel sizing', () => {
     beforeEach(() => {
@@ -55,7 +55,7 @@ describe('collapsible panel sizing', () => {
         }
     }
 
-    it('grows as desktop panels are removed, symmetrically for either side', () => {
+    it('allocates initial desktop sizes based on available panels, symmetrically for either side', () => {
         window.innerHeight = 2000;
         const both = getSizes(1200, true, false, { showPanelControls: true });
         const leftOnly = getSizes(1200, true, false, { showPgn: false, showPanelControls: true });
@@ -71,17 +71,15 @@ describe('collapsible panel sizing', () => {
         window.innerHeight = 400;
         const sizes = getSizes(width, true, false, { showPanelControls: true });
         const withoutHeaders = getSizes(width, true, true, { showPanelControls: true });
-        expect(sizes.board.width).toBeCloseTo(
-            400 - 80 - 64 - 48 - 2 * 27.9833 - PANEL_CONTROLS_HEIGHT,
-        );
+        expect(sizes.board.width).toBeCloseTo(400 - 80 - 64 - 48 - 2 * 27.9833);
         expect(sizes.board.minWidth).toBeLessThanOrEqual(sizes.board.maxWidth);
         expect(withoutHeaders.board.width - sizes.board.width).toBeCloseTo(2 * 27.9833);
     });
 
-    it('reserves the control row without changing legacy callers', () => {
+    it('uses the existing toolbar height without adding a row', () => {
         const legacy = getSizes(1800, true, false);
         const controls = getSizes(1800, true, false, { showPanelControls: true });
-        expect(legacy.board.maxHeight - controls.board.maxHeight).toBe(PANEL_CONTROLS_HEIGHT);
+        expect(legacy.board.maxHeight - controls.board.maxHeight).toBe(0);
         expect(getSizes(800, true, false).board.width).toBe((800 - 6 - 4) * 0.66);
     });
 });

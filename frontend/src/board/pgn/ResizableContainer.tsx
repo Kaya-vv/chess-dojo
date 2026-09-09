@@ -68,11 +68,12 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
     const calcSizes = useCallback(() => {
         const parentWidth = getParentWidth();
 
-        return getSizes(parentWidth, showUnderboard, !showPlayerHeaders, {
-            showPgn,
+        // Visibility only changes which panels occupy the layout, not their saved dimensions.
+        return getSizes(parentWidth, hasLeftPanel, !showPlayerHeaders, {
+            showPgn: hasRightPanel,
             showPanelControls,
         });
-    }, [showUnderboard, showPlayerHeaders, showPgn, showPanelControls]);
+    }, [hasLeftPanel, showPlayerHeaders, hasRightPanel, showPanelControls]);
 
     const onWindowResize = useCallback(() => {
         setSizes(calcSizes());
@@ -96,11 +97,11 @@ const ResizableContainer: React.FC<ResizableContainerProps> = ({
                         [area]: { ...sizes[area], width, height },
                     },
                     !showPlayerHeaders,
-                    { showPgn, showPanelControls },
+                    { showPgn: hasRightPanel, showPanelControls },
                 );
             });
         },
-        [setSizes, calcSizes, showPlayerHeaders, showPgn, showPanelControls],
+        [setSizes, calcSizes, showPlayerHeaders, hasRightPanel, showPanelControls],
     );
 
     if (!sizes) {
