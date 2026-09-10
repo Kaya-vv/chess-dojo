@@ -20,6 +20,45 @@ export interface PanelLayoutOptions {
     showPanelControls?: boolean;
 }
 
+export const RESTORE_GUTTER_WIDTH = 36;
+
+/** Fit the board without changing the normal layout or the visible panels' widths. */
+export function getFittedSizes(
+    sizes: AreaSizes,
+    parentWidth: number,
+    showUnderboard: boolean,
+    showPgn: boolean,
+): AreaSizes {
+    const leftInRow = showUnderboard && sizes.breakpoint === 'md';
+    const rightInRow = showPgn && sizes.breakpoint !== 'xs';
+    const panelCount = Number(leftInRow) + Number(rightInRow);
+    const availableWidth = parentWidth - sizes.padding;
+    const boardSize = Math.max(
+        1,
+        Math.min(
+            availableWidth -
+                RESTORE_GUTTER_WIDTH -
+                panelCount * sizes.spacing -
+                (leftInRow ? sizes.underboard.width : 0) -
+                (rightInRow ? sizes.pgn.width : 0),
+            getMaxBoardAreaHeight(),
+        ),
+    );
+    return {
+        ...sizes,
+        availableWidth,
+        board: {
+            ...sizes.board,
+            width: boardSize,
+            height: boardSize,
+            minWidth: boardSize,
+            maxWidth: boardSize,
+            minHeight: boardSize,
+            maxHeight: boardSize,
+        },
+    };
+}
+
 const hiddenPanel: ResizableData = {
     width: 0,
     height: 0,

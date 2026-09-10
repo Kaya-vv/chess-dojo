@@ -162,6 +162,61 @@ for (const width of [2463, 1400, 390]) {
     }
 }
 
+for (const viewport of [
+    { width: 1400, height: 800 },
+    { width: 700, height: 900 },
+    { width: 390, height: 400 },
+]) {
+    for (const route of ['/games/analysis', '/games/1500-1600/panel-visibility']) {
+        test(`${route}: fits hidden bars at ${viewport.width}x${viewport.height}`, async ({
+            page,
+        }) => {
+            await page.setViewportSize(viewport);
+            await page.goto(route);
+            const board = page.locator('cg-board');
+            await expect(board).toBeVisible();
+            await page.getByRole('button', { name: 'Hide left panel', exact: true }).click();
+            await page.getByRole('button', { name: 'Hide right panel', exact: true }).click();
+            const before = await boardBounds(board);
+            const boardElement = await page.getByTestId('chessground-board').elementHandle();
+            await page
+                .getByRole('button', { name: 'Hide player bars and controls', exact: true })
+                .click();
+            const restore = page.getByRole('button', {
+                name: 'Show player bars and controls',
+                exact: true,
+            });
+            await expect(restore).toBeFocused();
+            await expect(page.getByRole('button', { name: 'next move', exact: true })).toBeHidden();
+            const fitted = await boardBounds(board);
+            const restoreBounds = await boardBounds(restore);
+            expect(fitted.width).toBeCloseTo(fitted.height, 0);
+            expect(fitted.y + fitted.height).toBeLessThanOrEqual(viewport.height);
+            expect(restoreBounds.x).toBeGreaterThanOrEqual(fitted.x + fitted.width);
+            expect(restoreBounds.x + restoreBounds.width).toBeLessThanOrEqual(viewport.width);
+            if (viewport.width === 1400) expect(fitted.width).toBeGreaterThan(before.width);
+            expect(await boardElement?.evaluate((element) => element.isConnected)).toBe(true);
+            await page.keyboard.press('f');
+            await expect(page.getByTestId('chessground-board')).toHaveClass(/orientation-black/);
+            expect(
+                await page.evaluate(
+                    () => document.documentElement.scrollWidth <= window.innerWidth,
+                ),
+            ).toBe(true);
+            await page.screenshot({
+                path: test.info().outputPath('hidden-bars.png'),
+                fullPage: true,
+            });
+            await restore.click();
+            await expect(
+                page.getByRole('button', { name: 'Hide player bars and controls', exact: true }),
+            ).toBeFocused();
+            expect((await boardBounds(board)).width).toBeCloseTo(before.width, 0);
+            await expect(page.getByTestId('chessground-board')).toHaveClass(/orientation-black/);
+        });
+    }
+}
+
 test('restores editor focus and draft through the existing shortcut', async ({ page }) => {
     await page.setViewportSize({ width: 1400, height: 1000 });
     await page.goto('/games/analysis');

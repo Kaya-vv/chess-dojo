@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { getNewSizes, getSizes } from './resize';
+import { getFittedSizes, getNewSizes, getSizes, RESTORE_GUTTER_WIDTH } from './resize';
 
 describe('collapsible panel sizing', () => {
     beforeEach(() => {
@@ -81,5 +81,56 @@ describe('collapsible panel sizing', () => {
         const controls = getSizes(1800, true, false, { showPanelControls: true });
         expect(legacy.board.maxHeight - controls.board.maxHeight).toBe(0);
         expect(getSizes(800, true, false).board.width).toBe((800 - 6 - 4) * 0.66);
+    });
+});
+
+describe('board fitting with hidden bars', () => {
+    it.each([390, 599, 600, 899, 900, 1400])(
+        'fits viewport and visible panels at %ipx',
+        (width) => {
+            for (const height of [400, 1000]) {
+                window.innerHeight = height;
+                const normal = getSizes(width, true, false, { showPanelControls: true });
+                for (const left of [false, true]) {
+                    for (const right of [false, true]) {
+                        const fitted = getFittedSizes(normal, width, left, right);
+                        const rowPanels =
+                            (width >= 900 && left ? normal.underboard.width + normal.spacing : 0) +
+                            (width >= 600 && right ? normal.pgn.width + normal.spacing : 0);
+                        expect(fitted.board.width).toBe(fitted.board.height);
+                        expect(
+                            fitted.board.width + rowPanels + RESTORE_GUTTER_WIDTH + normal.padding,
+                        ).toBeLessThanOrEqual(width + 0.001);
+                        expect(fitted.board.height).toBeLessThanOrEqual(height - 80 - 64);
+                        expect(fitted.pgn.width).toBe(normal.pgn.width);
+                        expect(fitted.underboard.width).toBe(normal.underboard.width);
+                    }
+                }
+            }
+        },
+    );
+
+    it('reclaims header and control height without mutating the normal layout', () => {
+        window.innerHeight = 800;
+        const normal = getSizes(1800, true, false, { showPanelControls: true });
+        const saved = structuredClone(normal);
+        const fitted = getFittedSizes(normal, 1800, false, false);
+        expect(fitted.board.width - normal.board.width).toBeCloseTo(2 * 27.9833 + 48);
+        expect(normal).toEqual(saved);
+    });
+
+    it('shrinks when a panel is revealed and expands when a visible panel is resized smaller', () => {
+        window.innerHeight = 2000;
+        const normal = getSizes(1200, true, false, { showPanelControls: true });
+        const hidden = getFittedSizes(normal, 1200, false, false);
+        const revealed = getFittedSizes(normal, 1200, true, false);
+        expect(revealed.board.width).toBeLessThan(hidden.board.width);
+        const resized = getFittedSizes(
+            { ...normal, underboard: { ...normal.underboard, width: 200 } },
+            1200,
+            true,
+            false,
+        );
+        expect(resized.board.width).toBeGreaterThan(revealed.board.width);
     });
 });

@@ -2,6 +2,7 @@ import { VisibilityIcon } from '@/components/games/edit/UnpublishedGameBanner';
 import { UnsavedGameIcon } from '@/components/games/edit/UnsavedGameBanner';
 import useGame from '@/context/useGame';
 import { useLightMode } from '@/style/useLightMode';
+import UnfoldLess from '@mui/icons-material/UnfoldLess';
 import ViewSidebarOutlined from '@mui/icons-material/ViewSidebarOutlined';
 import { Box, IconButton, Paper, Stack, Tooltip } from '@mui/material';
 import { useTranslations } from 'next-intl';
@@ -20,10 +21,14 @@ const BoardButtons = ({
     underboardRef,
     panelControls,
     boardWidth = Infinity,
+    onHideBars,
+    hideBarsRef,
 }: {
     underboardRef?: React.RefObject<UnderboardApi | null>;
     panelControls?: PanelControls;
     boardWidth?: number;
+    onHideBars?: () => void;
+    hideBarsRef?: React.Ref<HTMLButtonElement>;
 }) => {
     const t = useTranslations('analysisBoard.boardButtons');
     const light = useLightMode();
@@ -87,6 +92,18 @@ const BoardButtons = ({
                 <Stack direction='row' sx={{ gridArea: 'start', alignItems: 'center' }}>
                     {panelToggle('left')}
                     <StartButtons />
+                    {onHideBars && (
+                        <Tooltip title={t('hideBoardBars')}>
+                            <IconButton
+                                ref={hideBarsRef}
+                                size='small'
+                                aria-label={t('hideBoardBars')}
+                                onClick={onHideBars}
+                            >
+                                <UnfoldLess sx={{ color: 'text.secondary' }} />
+                            </IconButton>
+                        </Tooltip>
+                    )}
                 </Stack>
                 <Box sx={{ gridArea: 'moves', display: 'flex', justifyContent: 'center' }}>
                     <ControlButtons />

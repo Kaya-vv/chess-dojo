@@ -3545,6 +3545,8 @@
             }
         },
         "boardButtons": {
+            "hideBoardBars": "Spielerleisten und Steuerelemente ausblenden",
+            "showBoardBars": "Spielerleisten und Steuerelemente anzeigen",
             "hideLeftPanel": "Linken Bereich ausblenden",
             "showLeftPanel": "Linken Bereich anzeigen",
             "hideRightPanel": "Rechten Bereich ausblenden",
