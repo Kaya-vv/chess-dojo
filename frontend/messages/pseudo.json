@@ -3545,10 +3545,10 @@
             }
         },
         "boardButtons": {
-            "hideLeftPanel": "[Ĥïđë ľëƒŧ þåñëľ]",
-            "showLeftPanel": "[Šĥöŵ ľëƒŧ þåñëľ]",
-            "hideRightPanel": "[Ĥïđë řïĝĥŧ þåñëľ]",
-            "showRightPanel": "[Šĥöŵ řïĝĥŧ þåñëľ]",
+            "hideLeftPanel": "[T] Hide left panel",
+            "showLeftPanel": "[T] Show left panel",
+            "hideRightPanel": "[T] Hide right panel",
+            "showRightPanel": "[T] Show right panel",
             "firstMove": "[T] First Move",
             "firstMoveAria": "[T] first move",
             "previousMove": "[T] Previous Move",
