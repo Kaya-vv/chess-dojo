@@ -164,7 +164,8 @@ describe('ResizableContainer side panels', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Hide player bars and controls' }));
         expect(screen.queryByTestId('player-header')).not.toBeInTheDocument();
         expect(screen.queryByTestId('player-footer')).not.toBeInTheDocument();
-        expect(screen.queryByRole('button', { name: 'Show left panel' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Show left panel' })).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Show right panel' })).toBeInTheDocument();
         expect(screen.getByTestId('board-area')).toHaveAttribute('data-width', '756');
         expect(screen.getByTestId('board-area')).toHaveAttribute('data-hide-resize', 'true');
         expect(screen.getByRole('button', { name: 'Show player bars and controls' })).toHaveFocus();
