@@ -7,7 +7,7 @@ import { ResizeCallbackData } from 'react-resizable';
 import Board, { onInitializeFunc } from '../Board';
 import { useChess } from './PgnBoard';
 import PlayerHeader from './PlayerHeader';
-import BoardButtons, { PanelControls } from './boardTools/boardButtons/BoardButtons';
+import BoardButtons, { PanelControls, PanelToggle } from './boardTools/boardButtons/BoardButtons';
 import { UnderboardApi } from './boardTools/underboard/Underboard';
 import { ResizableData, RESTORE_GUTTER_WIDTH } from './resize';
 
@@ -93,7 +93,7 @@ const ResizableBoardArea: React.FC<ResizableBoardAreaProps> = ({
                 </Box>
             </Stack>
             {barsHidden && (
-                <Box sx={{ width: RESTORE_GUTTER_WIDTH, pl: '4px' }}>
+                <Stack sx={{ width: RESTORE_GUTTER_WIDTH, pl: '4px', rowGap: 0.5 }}>
                     <Tooltip title={t('showBoardBars')}>
                         <IconButton
                             ref={restoreButton}
@@ -105,7 +105,10 @@ const ResizableBoardArea: React.FC<ResizableBoardAreaProps> = ({
                             <UnfoldMore />
                         </IconButton>
                     </Tooltip>
-                </Box>
+
+                    <PanelToggle side='left' size='small' panelControls={panelControls} />
+                    <PanelToggle side='right' size='small' panelControls={panelControls} />
+                </Stack>
             )}
         </Stack>
     );

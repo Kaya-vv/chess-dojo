@@ -35,32 +35,6 @@ const BoardButtons = ({
     const { game, isOwner: isGameOwner, unsaved } = useGame();
     const { chess } = useChess();
 
-    const panelToggle = (side: 'left' | 'right') => {
-        const control = panelControls?.[side];
-        if (!control) return null;
-        const label =
-            side === 'left'
-                ? t(control.visible ? 'hideLeftPanel' : 'showLeftPanel')
-                : t(control.visible ? 'hideRightPanel' : 'showRightPanel');
-        return (
-            <Tooltip title={label}>
-                <IconButton
-                    size='small'
-                    aria-label={label}
-                    aria-expanded={control.visible}
-                    onClick={control.onToggle}
-                >
-                    <ViewSidebarOutlined
-                        sx={{
-                            color: 'text.secondary',
-                            transform: side === 'left' ? 'scaleX(-1)' : undefined,
-                        }}
-                    />
-                </IconButton>
-            </Tooltip>
-        );
-    };
-
     return (
         <Paper
             elevation={3}
@@ -90,7 +64,7 @@ const BoardButtons = ({
                 }}
             >
                 <Stack direction='row' sx={{ gridArea: 'start', alignItems: 'center' }}>
-                    {panelToggle('left')}
+                    <PanelToggle side='left' panelControls={panelControls} />
                     <StartButtons />
                     {onHideBars && (
                         <Tooltip title={t('hideBoardBars')}>
@@ -122,7 +96,7 @@ const BoardButtons = ({
                     ) : (
                         <Box sx={{ width: '40px' }}></Box>
                     )}
-                    {panelToggle('right')}
+                    <PanelToggle side='right' panelControls={panelControls} />
                 </Stack>
             </Stack>
         </Paper>
@@ -130,3 +104,40 @@ const BoardButtons = ({
 };
 
 export default BoardButtons;
+
+export function PanelToggle({
+    panelControls,
+    side,
+    size,
+}: {
+    panelControls?: PanelControls;
+    side: 'left' | 'right';
+    size?: 'small' | 'medium' | 'large' | 'inherit';
+}) {
+    const t = useTranslations('analysisBoard.boardButtons');
+    const control = panelControls?.[side];
+    if (!control) return null;
+
+    const label =
+        side === 'left'
+            ? t(control.visible ? 'hideLeftPanel' : 'showLeftPanel')
+            : t(control.visible ? 'hideRightPanel' : 'showRightPanel');
+    return (
+        <Tooltip title={label}>
+            <IconButton
+                size='small'
+                aria-label={label}
+                aria-expanded={control.visible}
+                onClick={control.onToggle}
+            >
+                <ViewSidebarOutlined
+                    fontSize={size}
+                    sx={{
+                        color: 'text.secondary',
+                        transform: side === 'left' ? 'scaleX(-1)' : undefined,
+                    }}
+                />
+            </IconButton>
+        </Tooltip>
+    );
+}
