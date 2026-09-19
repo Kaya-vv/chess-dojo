@@ -208,6 +208,12 @@ const PgnBoard = forwardRef<PgnBoardApi, PgnBoardProps>(
             navGuard.accept();
         }, [gameContext, navGuard, pendingGameNavigation]);
 
+        useEffect(() => {
+            if ((navGuard.active || pendingGameNavigation) && !hasUnsavedBoardChanges()) {
+                acceptNavigation();
+            }
+        }, [acceptNavigation, hasUnsavedBoardChanges, navGuard.active, pendingGameNavigation]);
+
         const guardedGameContext = useMemo(
             () => ({
                 ...gameContext,
@@ -396,7 +402,11 @@ const PgnBoard = forwardRef<PgnBoardApi, PgnBoardProps>(
                 >
                     <DialogTitle>{t('title')}</DialogTitle>
                     <DialogContent>
-                        {hasUnsavedGameChanges ? t('gameWarning') : t('suggestedVariationWarning')}
+                        {hasUnsavedGameChanges
+                            ? t('gameWarning')
+                            : hasUnsavedSuggestedVariations()
+                              ? t('suggestedVariationWarning')
+                              : null}
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={rejectNavigation}>{t('cancel')}</Button>
