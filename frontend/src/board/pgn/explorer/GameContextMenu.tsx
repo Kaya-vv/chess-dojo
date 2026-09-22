@@ -89,40 +89,50 @@ export function GameContextMenu({
 
     return (
         <>
-            <Menu
-                open={!!source && !!menu.position}
-                onClose={menu.close}
-                anchorReference='anchorPosition'
-                anchorPosition={menu.position}
-            >
-                {canEdit && (
-                    <MenuItem disabled={request.isLoading()} onClick={() => void insert()}>
-                        {request.isLoading() && <CircularProgress size={16} sx={{ mr: 1 }} />}
-                        {t('insert')}
-                    </MenuItem>
-                )}
-                {canEdit && (
-                    <MenuItem
-                        onClick={() => {
-                            if (!source || !chess) return;
-                            citeGame(chess, source, window.location.origin);
-                            reconcile();
-                            menu.close();
-                            if (!busy.current) request.onSuccess(t('cited'));
-                        }}
-                    >
-                        {t('cite')}
-                    </MenuItem>
-                )}
-                <MenuItem
-                    onClick={() => {
-                        if (source) window.open(gameUrl(source), '_blank', 'noopener');
-                        menu.close();
+            {source && menu.position && (
+                <Menu
+                    open
+                    onClose={menu.close}
+                    anchorReference='anchorPosition'
+                    anchorPosition={menu.position}
+                    slotProps={{
+                        root: {
+                            onContextMenu: (event: React.MouseEvent) => {
+                                event.preventDefault();
+                                menu.close();
+                            },
+                        },
                     }}
                 >
-                    {t('open')}
-                </MenuItem>
-            </Menu>
+                    {canEdit && (
+                        <MenuItem disabled={request.isLoading()} onClick={() => void insert()}>
+                            {request.isLoading() && <CircularProgress size={16} sx={{ mr: 1 }} />}
+                            {t('insert')}
+                        </MenuItem>
+                    )}
+                    {canEdit && (
+                        <MenuItem
+                            onClick={() => {
+                                if (!source || !chess) return;
+                                citeGame(chess, source, window.location.origin);
+                                reconcile();
+                                menu.close();
+                                if (!busy.current) request.onSuccess(t('cited'));
+                            }}
+                        >
+                            {t('cite')}
+                        </MenuItem>
+                    )}
+                    <MenuItem
+                        onClick={() => {
+                            if (source) window.open(gameUrl(source), '_blank', 'noopener');
+                            menu.close();
+                        }}
+                    >
+                        {t('open')}
+                    </MenuItem>
+                </Menu>
+            )}
             <RequestSnackbar request={request} showSuccess />
         </>
     );

@@ -47,6 +47,18 @@ afterEach(() => {
 });
 
 describe('database game menu', () => {
+    it('closes immediately on a second right-click and can reopen without an overlay delay', () => {
+        mocks.chess = new Chess();
+        renderWithIntl(<Harness source={{ id: 'source' } as GameInfo} />);
+        fireEvent.contextMenu(screen.getByTestId('row'));
+        expect(screen.getByRole('menu')).toBeVisible();
+        expect(fireEvent.contextMenu(screen.getByRole('presentation'))).toBe(false);
+        expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+        expect(screen.queryByRole('presentation')).not.toBeInTheDocument();
+        fireEvent.contextMenu(screen.getByTestId('row'));
+        expect(screen.getByRole('menu')).toBeVisible();
+    });
+
     it.each(['masters', '1500-1600'])(
         'inserts the right source from %s and preserves navigation during the fetch',
         async (cohort) => {
