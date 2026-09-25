@@ -3428,7 +3428,6 @@
                 "open": "Apri partita in una nuova scheda",
                 "inserted": "Partita inserita.",
                 "cited": "Partita citata.",
-                "cancelled": "Inserimento annullato perché la partita di destinazione è cambiata.",
                 "invalidSource": "Impossibile inserire questa partita: la linea principale non è valida, è vuota o ha una posizione iniziale diversa."
             },
             "columnMove": "Mossa",

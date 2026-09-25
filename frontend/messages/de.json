@@ -3428,7 +3428,6 @@
                 "open": "Partie in neuem Tab öffnen",
                 "inserted": "Partie eingefügt.",
                 "cited": "Partie zitiert.",
-                "cancelled": "Einfügen abgebrochen, da sich die Zielpartie geändert hat.",
                 "invalidSource": "Diese Partie kann nicht eingefügt werden: Die Hauptvariante ist ungültig, leer oder hat eine andere Ausgangsstellung."
             },
             "columnMove": "Zug",

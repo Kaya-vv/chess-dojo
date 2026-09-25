@@ -3428,7 +3428,6 @@
                 "open": "Abrir partida numa nova aba",
                 "inserted": "Partida inserida.",
                 "cited": "Partida citada.",
-                "cancelled": "Inserção cancelada porque a partida de destino mudou.",
                 "invalidSource": "Não é possível inserir esta partida: a linha principal é inválida, está vazia ou tem uma posição inicial diferente."
             },
             "columnMove": "Lance",

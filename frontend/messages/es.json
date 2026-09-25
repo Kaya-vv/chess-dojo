@@ -3428,7 +3428,6 @@
                 "open": "Abrir partida en una pestaña nueva",
                 "inserted": "Partida insertada.",
                 "cited": "Partida citada.",
-                "cancelled": "Inserción cancelada porque la partida de destino ha cambiado.",
                 "invalidSource": "No se puede insertar esta partida: la línea principal no es válida, está vacía o tiene una posición inicial diferente."
             },
             "columnMove": "Jugada",

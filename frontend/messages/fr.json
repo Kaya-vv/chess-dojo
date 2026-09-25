@@ -3428,7 +3428,6 @@
                 "open": "Ouvrir la partie dans un nouvel onglet",
                 "inserted": "Partie insérée.",
                 "cited": "Partie citée.",
-                "cancelled": "Insertion annulée car la partie cible a changé.",
                 "invalidSource": "Impossible d’insérer cette partie : la ligne principale est invalide, vide ou commence dans une position différente."
             },
             "columnMove": "Coup",

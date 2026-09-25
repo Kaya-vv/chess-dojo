@@ -3,7 +3,7 @@ import { Game, GameInfo } from '@/database/game';
 import { useDataGridContextMenu } from '@/hooks/useDataGridContextMenu';
 import { renderWithIntl } from '@/i18n/intl.test';
 import { Chess } from '@jackstenglein/chess';
-import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GameContextMenu } from './GameContextMenu';
 
@@ -70,15 +70,18 @@ describe('database game menu', () => {
             } as Game;
             mocks.chess = new Chess({ pgn: '1. e4 e5 *' });
             mocks.chess.seek(mocks.chess.history()[0]);
-            let resolve!: (value: { data: Game }) => void;
-            mocks.getGame.mockReturnValue(
-                new Promise((r) => {
-                    resolve = r;
-                }),
-            );
+            const { promise, resolve } = Promise.withResolvers<{ data: Game }>();
+            mocks.getGame.mockReturnValue(promise);
             renderWithIntl(<Harness source={source} />);
             fireEvent.contextMenu(screen.getByTestId('row'));
             fireEvent.click(screen.getByRole('menuitem', { name: 'Insert game with citation' }));
+            expect(
+                screen.getByRole('menuitem', { name: 'Insert game with citation' }),
+            ).toHaveAttribute('aria-disabled', 'true');
+            expect(screen.getByRole('menuitem', { name: 'Cite game' })).toHaveAttribute(
+                'aria-disabled',
+                'true',
+            );
             const selected = mocks.chess.history()[1];
             mocks.chess.seek(selected);
             await act(async () => {
@@ -105,41 +108,4 @@ describe('database game menu', () => {
         expect(!!screen.queryByRole('menuitem', { name: 'Cite game' })).toBe(editable);
         expect(screen.getByRole('menuitem', { name: 'Open game in new tab' })).toBeVisible();
     });
-
-    it.each(['manual edit', 'replacement', 'permission loss'])(
-        'rejects a fetched source after %s',
-        async (change) => {
-            const source = {
-                cohort: 'masters',
-                id: 'source',
-                headers: {},
-                pgn: '1. d4 d5 *',
-            } as Game;
-            mocks.chess = new Chess({ pgn: '1. e4 *' });
-            let resolve!: (value: { data: Game }) => void;
-            mocks.getGame.mockReturnValue(
-                new Promise((r) => {
-                    resolve = r;
-                }),
-            );
-            const view = renderWithIntl(<Harness source={source} />);
-            fireEvent.contextMenu(screen.getByTestId('row'));
-            fireEvent.click(screen.getByRole('menuitem', { name: 'Insert game with citation' }));
-            if (change === 'manual edit') mocks.chess.setComment('new unsaved note');
-            if (change === 'replacement') mocks.chess.loadPgn(mocks.chess.renderPgn());
-            if (change === 'permission loss')
-                view.rerender(<Harness source={source} owner={false} />);
-            const edited = mocks.chess.renderPgn();
-            await act(async () => {
-                resolve({ data: source });
-                await Promise.resolve();
-            });
-            await waitFor(() =>
-                expect(
-                    screen.getByText('Insertion cancelled because the target game changed.'),
-                ).toBeVisible(),
-            );
-            expect(mocks.chess.renderPgn()).toBe(edited);
-        },
-    );
 });
