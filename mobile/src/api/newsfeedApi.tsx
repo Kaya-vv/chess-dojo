@@ -12,7 +12,10 @@ export type NewsfeedApiContextType = {
      * @param id The id of the timeline entry.
      * @returns An AxiosResponse containing the timeline entry.
      */
-    getNewsfeedItem: (owner: string, id: string) => Promise<AxiosResponse<TimelineEntry, any>>;
+    getNewsfeedItem: (
+        owner: string,
+        id: string
+    ) => Promise<AxiosResponse<TimelineEntry, any>>;
 
     /**
      * Fetches a page of the provided newsfeed.
@@ -24,7 +27,7 @@ export type NewsfeedApiContextType = {
     listNewsfeed: (
         newsfeedIds: string[],
         skipLastFetch?: boolean,
-        startKey?: string,
+        startKey?: string
     ) => Promise<AxiosResponse<ListNewsfeedResponse, any>>;
 
     /**
@@ -37,7 +40,7 @@ export type NewsfeedApiContextType = {
     createNewsfeedComment: (
         owner: string,
         id: string,
-        content: string,
+        content: string
     ) => Promise<AxiosResponse<TimelineEntry, any>>;
 
     /**
@@ -50,7 +53,7 @@ export type NewsfeedApiContextType = {
     setNewsfeedReaction: (
         owner: string,
         id: string,
-        types: string[],
+        types: string[]
     ) => Promise<AxiosResponse<TimelineEntry, any>>;
 };
 
@@ -91,7 +94,7 @@ export function listNewsfeed(
     idToken: string,
     newsfeedIds: string[],
     skipLastFetch?: boolean,
-    startKey?: string,
+    startKey?: string
 ) {
     return axios.get<ListNewsfeedResponse>(`${BASE_URL}/newsfeed`, {
         params: {
@@ -113,7 +116,12 @@ export function listNewsfeed(
  * @param content The text content of the comment.
  * @returns The updated TimelineEntry.
  */
-export function createNewsfeedComment(idToken: string, owner: string, id: string, content: string) {
+export function createNewsfeedComment(
+    idToken: string,
+    owner: string,
+    id: string,
+    content: string
+) {
     return axios.post<TimelineEntry>(
         `${BASE_URL}/newsfeed/${owner}/${id}/comments`,
         { content },
@@ -121,7 +129,7 @@ export function createNewsfeedComment(idToken: string, owner: string, id: string
             headers: {
                 Authorization: 'Bearer ' + idToken,
             },
-        },
+        }
     );
 }
 
@@ -133,10 +141,15 @@ export function createNewsfeedComment(idToken: string, owner: string, id: string
  * @param types The reaction types to set. An empty list deletes the reaction.
  * @returns An AxiosResponse containing the updated TimelineEntry.
  */
-export function setNewsfeedReaction(idToken: string, owner: string, id: string, types: string[]) {
+export function setNewsfeedReaction(
+    idToken: string,
+    owner: string,
+    id: string,
+    types: string[]
+) {
     return axios.put<TimelineEntry>(
         `${BASE_URL}/newsfeed/${owner}/${id}/reactions`,
         { types },
-        { headers: { Authorization: 'Bearer ' + idToken } },
+        { headers: { Authorization: 'Bearer ' + idToken } }
     );
 }
