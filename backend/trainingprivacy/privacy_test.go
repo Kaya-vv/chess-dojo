@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackstenglein/chess-dojo-scheduler/backend/api"
 	"github.com/jackstenglein/chess-dojo-scheduler/backend/database"
+	"github.com/jackstenglein/chess-dojo-scheduler/backend/trainingprivacy/privacytest"
 )
 
 type fakeRepository struct {
@@ -173,15 +174,5 @@ func TestVisibilityValidation(t *testing.T) {
 }
 
 func (r *fakeRepository) GetTrainingPrivacyUsers(names []string) ([]*database.User, error) {
-	result := make([]*database.User, 0, len(names))
-	for _, name := range names {
-		user, err := r.GetTrainingPrivacyUser(name)
-		if err != nil {
-			return nil, err
-		}
-		if user != nil {
-			result = append(result, user)
-		}
-	}
-	return result, nil
+	return privacytest.Users(names, r.GetTrainingPrivacyUser)
 }

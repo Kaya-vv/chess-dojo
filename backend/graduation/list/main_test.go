@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/jackstenglein/chess-dojo-scheduler/backend/api"
 	"github.com/jackstenglein/chess-dojo-scheduler/backend/database"
+	"github.com/jackstenglein/chess-dojo-scheduler/backend/trainingprivacy/privacytest"
 )
 
 type listGraduationsFakeRepo struct {
@@ -218,15 +219,5 @@ func (r *listGraduationsFakeRepo) GetTrainingPrivacyFollower(poster, follower st
 }
 
 func (r *listGraduationsFakeRepo) GetTrainingPrivacyUsers(names []string) ([]*database.User, error) {
-	result := make([]*database.User, 0, len(names))
-	for _, name := range names {
-		user, err := r.GetTrainingPrivacyUser(name)
-		if err != nil {
-			return nil, err
-		}
-		if user != nil {
-			result = append(result, user)
-		}
-	}
-	return result, nil
+	return privacytest.Users(names, r.GetTrainingPrivacyUser)
 }
