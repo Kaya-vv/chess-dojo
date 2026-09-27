@@ -335,7 +335,7 @@ function PriceMatrix({
                             disabled:
                                 request?.isLoading() && selectedTier !== SubscriptionTier.Lecture,
                             onClick: () =>
-                                onSubscribe(SubscriptionTier.Lecture, 'month', {
+                                onSubscribe(SubscriptionTier.Lecture, interval, {
                                     currency,
                                     value: priceData[SubscriptionTier.Lecture][interval],
                                 }),
@@ -409,9 +409,9 @@ function PriceMatrix({
                                 request?.isLoading() &&
                                 selectedTier !== SubscriptionTier.GameReview,
                             onClick: () =>
-                                onSubscribe(SubscriptionTier.GameReview, 'month', {
+                                onSubscribe(SubscriptionTier.GameReview, interval, {
                                     currency,
-                                    value: priceData[SubscriptionTier.Lecture][interval],
+                                    value: priceData[SubscriptionTier.GameReview][interval],
                                 }),
                             children: t('getSenseiFeedback'),
                         }}
