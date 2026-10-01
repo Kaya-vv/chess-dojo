@@ -9,14 +9,9 @@ export function getGameTableSortModelKey(namespace: string): string {
 }
 
 /**
- * Returns the comparator of the GameTable Played column. PGN dates are compared by code
- * units, the order DynamoDB uses for game ids, so partial dates such as `2024.05.??` sort as
- * later than the known days of their period (after them ascending, before them descending).
- * Undated games (missing date, or a date starting with `?` or any later character, such as
- * `????.??.??`) come last in both directions.
- *
- * The masters games list pages games in exactly this order (see listGames.ts in the backend
- * pgnService), so rows loaded from later pages are appended below the existing rows.
+ * Returns the comparator of the GameTable Played column. Dates are compared like
+ * DynamoDB sort keys, and undated games come last in both directions, matching the
+ * order the masters games list is paged in.
  * @param sortDirection The direction of the sort.
  */
 export function getPlayedDateSortComparator(

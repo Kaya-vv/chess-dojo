@@ -17,10 +17,8 @@ export type MastersSortDirection = 'asc' | 'desc';
 export const mastersTimeControls = ['standard', 'rapid', 'blitz', 'unknown'];
 
 /**
- * The keys of the independently paged masters streams. Each time control is split into its
- * dated games and its undated games (date starting with `?` or any later character, such as
- * `????.??.??`). Undated games come after all dated games in both sort directions, which is
- * the order the GameTable Played column uses (see getPlayedDateSortComparator in the frontend).
+ * The masters streams queried per page: the dated and undated games of each time control.
+ * Undated games (dates starting with `?`) sort after all dated games.
  */
 export const mastersStreamKeys = mastersTimeControls.flatMap((tc) => [
     `${tc}:dated`,
@@ -31,9 +29,8 @@ export const mastersStreamKeys = mastersTimeControls.flatMap((tc) => [
 export const MASTERS_PAGE_SIZE = 100;
 
 /**
- * Pagination cursor for the masters games list. Maps a masters stream key to the
- * explorer item id (sort key) of the last game returned from it, or '' if no game has
- * been returned from it yet. Exhausted streams are omitted.
+ * Pagination cursor for masters games. Maps each stream key to the id of the last
+ * game returned from it ('' if none yet). Exhausted streams are omitted.
  */
 export type MastersCursor = Record<string, string>;
 
@@ -256,9 +253,8 @@ async function queryMastersStream(
 }
 
 /**
- * Merges pages of masters games from several streams into a single page ordered by date,
- * with undated games after all dated games in both directions. Each stream must be ordered
- * by game id in the given direction and contain at most pageSize items.
+ * Merges the pages of several masters streams into one page ordered by date. Each stream
+ * must be ordered by game id in the given direction and hold at most pageSize items.
  * @param streams The query results for each stream.
  * @param sortDirection The direction to order the games by date.
  * @param pageSize The maximum number of games to return.
